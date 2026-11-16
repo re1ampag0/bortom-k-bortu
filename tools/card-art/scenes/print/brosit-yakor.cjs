@@ -43,20 +43,22 @@ module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'acc
     // the enemy standing off at an angle, far on the left; our shot falls by her
     bg += `<g data-far="">${K.ship(u, L, { kind: 'endeavour', x: 24, y: HZ + 1.4, scale: .21, detail: 'far', flip: true, seed: 3 })}</g>`
       + K.splash(u, { x: 38, y: HZ + 2, w: 7, h: 11, seed: 3, L }) + K.splash(u, { x: 12, y: HZ + 2.4, w: 5, h: 7, seed: 4, L });
-    // the wake of her turn (review: no white ring round her): the kit's own wake runs astern of her; beyond it the
-    // track of the stern swinging round the anchor curls away into the bay — a smooth slick of flattened water edged
-    // with broken, fading foam, wide near the stern, thin and patchy far off. No closed loop, no solid white line
-    { const id = nid('ab', u), foamC = mix(L.pal.sea[0], '#ffffff', .78);
-      const B = s => { const t = s, a = [176, WL + .6], c = [204, WL - 6], e = [178, HZ + 5.5];   // a curve: out to the right, then away into the distance
-        return [(1 - t) * (1 - t) * a[0] + 2 * t * (1 - t) * c[0] + t * t * e[0], (1 - t) * (1 - t) * a[1] + 2 * t * (1 - t) * c[1] + t * t * e[1]]; };
-      let slick = '';
-      for (let i = 0; i < 40; i++) { const s0 = i / 40, s1 = (i + 1.3) / 40, [x0, y0] = B(s0), [x1, y1] = B(s1), k = Math.max(0, (y0 - HZ) / (WL - HZ)), w = (1 + 5.5 * k) * (1 - s0 * .5);
-        slick += `<path d="M${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}" stroke-width="${f(w)}" opacity="${f(.16 * (1 - s0 * .7))}"/>`; }
-      bg += `<defs><filter id="${id}" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation=".9"/></filter></defs><g filter="url(#${id})" stroke="${foamC}" stroke-linecap="round" fill="none">${slick}</g>`;
-      // broken foam along both edges of the track: patches with gaps, fewer and smaller with distance
-      for (let s = .02; s < .95; s += .045 + R() * .05) { const [x, y] = B(s), k = Math.max(0, (y - HZ) / (WL - HZ)), age = 1 - s * .6;
-        if (R() < .25) continue;
-        for (const e of [-1, 1]) if (R() < .75) bg += K.foam(u, { x: x + (R() - .5) * 1.5, y: y + e * (.5 + k * 2) * age, w: (1.6 + k * 6) * age * (.6 + R() * .6), h: (.25 + k * .8) * age, seed: 40 + Math.round(s * 300) + (e > 0 ? 7 : 0), L }); } }
+    // the wake of her turn, plain on the water: a broad white arc that starts under her stern, swings out to the
+    // right and round behind her, comes out again beyond her bow and closes in towards the point where the chain
+    // went in — she has spun on the spot round her anchor. Fresh and wide at the stern, older and thinner round the
+    // far side; wider near us (perspective)
+    { const id = nid('ab', u), C = { x: 96, y: 79, rx: 96, ry: 11 }, th0 = .66, th1 = -3.6, N = 90, foamC = mix(L.pal.sea[0], '#ffffff', .82);
+      const P = s => { const th = th0 + (th1 - th0) * s; return [C.x + C.rx * Math.cos(th), C.y + C.ry * Math.sin(th)]; };
+      let halo = '', core = '', lip = '';
+      for (let i = 0; i < N; i++) { const s0 = i / N, s1 = (i + 1.2) / N, [x0, y0] = P(s0), [x1, y1] = P(s1), k = Math.max(0, (y0 - HZ) / (WL - HZ)), age = 1 - s0 * .45, w = (.7 + 5.2 * k) * age;
+        halo += `<path d="M${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}" stroke-width="${f(w * 1.9)}"/>`; core += `<path d="M${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}" stroke-width="${f(w)}" opacity="${f(.55 + .4 * age)}"/>`;
+        lip += `<path d="M${f(x0)} ${f(y0 + w * .42)}L${f(x1)} ${f(y1 + w * .42)}" stroke-width="${f(Math.max(.25, w * .18))}"/>`; }
+      bg += `<defs><filter id="${id}" x="-10%" y="-60%" width="120%" height="220%"><feGaussianBlur stdDeviation="1.1"/></filter></defs>`
+        + `<g filter="url(#${id})" stroke="${foamC}" stroke-linecap="round" fill="none" opacity=".5">${halo}</g>`
+        + `<g stroke="#f6fffc" stroke-linecap="round" fill="none">${core}</g><g stroke="#ffffff" stroke-linecap="round" fill="none" opacity=".9">${lip}</g>`;
+      // churned foam along it: patches and streaks, more and bigger where it is fresh and near
+      for (let s = .01; s < 1; s += .018 + R() * .02) { const [x, y] = P(s), k = Math.max(0, (y - HZ) / (WL - HZ)), age = 1 - s * .45;
+        bg += K.foam(u, { x: x + (R() - .5) * 2, y: y + (R() - .5) * (.6 + k * 1.6), w: (2.4 + k * 10) * age, h: (.3 + k * 1.3) * age, seed: 40 + Math.round(s * 300), L }); } }
 
     // ——— the ship: the kit's Pearl, wake and foam at her stem
     bg += K.ship(u, L, SHIP);
@@ -71,30 +73,19 @@ module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'acc
     { const sg = nid('sg', u), sb = nid('sb', u); fg += `<defs>${linGrad(sg, 0, WL, 0, 220, [[0, '#e8fff4', .5], [.5, '#bff0e8', .16], [1, '#bff0e8', 0]])}<filter id="${sb}" x="-20%" y="-10%" width="140%" height="120%"><feGaussianBlur stdDeviation="2.2"/></filter></defs><g filter="url(#${sb})">`;
       for (const [x, w] of [[46, 9], [92, 14], [126, 6], [158, 16], [188, 8]]) fg += `<path d="M${x} ${WL}h${w}l${f(-48 - w * .5)} 140h${-w * 1.6}z" fill="url(#${sg})" style="mix-blend-mode:screen"/>`;
       fg += `</g>`; }
-    // her bottom under the water, to her own lines (review: one hull through the waterline, not a separate slab): the
-    // outline starts exactly where her side meets the water at the stem and the sternpost, the forefoot curves down
-    // from the stem to the keel, the keel runs aft to an upright sternpost with the rudder hung on it. The same coal-
-    // black planking as above the water, only dimmed and cooled by the water over it; the strakes run on from above,
-    // a thin dark slime belt and a few short strands of weed just under the waterline
+    // her bottom under the water, to her own lines: the forefoot curving down from the stem, the keel, the run up to
+    // the sternpost, the rudder; foul with weed and barnacles, seen through the green water
     const hp = (X, H) => [SHIP.x + SHIP.scale * X, WL - SHIP.scale * H];
-    const KEEL = [[-52.2, .6], [-52.1, -2], [-51.2, -4.6], [-49.4, -7], [-46.6, -9], [-42.6, -10.4], [-37, -11], [30, -12], [44, -12.2], [51.4, -12], [52.6, -10], [52.8, .6]];
-    { const hg = nid('hg', u), hc = nid('hc', u), hs = nid('hs', u), d = 'M' + KEEL.map(q => hp(...q).map(f).join(' ')).join('L') + 'Z', k0 = hp(0, -12)[1];
-      fg += `<defs>${linGrad(hg, 0, WL, 0, k0, [[0, '#222830'], [.35, '#1a232b'], [1, '#0c161e']])}${linGrad(hs, 0, WL, 0, WL + 4, [[0, '#24301e', .7], [1, '#24301e', 0]])}<clipPath id="${hc}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="url(#${hg})"/>`
-        + `<g clip-path="url(#${hc})"><rect x="0" y="${WL}" width="200" height="4" fill="url(#${hs})"/>`
-        // the strakes: thin dark seams following the run of the hull
-        + [-1.8, -3.8, -5.8, -7.8, -9.8].map(H => { const a = hp(-53, H), b = hp(54, H); return `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#080e12" stroke-width=".3" opacity=".55"/>`; }).join('')
-        // the sun through the water: a faint cool sheen on the upper turn of the bilge, fading down
-        + `<path d="M${f(hp(-50, -1.2)[0])} ${f(hp(0, -1.2)[1])}H${f(hp(52, -1.2)[0])}" stroke="#5a8c94" stroke-width="1.6" opacity=".18"/>`
-        // short weed and a few barnacles near the waterline only
-        + Array.from({ length: 16 }, () => { const p = hp(-48 + R() * 98, -.3 - R() * 1.6); return `<path d="M${f(p[0])} ${f(p[1])}q${f((R() - .5) * 1.2)} ${f(.8 + R())} ${f((R() - .5) * 1.6)} ${f(1.4 + R() * 1.6)}" stroke="#2e4a2a" stroke-width="${f(.35 + R() * .3)}" fill="none" opacity=".55"/>`; }).join('')
-        + Array.from({ length: 12 }, () => { const p = hp(-48 + R() * 98, -.6 - R() * 3); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.25 + R() * .3)}" fill="#6a7a74" opacity=".35"/>`; }).join('') + `</g>`
-        + `<path d="M${KEEL.slice(5, 11).map(q => hp(...q).map(f).join(' ')).join('L')}" stroke="#070d12" stroke-width=".8" fill="none"/>`;
-      // the rudder hung on the sternpost: its head rises out of the water under the counter, the blade goes down to the keel
-      { const a = hp(52.8, 5.6), b = hp(55.6, 5.6), c = hp(56.2, -11.2), d2 = hp(52.6, -12), w = hp(0, 0)[1];
-        const rd = `M${[a, b, c, d2].map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z`, rc = nid('rc', u), rg = nid('rg', u);
-        fg += `<defs><clipPath id="${rc}"><path d="${rd}"/></clipPath>${linGrad(rg, 0, a[1], 0, c[1], [[0, '#2a2d32'], [(w - a[1]) / (c[1] - a[1]), '#24282d'], [(w - a[1]) / (c[1] - a[1]) + .02, '#26323a'], [1, '#101d26']])}</defs>`
-          + `<path d="${rd}" fill="url(#${rg})" stroke="#090c10" stroke-width=".35"/><g clip-path="url(#${rc})">`
-          + [1.8, -2, -6].map(H => { const p = hp(52.6, H), q = hp(56.4, H); return `<path d="M${f(p[0])} ${f(p[1])}L${f(q[0])} ${f(q[1])}" stroke="#585048" stroke-width=".45" opacity=".6"/>`; }).join('') + `</g>`; } }
+    const KEEL = [[-52, 0], [-51.6, -2.6], [-50.4, -5], [-48.2, -7.1], [-45, -8.5], [-40, -9], [30, -9], [40, -8.7], [46, -7.6], [49.6, -5.4], [51.4, -2.6], [52, 0]];
+    { const hg = nid('hg', u), hc = nid('hc', u), d = 'M' + KEEL.map(q => hp(...q).map(f).join(' ')).join('L') + 'Z';
+      fg += `<defs>${linGrad(hg, 0, WL, 0, WL + 8, [[0, '#2a4c4e'], [.45, '#1c3c40'], [1, '#0e2a32']])}<clipPath id="${hc}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="url(#${hg})"/>`
+        + `<g clip-path="url(#${hc})">` + Array.from({ length: 34 }, () => { const p = hp(-48 + R() * 98, -.4 - R() * 6); return `<path d="M${f(p[0])} ${f(p[1])}q${f((R() - .5) * 2)} ${f(1.4 + R() * 2)} ${f((R() - .5) * 3)} ${f(2.6 + R() * 3)}" stroke="${R() > .5 ? '#3a6a3a' : '#5a7a40'}" stroke-width="${f(.4 + R() * .5)}" fill="none" opacity=".75"/>`; }).join('')
+        + Array.from({ length: 22 }, () => { const p = hp(-48 + R() * 98, -.5 - R() * 7.5); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.3 + R() * .5)}" fill="#a8b8a8" opacity=".5"/>`; }).join('')
+        + [-2.6, -5.2, -7.6].map(H => { const a = hp(-47, H), b = hp(49, H); return `<path d="M${f(a[0])} ${f(a[1])}L${f(b[0])} ${f(b[1])}" stroke="#0a1e24" stroke-width=".3" opacity=".5"/>`; }).join('')
+        + Array.from({ length: 12 }, () => { const p = hp(-46 + R() * 94, -.6 - R() * 4), w = 4 + R() * 6; return `<path d="M${f(p[0])} ${f(p[1])}q${f(w / 2)} ${f(-1 - R())} ${f(w)} 0" stroke="#8ae0d8" stroke-width=".35" fill="none" opacity=".45"/>`; }).join('') + `</g>`
+        + `<path d="M${KEEL.slice(5, 8).map(q => hp(...q).map(f).join(' ')).join('L')}" stroke="#06141a" stroke-width="1" fill="none"/>`;
+      // the rudder hanging off the sternpost
+      { const a = hp(51.6, -.2), b = hp(55.6, -.2), c = hp(55, -8.4), d2 = hp(49.4, -8.2); fg += `<path d="M${[a, b, c, d2].map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="#183438" stroke="#0a1e24" stroke-width=".4"/>`; } }
     // the sand: a slope from the shallows on the left down into the deep on the right; ripples, stones, weed
     { const sg = nid('sd', u), d = 'M-10 134Q20 138 50 148Q90 160 130 172Q170 186 210 196L210 292L-10 292Z';
       fg += `<defs>${linGrad(sg, 0, 134, 0, 260, [[0, '#d6c89a'], [.18, '#a49a74'], [.5, '#4a5a52'], [1, '#0e2230']])}</defs><path d="${d}" fill="url(#${sg})"/>`
@@ -134,11 +125,9 @@ module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'acc
     // the cut: the surface seen edge-on — a bright wavering line, the underside of the surface mirroring the light
     // (fainter over her bottom, which is dark right up to the surface)
     { const sl = nid('sl', u); let d = `M0 ${WL}`; for (let x = 0; x <= 200; x += 10) d += `Q${x + 5} ${f(WL + (x % 20 ? -1 : 1) * .9)} ${x + 10} ${WL}`;
-      const h0 = hp(-52.2, 0)[0], h1 = hp(52.8, 0)[0];
+      const h0 = hp(-52, 0)[0], h1 = hp(52, 0)[0];
       fg += `<defs>${linGrad(sl, 0, WL, 0, WL + 6, [[0, '#e8fff8', .55], [1, '#e8fff8', 0]])}</defs><rect x="0" y="${WL}" width="${f(h0)}" height="6" fill="url(#${sl})"/><rect x="${f(h1)}" y="${WL}" width="${f(200 - h1)}" height="6" fill="url(#${sl})"/>`
-        + `<defs><clipPath id="${sl}o"><rect x="-10" y="${WL - 3}" width="${f(h0 + 10.4)}" height="6"/><rect x="${f(h1 + 2.8)}" y="${WL - 3}" width="${f(210 - h1)}" height="6"/></clipPath></defs>`
-        + `<g clip-path="url(#${sl}o)"><path d="${d}" stroke="#f4fffc" stroke-width="1.1" fill="none" opacity=".85"/></g>`
-        + `<path d="M${f(h0)} ${WL}H${f(h1 + 3.2)}" stroke="#cfe8e6" stroke-width=".35" fill="none" opacity=".35"/>`; }   // over the hull only the wet line where the water meets her side
+        + `<rect x="${f(h0)}" y="${WL}" width="${f(h1 - h0)}" height="3" fill="url(#${sl})" opacity=".3"/><path d="${d}" stroke="#f4fffc" stroke-width="1.1" fill="none" opacity=".85"/>`; }
 
     // ——— above the water: the spray thrown up round the shank (behind the iron), the anchor's top, the chain
     fg += K.splash(u, { x: ANC.x + 1, y: WL, w: 20, h: 17, seed: 3, L, wind: -.3 }) + K.splash(u, { x: ANC.x - 6, y: WL + .3, w: 9, h: 9, seed: 7, L, wind: -.6 });
@@ -152,16 +141,12 @@ module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'acc
     // the spray falling in front: drops and a foam ring at the shank
     fg += K.foam(u, { x: ANC.x + 1, y: WL + .2, w: 16, h: 1.4, seed: 5, L })
       + Array.from({ length: 16 }, () => { const a = -Math.PI * (.1 + R() * .8), d = 6 + R() * 12, x = ANC.x + Math.cos(a) * d, y = WL - 4 + Math.sin(a) * d * .9; return `<ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(.35 + R() * .35)}" ry="${f(.5 + R() * .5)}" fill="#f4fffc" opacity="${f(.55 + R() * .4)}" transform="rotate(${f(a * 180 / Math.PI + 90)} ${f(x)} ${f(y)})"/>`; }).join('');
-    // the side that has come round to the enemy fires (review: the fire goes OUT of the ports, not along her side):
-    // each flash bursts straight out of its port towards us — a short, wide, foreshortened sheaf leaning a little down
-    // and towards the enemy on the left; the smoke balloons out in front of the side and drifts off to the left
+    // the side that has come round to the enemy fires: flashes at three ports of her gun deck, the fire and the
+    // smoke thrown out towards the enemy (to the left, over her bow and the water)
     for (const [i, [x, y]] of PORTS.entries()) {
-      fg += K.smoke(u, L, { x: x - 2, y: y + 3, w: i ? 22 : 18, h: i ? 13 : 10, wind: -1.4, seed: 3 + i * 4, opacity: .9, glow: { color: '#ffb050', power: .5 } }); }
-    for (const [i, [x, y]] of PORTS.entries()) { const fb = nid('fb', u), fs = nid('fs', u), Rf = rng(50 + i), cx = x, cy = y + .5;
-      // the burst seen nearly end-on: a ragged star of short tongues round the muzzle, the lower ones (nearer us) longer
-      let d = ''; const n = 11; for (let k = 0; k < n * 2; k++) { const a = (k / (n * 2)) * Math.PI * 2 + Rf() * .12, low = Math.max(0, Math.sin(a)), r = k % 2 ? 1.6 + Rf() * .5 : 3.4 + Rf() * 2 + low * 2.4;
-        d += (k ? 'L' : 'M') + f(cx + Math.cos(a) * r * 1.1) + ' ' + f(cy + Math.sin(a) * r * .9); }
-      fg += `<defs>${radGrad(fb, cx, cy, 7.5, [[0, '#ffb050', .7], [.5, '#ff8a2a', .3], [1, '#ff7a1e', 0]])}${radGrad(fs, cx, cy + .6, 5.6, [[0, '#ffffff', 1], [.3, '#fff2b8', 1], [.62, '#ffc040', .95], [1, '#ff7a1e', .85]])}</defs>`
-        + `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="7.5" ry="6.4" fill="url(#${fb})"/><path d="${d}Z" fill="url(#${fs})"/><ellipse cx="${f(cx)}" cy="${f(cy)}" rx="1.5" ry="1.2" fill="#ffffff"/>`; }
+      fg += K.smoke(u, L, { x: x - 6, y: y - .5, w: i ? 26 : 20, h: i ? 13 : 10, wind: -2.2, seed: 3 + i * 4, opacity: .95, glow: { color: '#ffb050', power: .5 } }); }   // short, so the smoke stays off the anchor
+    for (const [i, [x, y]] of PORTS.entries()) { const fb = nid('fb', u);
+      fg += `<defs>${radGrad(fb, x - 1, y, 5, [[0, '#ffffff', 1], [.25, '#fff0b0', 1], [.55, '#ffc040', .85], [1, '#ff7a1e', 0]])}</defs><circle cx="${f(x - 1)}" cy="${f(y)}" r="5" fill="url(#${fb})"/>`
+        + K.muzzleFlash(u, { x: x - .6, y, dir: 172, len: 13, seed: i, smoke: false }); }
     return [bg, fg];
   } };

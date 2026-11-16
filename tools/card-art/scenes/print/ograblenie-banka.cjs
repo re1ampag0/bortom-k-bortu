@@ -1,13 +1,18 @@
-// «Ограбление банка» (Жемчужина, ПРИКАЗ: заберите 1 Порох из Трюма противника в свой), variant A. Our own scene:
-// the «bank» robbed is the Company's powder store in a colonial port. Night: the store's tall doors stand forced open
-// (the hasp torn out, the padlock on the cobbles, a crowbar against the jamb); inside, the Company's powder kegs lie
-// stacked head-out, warm in the pirates' dark lantern on the floor; one pirate comes out of the door hugging a keg,
-// another rolls a keg over the cobbles to the right, toward the harbour, where a third keg is already rolling and the
-// masts of the Pearl stand over the roofs by the moon. The moon over the roofs on the right is the key (rims on the
-// right, shadows towards us and to the left); the lantern is a small warm second light inside the door.
-// Replaced against the accepted version (review): a safe dragged out of the bank with its wall by a team of horses is a
-// recognisable film scene, and the card takes Powder, not gold — no safe, no horses, no gold; the powder is what goes.
-// Kept: the sky with its stars and the sharp moon, the plastered facade with its quoins and tiled eaves, the cobbles.
+// «Ограбление банка» (Жемчужина, ПРИКАЗ: заберите 1 Порох из Трюма противника в свой), variant A of the method trial
+// (docs/progress/print-kit.md «Проба способа»): the first-round scene (portrait-pearl.cjs SCENES['Ограбление банка'])
+// at its best. Night in a colonial port: a breach torn in the bank's ground floor, and the whole safe — with a
+// chunk of the wall still clinging to it — is dragged out over the cobbles by a team of horses (whole, pulling away
+// to the right, heads into the collars, the chains taut to the hames); coins trickle from the sprung door all the way from the hole; the watchman
+// runs up the street with his lantern. The moon over the roofs on the right is the light; the lantern is a warm
+// second one on the left.
+// Fixed against the first round: the horses were stick figures — now they have rumps, hocks, tails and harness, one
+// hind leg pushing, one swinging; the safe floated in front of the hole — it sits on the cobbles, its feet scrape
+// sparks; the coin column stood in the air — the coins lie in a trail; the cobbles were one stamp in rows — each
+// stone its own, in perspective, wet under the moon; the facade has plaster, brick under it, quoins and a lit corner.
+// Second pass: the stars as in the first round (a warm scatter over the roofs, a few with a cross); the moon is a sharp
+// disc with relief (maria, craters, Tycho's rays), no blurred spot; the light is set by where it stands in the
+// picture (low, a little right, in front of us): long shadows towards us and to the left, rims on the right. More gold,
+// muted: coins in the trail and spilling from the door, ingots on the vault shelves and one fallen on the cobbles.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -16,17 +21,14 @@ const { glow, gloom } = PK;
 const MOON = { x: 172, y: 52, r: 7.5 };
 
 const HZ = 100, ST = 128, CORNER = 148;                // eye level; the foot of the facade (the street begins); the building's corner
-const DOOR = { x0: 56, x1: 112, jamb: 82, top: 70 };   // the store's doorway: its jambs, where the arch springs, the arch's crown
-const LAMP = { x: 63, y: 126 };                        // the pirates' dark lantern on the store's floor, inside the door
-const KS = .62;                                        // a keg's scale (30 × 21 at 1): about half a man's height
-const PA = { x: 124, y: 131.6 }, PB = { x: 92, y: 129.4 }; // the pirate rolling a keg; the pirate coming out with one in his arms
+const SAFE = { x: 98, y: 127, w: 54, h: 42 };          // the safe: middle of its foot on the cobbles
+const GUARD = { x: 22, y: 128 };
 const light = { time: 'night', haze: .35, key: { type: 'moon', x: MOON.x, y: MOON.y, color: '#d4e0f6', power: .85 }, fill: { color: '#34486c', power: .4 },
-  rim: { az: 30, color: '#cfe0ff', power: .5 }, locals: [{ x: LAMP.x, y: LAMP.y - 4, color: '#ffc060', power: .6, radius: 36 }] };
-const skel = { horizon: HZ, eye: 1.6, light: 'the moon low over the roofs on the right, in front of us: rims on the right, long shadows towards us and a little to the left; the pirates\' dark lantern on the store\'s floor a warm local light inside the door', items: [
-  ['facade', -4, ST, 152, 128, 'street'], ['doorway', DOOR.x0, ST, DOOR.x1 - DOOR.x0, ST - DOOR.top, 'facade ground floor, doors open out'],
-  ['kegs inside', 60, 118, 46, 40, 'the store\'s floor, stacked head-out'], ['pirate B + keg', PB.x - 10, PB.y, 26, 36, 'threshold, the keg in his arms'],
-  ['pirate A', PA.x - 12, PA.y, 26, 30, 'cobbles, his hands behind the keg'], ['keg A', 140, 135.6, 14, 16, 'cobbles, rolling'], ['keg C', 172, 134.6, 12, 12, 'cobbles, rolling on'],
-  ['masts', 156, 104, 30, 46, 'beyond the roofs (the harbour)'], ['moon', 164, 44, 16, 16, 'sky']] };
+  rim: { az: 30, color: '#cfe0ff', power: .5 }, locals: [{ x: GUARD.x + 8, y: GUARD.y - 14, color: '#ffc060', power: .7, radius: 40 }] };
+const skel = { horizon: HZ, eye: 1.6, light: 'the moon low over the roofs on the right, in front of us (az and el follow from its place in the picture): rims on the right, long shadows towards us and a little to the left; the watchman\'s lantern a warm local light on the left', items: [
+  ['facade', -4, ST, 152, 128, 'street'], ['breach', 42, ST, 84, 58, 'facade ground floor'], ['safe', 71, SAFE.y, 54, 52, 'cobbles (castors), wall chunk on its back'],
+  ['horse near', 138, 129, 56, 40, 'cobbles (hooves)'], ['horse far', 144, 120, 48, 38, 'cobbles'], ['chains', 124, 96, 62, 16, 'safe → swingletree → collars'],
+  ['watchman', 10, GUARD.y, 26, 36, 'cobbles'], ['coins', 40, 150, 100, 20, 'cobbles'], ['moon', 164, 44, 16, 16, 'sky']] };
 
 const lerp = (a, b, t) => a + (b - a) * t;
 function smooth(pts, closed = false) { const n = pts.length, g = i => closed ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]; let d = `M${f(pts[0][0])} ${f(pts[0][1])}`;
@@ -55,80 +57,74 @@ function cobbles(u, L, y0, y1) {
   }
   return out;
 }
-
-// a powder keg lying with its head to us (the way kegs are stacked in a store, and the way one rolls away from us across
-// the street): the body recedes a little up (we look down on it by `depth`), the chime round the head, the head's
-// boards, its bung; tarred dark staves, iron hoops; lit warm by the lantern (warm 0..1, from
-// `wa` — the direction it comes from) and the moon on the right edge (moon 0..1)
-function kegEnd(u, cx, cy, r, o = {}) {
-  const dep = o.depth || 0, warm = o.warm || 0, moon = o.moon == null ? .6 : o.moon, wa = o.wa || [-1, .3], g = nid('ke', u), h = nid('kh', u);
-  const bx = cx, by = cy - dep, rb = r * 1.12;   // the back of the body (the far head, and the belly between the heads)
-  const lc = mix('#2a1c12', '#d89048', warm * .75), dc = '#0e0805', wl = Math.hypot(wa[0], wa[1]), ux = wa[0] / wl, uy = wa[1] / wl;
-  let out = `<defs>${linGrad(h, cx + ux * r, cy + uy * r, cx - ux * r, cy - uy * r, [[0, mix('#4a3420', '#e8a858', warm * .8), 1], [.55, mix('#2e2016', '#9a5a28', warm * .6), 1], [1, '#140c08', 1]])}</defs>`;
-  // the body: the belly (bulging past the chime) from the far end to the near one
-  out += `<path d="M${f(bx - rb)} ${f(by)}A${f(rb)} ${f(rb)} 0 0 1 ${f(bx + rb)} ${f(by)}L${f(cx + rb)} ${f(cy)}A${f(rb)} ${f(rb)} 0 0 1 ${f(cx - rb)} ${f(cy)}Z" fill="#1c140e" stroke="${dc}" stroke-width=".4"/>`
-    + `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(rb)}" fill="#1c140e" stroke="${dc}" stroke-width=".45"/>`;
-  // the staves seen on the body's top (between the heads) and the iron hoop over it
-  if (dep > .8) { for (let k = -3; k <= 3; k++) { const a = -Math.PI / 2 + k * .36, x0 = cx + Math.cos(a) * rb, y0 = cy + Math.sin(a) * rb; out += `<path d="M${f(x0)} ${f(y0)}l0 ${f(-dep)}" stroke="${dc}" stroke-width=".35" opacity=".8"/>`; }
-    out += `<path d="M${f(bx - rb * .96)} ${f(by + dep * .45)}A${f(rb)} ${f(rb)} 0 0 1 ${f(bx + rb * .96)} ${f(by + dep * .45)}" stroke="#0a0604" stroke-width="1.1" fill="none"/>`
-      + `<path d="M${f(bx - rb * .7)} ${f(by + dep * .45 - rb * .72)}A${f(rb)} ${f(rb)} 0 0 1 ${f(bx + rb * .7)} ${f(by + dep * .45 - rb * .72)}" stroke="#8a96a8" stroke-width=".3" fill="none" opacity="${f(.25 + moon * .4)}"/>`; }
-  // the near hoop round the belly just behind the chime, then the chime (the stave ends) and the head set into it
-  out += `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(rb - .5)}" fill="none" stroke="#0a0604" stroke-width="1.2"/>`
-    + `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r)}" fill="${lc}" stroke="${dc}" stroke-width=".4"/>`
-    + `<circle cx="${f(cx)}" cy="${f(cy)}" r="${f(r * .8)}" fill="url(#${h})" stroke="${dc}" stroke-width=".35"/>`;
-  // the head's boards and the bung: a small square plug in one board, off the middle
-  for (const k of [-.42, 0, .42]) { const e = Math.sqrt(1 - k * k) * r * .8; out += `<path d="M${f(cx + k * r * .8)} ${f(cy - e)}V${f(cy + e)}" stroke="${dc}" stroke-width=".3" opacity=".7"/>`; }
-  out += `<rect x="${f(cx + r * .1)}" y="${f(cy - r * .52)}" width="${f(r * .24)}" height="${f(r * .24)}" fill="${mix('#3a2a1a', '#c08048', warm * .6)}" stroke="${dc}" stroke-width=".3"/>`;
-  // light on the chime and the belly: the lantern's side warm, the moon's on the right
-  if (warm > .05) { const a0 = Math.atan2(uy, ux); out += `<path d="M${f(cx + Math.cos(a0 - .9) * r)} ${f(cy + Math.sin(a0 - .9) * r)}A${f(r)} ${f(r)} 0 0 1 ${f(cx + Math.cos(a0 + .9) * r)} ${f(cy + Math.sin(a0 + .9) * r)}" stroke="#ffc070" stroke-width=".5" fill="none" opacity="${f(Math.min(.9, warm))}"/>`; }
-  if (moon > .05) out += `<path d="M${f(cx + rb * Math.cos(-1.1))} ${f(cy - dep * .5 + rb * Math.sin(-1.1))}A${f(rb)} ${f(rb)} 0 0 1 ${f(cx + rb * Math.cos(.5))} ${f(cy + rb * Math.sin(.5))}" stroke="#cfe0ff" stroke-width=".5" fill="none" opacity="${f(moon * .8)}"/>`;
+// one draught horse seen from the side, whole, pulling away to the right: the head low and forward into the collar,
+// the near fore reaching, the far fore and the near hind driving back; the collar with its hames round the neck, the
+// back band, the bridle; tail streaming back. (x, y) — the ground under the buttock; lift — the head raised (degrees)
+function limb(pts, ws) {
+  const n = pts.length, L = [], R = [];
+  for (let i = 0; i < n; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+    L.push([pts[i][0] + nx * ws[i] / 2, pts[i][1] + ny * ws[i] / 2]); R.push([pts[i][0] - nx * ws[i] / 2, pts[i][1] - ny * ws[i] / 2]); }
+  return L.concat(R.reverse());
+}
+// the neck and head turn about the neck's base (lift in degrees: + raised, - lowered); also used for the hame points
+function bend(lx, ly, liftDeg) { const lift = (liftDeg || 0) * Math.PI / 180; if (!lift || lx < 37) return [lx, ly]; const dx = lx - 38, dy = ly + 28, c0 = Math.cos(-lift), s0 = Math.sin(-lift); return [38 + dx * c0 - dy * s0, -28 + dx * s0 + dy * c0]; }
+function horse(u, L, x, y, s, c, o = {}) {
+  const g = nid('hs', u), lg = nid('hl', u), R = rng(o.seed || 3);
+  const hp = (lx, ly) => bend(lx, ly, o.lift);
+  const P = (lx, ly) => { const q = hp(lx, ly); return [x + q[0] * s, y + q[1] * s]; };
+  const pd = (pts, cl) => smooth(pts.map(([a, b]) => P(a, b)), cl);
+  const leg = (pts, ws, fill) => { const q = pts[pts.length - 1], h0 = P(q[0] - 2.2, 0), h1 = P(q[0] + 2.4, 0), h2 = P(q[0] + 1.8, -2.6), h3 = P(q[0] - 1.8, -2.6);
+    return `<path d="${pd(limb(pts, ws), true)}" fill="${fill}" stroke="#0a0604" stroke-width=".45"/>`
+      + `<path d="M${f(h0[0])} ${f(h0[1])}L${f(h1[0])} ${f(h1[1])}L${f(h2[0])} ${f(h2[1])}L${f(h3[0])} ${f(h3[1])}Z" fill="#141010" stroke="#000" stroke-width=".3"/>`
+      + `<path d="M${f(h3[0])} ${f(h3[1])}q${f(1.8 * s)} ${f(-1.2 * s)} ${f(3.6 * s)} 0" stroke="${c[0]}" stroke-width="${f(.9 * s)}" fill="none" opacity=".5"/>`; };
+  let out = `<defs>${linGrad(g, x + 50 * s, y - 44 * s, x, y - 16 * s, [[0, c[0], 1], [.5, c[1], 1], [1, c[2], 1]])}${linGrad(lg, 0, y - 24 * s, 0, y, [[0, c[1], 1], [1, c[2], 1]])}</defs>`;
+  // the far legs (darker): the far fore driving back, the far hind under the belly
+  out += leg([[34, -22], [33, -12], [30.6, -4.4], [29.6, -1.2]], [7, 4, 3, 3.2], c[2]) + leg([[14, -27], [15.4, -17], [12.4, -10.4], [14, -3.2], [14.8, -1.2]], [9, 6, 3.6, 2.8, 3], c[2]);
+  // the tail streaming back and down from the croup
+  const t0 = P(1.4, -31.6); for (let i = 0; i < 9; i++) { const sw = (i - 4) * .8, len = 20 + R() * 6;
+    out += `<path d="M${f(t0[0])} ${f(t0[1])}C${f(t0[0] - 6 * s)} ${f(t0[1] - 1 * s + sw)} ${f(t0[0] - 9 * s)} ${f(t0[1] + 6 * s + sw)} ${f(t0[0] - (11 + R() * 4) * s)} ${f(t0[1] + (len * .6 + sw) * s)}" stroke="${i % 3 ? '#140c08' : '#3a2416'}" stroke-width="${f((1.1 - Math.abs(i - 4) * .1) * s)}" fill="none" stroke-linecap="round"/>`; }
+  // the body, the neck and the head stretched forward and down into the pull
+  const body = [[1, -32], [6, -35.5], [13, -35], [21, -33], [29, -34.5], [34, -37], [39, -40.5], [44, -42.5], [47.5, -42], [51, -39.5], [55.5, -33], [58.5, -29.6], [58, -27.4], [55, -27], [51.5, -29.4], [47.5, -32], [44, -30], [41, -25], [38.5, -20.5], [32, -18.4], [22, -18], [12, -19], [6, -21], [1.5, -25], [0, -29]];
+  out += `<path d="${pd(body, true)}" fill="url(#${g})" stroke="#0a0604" stroke-width=".5"/>`;
+  // the ears, the eye, the nostril; the mane along the crest
+  out += `<path d="${pd([[45.4, -42.2], [45, -46.6], [47.6, -42.6]], true)}" fill="${c[1]}" stroke="#0a0604" stroke-width=".35"/>`;
+  { const e = P(50.4, -37.6), n = P(57.4, -29.4); out += `<ellipse cx="${f(e[0])}" cy="${f(e[1])}" rx="${f(.9 * s)}" ry="${f(.6 * s)}" fill="#0a0604"/><circle cx="${f(e[0] + .3 * s)}" cy="${f(e[1] - .2 * s)}" r="${f(.25 * s)}" fill="#cfe0ff"/><ellipse cx="${f(n[0])}" cy="${f(n[1])}" rx="${f(.6 * s)}" ry="${f(.4 * s)}" fill="#0a0604"/>`; }
+  for (let i = 0; i < 8; i++) { const t = i / 7, a = P(33 + t * 13, -37 - t * 5.4), b = P(32 + t * 12.4, -33.4 - t * 5); out += `<path d="M${f(a[0])} ${f(a[1])}Q${f(a[0] - 1.6 * s)} ${f((a[1] + b[1]) / 2)} ${f(b[0])} ${f(b[1])}" stroke="#140c08" stroke-width="${f(1.3 * s)}" stroke-linecap="round" fill="none"/>`; }
+  // the near legs: the fore reaching forward, the hind driving back (hock bent behind)
+  out += leg([[37, -22], [41, -12.4], [44.4, -4.6], [45.8, -1.2]], [7.4, 4.2, 3.2, 3.4], `url(#${lg})`) + leg([[5, -28], [8, -18.4], [2, -11.4], [-2, -3.4], [-3, -1.2]], [12, 7.4, 4, 3.2, 3.4], `url(#${lg})`);
+  out += `<path d="${pd([[2, -26], [6, -21], [8.4, -18.6]])}" stroke="${c[0]}" stroke-width="${f(.5 * s)}" fill="none" opacity=".5"/>`;
+  // the moon on the top line: croup, back, crest, poll
+  out += `<path d="${pd([[4, -35], [13, -35.2], [21, -33.2], [29, -34.7], [34, -37.2], [39, -40.7], [44, -42.7]])}" stroke="${o.rim || '#d8e4f8'}" stroke-width="${f(.55 * s)}" fill="none" opacity=".75"/>`;
+  // harness: the bridle, the collar padded round the neck with its brass-tipped hames, the back band, the hame rein
+  out += `<path d="${pd([[48.6, -41.2], [52.6, -33.4], [55.4, -29.6]])}M${pd([[53.6, -32.6], [56.6, -31.2], [58.2, -29.2]]).slice(1)}" stroke="#1a0e08" stroke-width="${f(.9 * s)}" fill="none"/>`;
+  // the collar: a thick band of dark leather lying on the neck at the shoulder, from just over the crest down to the
+  // chest point, edged with brass (the hames) along both sides, the hame tips standing up over the crest
+  { const mid = [[37.6, -42.2], [39.4, -32], [41.4, -22.6]], off = d => mid.map(([a, b]) => [a + d, b + d * .18]);
+    out += `<path d="${pd(mid)}" stroke="#0a0604" stroke-width="${f(4.6 * s)}" fill="none" stroke-linecap="round"/><path d="${pd(mid)}" stroke="#2e1a0e" stroke-width="${f(3.8 * s)}" fill="none" stroke-linecap="round"/>`
+      + `<path d="${pd(off(.7))}" stroke="#5a3820" stroke-width="${f(1.1 * s)}" fill="none" stroke-linecap="round" opacity=".8"/>`
+      + `<path d="${pd(off(1.9))}" stroke="#c9a048" stroke-width="${f(.6 * s)}" fill="none"/><path d="${pd(off(-1.9))}" stroke="#a8843a" stroke-width="${f(.5 * s)}" fill="none"/>`;
+    const tip = P(37.2, -44.2); out += `<circle cx="${f(tip[0])}" cy="${f(tip[1])}" r="${f(.75 * s)}" fill="#e8c46a" stroke="#4a320a" stroke-width=".2"/>`; }
+  out += `<path d="${pd([[24, -34], [24.6, -26], [24, -18.4]])}" stroke="#1a0e08" stroke-width="${f(1.8 * s)}" fill="none"/>` + [[24.4, -30], [24.4, -23]].map(([a, b]) => { const p = P(a, b); return `<circle cx="${f(p[0])}" cy="${f(p[1])}" r="${f(.6 * s)}" fill="#d8b050"/>`; }).join('')
+    + `<path d="${pd([[55, -30], [46, -37], [38, -38.6], [30, -36.4]])}" stroke="#1a0e08" stroke-width="${f(.6 * s)}" fill="none" opacity=".9"/>`;
   return out;
 }
-
-// a pirate in silhouette against the night (flat dark shapes, as the watchman of the first round), facing right;
-// (x, y) — the ground under the pelvis. pose 'push': bent low over a keg, both arms reaching down to its far side
-// (the hands are behind it); 'carry': upright, leaning back under a keg hugged to his chest (his hands behind it).
-// The moon puts a thin cold rim on his right edges. Returns the figure without the keg.
-function pirate(u, L, x, y, pose, o = {}) {
-  const c = o.c || '#11121a', band = o.band || '#4a1a1c', rim = '#cfe0ff', P = (a, b) => `${f(x + a)} ${f(y + b)}`;
-  const limb = (pts, w, col = c) => `<path d="M${pts.map(([a, b]) => P(a, b)).join('L')}" stroke="${col}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-  let out = '';
-  if (pose === 'push') {
-    // legs: the back one straight, driving off its toe; the front one bent under him; boots
-    out += limb([[-1, -15.6], [-6.4, -8.6], [-11, -2.4]], 3.3) + limb([[-11.4, -2.6], [-9, -.4]], 2.5)
-      + limb([[1, -15.6], [6.6, -9], [5, -1.8]], 3.3) + limb([[4.6, -1.4], [8.4, -.5]], 2.5);
-    // the far arm (a little darker), reaching to the keg's far side
-    out += limb([[9.4, -25.6], [14.4, -18.4], [18.2, -10.6]], 2.2, '#0a0b10');
-    // the body bent forward: the hips back, the shoulders low over the keg; a sash at the waist
-    out += `<path d="M${P(-3.4, -17)}Q${P(-3, -21.6)} ${P(3, -25.4)}Q${P(7.4, -28.4)} ${P(11.6, -26)}L${P(10.4, -22.4)}Q${P(5, -19.6)} ${P(3, -14.6)}Q${P(-.4, -13.4)} ${P(-3.4, -14.6)}Z" fill="${c}"/>`
-      + `<path d="M${P(-3.2, -15.8)}L${P(3.2, -16.6)}" stroke="${band}" stroke-width="1.5"/>`;
-    // the head forward and low, a bandana with its knot behind, the profile to the right
-    out += `<circle cx="${f(x + 13.6)}" cy="${f(y - 28.6)}" r="2.6" fill="${c}"/><path d="M${P(15.8, -28.2)}l1 .9l-1 .5" fill="${c}"/>`
-      + `<path d="M${P(11.2, -29.2)}Q${P(13.4, -32.6)} ${P(16.2, -30)}L${P(15.8, -29.2)}Q${P(13.4, -30.6)} ${P(11.4, -28.2)}Z" fill="${band}"/><path d="M${P(11.4, -29.4)}l-2.6 1.2M${P(11.4, -29.2)}l-2 2.4" stroke="${band}" stroke-width=".7" stroke-linecap="round"/>`;
-    // the near arm over it, down to the keg's top (the hand goes behind the keg)
-    out += limb([[10.4, -24.6], [15.4, -17.6], [19.4, -9.6]], 2.4);
-    // the moon's rim on the right: the shin, the forearm, the face
-    out += `<path d="M${P(7.6, -9)}L${P(6.2, -2.4)}M${P(16.4, -17.4)}L${P(19.4, -11.4)}M${P(16.2, -30)}q.9 1.4 .2 3" stroke="${rim}" stroke-width=".45" fill="none" opacity=".7" stroke-linecap="round"/>`;
-  } else {
-    // legs in a short step out of the door, the weight back under the keg
-    out += limb([[-1, -15.6], [-3.4, -8.4], [-5.6, -1.8]], 3.3) + limb([[-6, -1.4], [-2.6, -.5]], 2.5)
-      + limb([[1.4, -15.6], [4.4, -8.6], [5.4, -1.6]], 3.3) + limb([[5, -1.2], [8.6, -.5]], 2.5);
-    // the body leaning back a little; a sash; the far arm round the keg (behind it)
-    out += limb([[1.4, -27], [6, -24.4], [10, -22.4]], 2.2, '#0a0b10');
-    out += `<path d="M${P(-3.8, -28.4)}Q${P(.2, -30.6)} ${P(3.6, -28.4)}L${P(3.6, -15.6)}Q${P(0, -14)} ${P(-3.2, -15.4)}Q${P(-4.4, -22)} ${P(-3.8, -28.4)}Z" fill="${c}"/>`
-      + `<path d="M${P(-3.4, -16.4)}L${P(3.6, -16.8)}" stroke="${band}" stroke-width="1.5"/>`;
-    // the head turned a little back over the shoulder (looking out for the watch), in a tricorn
-    out += `<circle cx="${f(x + .6)}" cy="${f(y - 32.4)}" r="2.6" fill="${c}"/><path d="M${P(3, -32)}l1 .8l-1 .5" fill="${c}"/>`
-      + `<path d="M${P(-3.8, -34)}L${P(5, -34.8)}L${P(3.4, -37.2)}L${P(.6, -36.2)}L${P(-2, -37.4)}Z" fill="${c}"/>`;
-    // the near arm round the keg (the forearm and the hand behind it)
-    out += limb([[2.6, -27.4], [4.2, -22], [8.6, -19.8]], 2.4);
-    out += `<path d="M${P(3.6, -28.2)}L${P(3.6, -26)}M${P(4.6, -8.6)}L${P(5.6, -2)}M${P(3, -33.6)}q.8 1.2 0 2.4" stroke="${rim}" stroke-width=".45" fill="none" opacity=".7" stroke-linecap="round"/>`;
-  }
+// the watchman running up the street from the left, coat flying, lantern swinging forward
+function watchman(u, L, x, y) {
+  const c = '#141420', e = '#3a3a4a';
+  let out = K.contactShadow(u, x + 1, y, 18, L, { ry: 1.2, opacity: .6 });
+  out += `<path d="M${x - 3} ${y - 22}C${x - 6} ${y - 18} ${x - 10} ${y - 12} ${x - 12} ${y - 9}L${x - 6} ${y - 10}C${x - 4} ${y - 14} ${x - 2} ${y - 17} ${x} ${y - 19}Z" fill="${c}"/>`     // coat tail flying back
+    + `<path d="M${x - 4} ${y - 24}C${x - 4} ${y - 30} ${x + 4} ${y - 31} ${x + 5} ${y - 25}L${x + 4} ${y - 13}C${x + 1} ${y - 12} ${x - 2} ${y - 12} ${x - 4} ${y - 14}Z" fill="${c}"/>`   // body leaning forward
+    + `<path d="M${x - 2} ${y - 13}L${x - 7} ${y - 6}L${x - 10} ${y - 1}L${x - 8} ${y}L${x - 4} ${y - 5}L${x + 1} ${y - 11}Z" fill="${c}"/>`                                        // back leg
+    + `<path d="M${x + 1} ${y - 13}L${x + 6} ${y - 7}L${x + 6} ${y - .6}L${x + 9.4} ${y - .4}L${x + 9} ${y - 1.8}L${x + 8} ${y - 8}L${x + 4} ${y - 14}Z" fill="${c}"/>`                    // front leg
+    + `<circle cx="${x + 2.4}" cy="${y - 33}" r="2.9" fill="${c}"/><path d="M${x - 2.6} ${y - 34.6}L${x + 7.6} ${y - 35.6}L${x + 5.6} ${y - 38}L${x + 2.6} ${y - 37}L${x - .4} ${y - 38}Z" fill="${c}"/>`   // head, tricorne
+    + `<path d="M${x + 3} ${y - 26}L${x + 9} ${y - 21}L${x + 11} ${y - 18}" stroke="${c}" stroke-width="2" fill="none" stroke-linecap="round"/>`                                        // arm with the lantern
+    + `<path d="M${x - 2} ${y - 26}L${x - 7} ${y - 22}" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/>`;
+  // the lantern's light catching the front edges of him
+  out += `<path d="M${x + 5} ${y - 25}L${x + 4} ${y - 14}M${x + 6} ${y - 7}L${x + 6} ${y - 1}M${x + 5} ${y - 34}q.6 1.6 -.6 3" stroke="#ffb050" stroke-width=".5" fill="none" opacity=".8"/>`;
+  // the lantern: a little box with a bright window
+  out += `<path d="M${x + 11} ${y - 18}v1.2" stroke="#2a2a2a" stroke-width=".5"/><rect x="${x + 9.4}" y="${y - 16.8}" width="3.6" height="4.6" rx=".6" fill="#ffd27a" stroke="#3a2a10" stroke-width=".4"/><path d="M${x + 9} ${y - 17}h4.4" stroke="#3a2a10" stroke-width=".6"/>`;
   return out;
 }
-
-// a keg painted on the sign: the store's mark (a plain keg outline, gilt)
-const signKeg = (x, y) => `<path d="M${f(x - 2.4)} ${f(y - 3.4)}Q${f(x - 3.4)} ${f(y)} ${f(x - 2.4)} ${f(y + 3.4)}H${f(x + 2.4)}Q${f(x + 3.4)} ${f(y)} ${f(x + 2.4)} ${f(y - 3.4)}Z" fill="none" stroke="#e8c46a" stroke-width=".7"/><path d="M${f(x - 2.9)} ${f(y - 1.4)}h5.8M${f(x - 2.9)} ${f(y + 1.4)}h5.8" stroke="#e8c46a" stroke-width=".5"/>`;
 
 // the moon: a sharp disc, limb a little darker, the maria where they are on the real moon, craters with a lit rim on
 // the far side from the sun, Tycho's rays; only a faint tight corona (no blurred spot)
@@ -150,17 +146,19 @@ function moonDisc(u, { x, y, r }) {
   // the limb: a crisp edge, a touch darker
   return out + `</g><circle cx="${x}" cy="${y}" r="${f(r - .15)}" fill="none" stroke="#bab6a2" stroke-width=".3" opacity=".7"/>`;
 }
+// a gold ingot: a trapezoid bar seen from the front and above, muted gold, the moon glinting on its right edge
+function ingot(u, x, y, s, rot = 0) {
+  const g = nid('ig', u), t = nid('it', u);
+  return `<g transform="translate(${f(x)} ${f(y)}) rotate(${rot}) scale(${s})"><defs>${linGrad(g, -5, 0, 5, 0, [[0, '#5a4214', 1], [.55, '#9a7a34', 1], [1, '#c8a656', 1]])}${linGrad(t, 0, -3.6, 0, -2, [[0, '#d8bc72', 1], [1, '#a8883e', 1]])}</defs>`
+    + `<ellipse cx="0" cy=".3" rx="5.6" ry=".8" fill="#08080c" opacity=".6"/><path d="M-5 0L-3.8 -2.4H3.8L5 0Z" fill="url(#${g})" stroke="#3a2808" stroke-width=".25"/>`
+    + `<path d="M-3.8 -2.4L-3 -3.4H3L3.8 -2.4Z" fill="url(#${t})" stroke="#3a2808" stroke-width=".2"/><path d="M3.8 -2.4L5 0" stroke="#f0dca0" stroke-width=".35" opacity=".8"/><path d="M-2.6 -2.9h4" stroke="#7a5a1c" stroke-width=".2"/></g>`;
+}
 
 module.exports = { name: 'Ограбление банка', kind: 'deck', status: 'accepted', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
-    // the sky over the roofs on the right: stars, the moon, a cloud; beyond the roofs the masts of the Pearl at the
-    // quay (furled, dark against the sky); the far roofs and a palm in silhouette
+    // the sky over the roofs on the right: stars, the moon, a cloud; the far roofs and a palm in silhouette
     let bg = K.sky(u, L, { horizon: HZ, stars: false, seed: 6 }) + PK.stars(30, 140, 0, 60, 80, 6) + moonDisc(u, MOON) + K.cloud(u, L, { x: 184, y: 30, w: 30, h: 5, seed: 7, far: .4 });
-    for (const [mx, mt, yards] of [[158, 62, [70, 80]], [183, 58, [66, 77]]]) {
-      bg += `<path d="M${mx} 100V${mt}" stroke="#0e1220" stroke-width="1.3"/><path d="M${mx} ${mt + 3}v-4" stroke="#0e1220" stroke-width=".7"/>`;
-      for (const yy of yards) { const hw = yy < 72 ? 7 : 9.4; bg += `<path d="M${mx - hw} ${yy}h${2 * hw}" stroke="#0e1220" stroke-width=".9"/><path d="M${mx - hw + .6} ${yy + .9}Q${mx} ${yy + 2.6} ${mx + hw - .6} ${yy + .9}" stroke="#0e1220" stroke-width="1.5" fill="none"/>`; }
-      bg += `<path d="M${mx} ${mt}L${mx - 12} 96M${mx} ${mt}L${mx + 12} 96" stroke="#0e1220" stroke-width=".35" opacity=".8"/>`; }
     bg += `<path d="M${CORNER} 104L156 96L164 98L168 90L184 92L188 86L200 88V${ST}H${CORNER}Z" fill="#141a28"/><rect x="170" y="94" width="3" height="3" fill="#ffc870" opacity=".75"/>`
       + `<path d="M190 ${ST - 26}q1 -14 -2 -24" stroke="#10141e" stroke-width="1.6" fill="none"/>` + [[-1, -.6], [-.8, .2], [.2, -.9], [.9, -.2], [1, .5]].map(([a, b]) => `<path d="M188 78q${f(a * 6)} ${f(b * 4 - 2)} ${f(a * 12)} ${f(b * 6 + 3)}" stroke="#10141e" stroke-width="1.4" fill="none"/>`).join('');
     // the facade: plaster in moonlight from the side (the right edge lit), cracks, the tiled eaves
@@ -175,64 +173,93 @@ module.exports = { name: 'Ограбление банка', kind: 'deck', status
       const tg = nid('tl', u); bg += `<defs>${linGrad(tg, 0, 0, 10, 0, [[0, '#3a1a14', 1], [.6, '#6a3426', 1], [1, '#9a5a40', 1]])}</defs><path d="M-6 0H${CORNER + 4}V15H-6Z" fill="#4a2620"/>`;
       { const R = rng(71); for (let x = -6; x < CORNER + 4; x += 9.6) { const w = 9.4 + R() * .4, hh = 5.4 + R() * 1.4, dy = (R() - .5) * .8; bg += `<path d="M${f(x)} ${f(15.6 + dy)}q${f(w / 2)} ${f(-hh)} ${f(w)} ${f(-dy * .5)}v-12h${f(-w)}z" fill="url(#${tg})" stroke="#1a0a06" stroke-width=".5"/>`; } }
       bg += `<path d="M-6 16.4H${CORNER + 4}" stroke="#0e0604" stroke-width="1.8"/><path d="M-6 19H${CORNER}" stroke="#000" stroke-width="2.4" opacity=".35"/>`; }
-    // the upper floor: two barred windows (one lit — the store's clerk asleep upstairs), the sign with the store's mark
-    const bars = (x0, y0) => [3, 6, 9, 12, 15].map(d => `<path d="M${x0 + d} ${y0}v22" stroke="#15161c" stroke-width=".8"/>`).join('');
-    bg += `<rect x="78" y="24" width="18" height="22" fill="#0c0e16" stroke="#2a2c36" stroke-width="1.6"/>${bars(78, 24)}`
-      + `<rect x="108" y="24" width="18" height="22" fill="#e8a850" opacity=".85" stroke="#2a2c36" stroke-width="1.6"/>${bars(108, 24)}` + K.localGlow(u, { x: 117, y: 35, color: '#ffb050', power: .4, radius: 14 }, { core: false })
-      + `<path d="M76 47h22M106 47h22" stroke="#4a4c5a" stroke-width="1.4"/>`;
-    { const sg = nid('sg', u); bg += `<defs>${linGrad(sg, 0, 52, 0, 64, [[0, '#7a5030', 1], [1, '#3a2210', 1]])}</defs><rect x="70" y="52" width="56" height="11" rx="1.5" fill="url(#${sg})" stroke="#1a0e06" stroke-width=".6"/>`
-        + [84, 98, 112].map(x => signKeg(x, 57.5)).join('') + `<rect x="72.6" y="54" width="50.8" height="7" fill="none" stroke="#c9a048" stroke-width=".5"/><path d="M76 52v-3M120 52v-3" stroke="#2a2a2a" stroke-width=".7"/>`; }
-    // the barred window on the left of the ground floor
-    bg += `<rect x="16" y="56" width="20" height="24" fill="#0c0e16" stroke="#2a2c36" stroke-width="1.4"/>` + [4, 8, 12, 16].map(d => `<path d="M${16 + d} 56v24" stroke="#1a1b22" stroke-width=".9"/>`).join('') + `<path d="M14.4 81h23.2" stroke="#4a4c5a" stroke-width="1.4"/>`;
-    // the doorway: a stone arch, the store inside — the back wall, the plank floor, the powder kegs stacked head-out,
-    // the lantern on the floor; the moonlight falls in across the floor from the right
-    { const { x0, x1, jamb, top } = DOOR, mx = (x0 + x1) / 2, d = `M${x0} ${ST}V${jamb}Q${mx} ${top - 12} ${x1} ${jamb}V${ST}Z`, cid = nid('dc', u), wg = nid('dw', u);
-      bg += `<defs><clipPath id="${cid}"><path d="${d}"/></clipPath>${linGrad(wg, 0, top, 0, ST, [[0, '#08070a', 1], [1, '#16110e', 1]])}</defs><g clip-path="url(#${cid})"><rect x="${x0}" y="${top - 12}" width="${x1 - x0}" height="${ST - top + 12}" fill="url(#${wg})"/>`;
-      // the floor: planks running in, lit a little by the lantern
-      bg += `<path d="M${x0} 118.6H${x1}V${ST}H${x0}Z" fill="#241a12"/>` + [121, 123.6, 126.2].map(y => `<path d="M${x0} ${y}H${x1}" stroke="#0e0906" stroke-width=".4"/>`).join('');
-      bg += `<path d="M${x1} 118.6L${x1 - 22} 118.6L${x1 - 38} ${ST}H${x1}Z" fill="#9aaccc" opacity=".14"/>`;
-      // the kegs: a pyramid of four rows, head-out, lit warm by the lantern on the left, the far ones darker
-      const rk = 5.6, rows = [[4, 112.4], [3, 102], [2, 91.6], [1, 81.2]];
-      rows.forEach(([n, cy], ri) => { for (let i = 0; i < n; i++) { const cx = mx - (n - 1) * rk * 1.12 + i * rk * 2.24, dl = Math.hypot(cx - LAMP.x, cy - LAMP.y), warm = Math.max(.08, 1 - dl / 46);
-        bg += kegEnd(u, cx, cy, rk, { warm, moon: cx > mx ? .25 : 0, wa: [LAMP.x - cx, LAMP.y - cy] }); } });
-      bg += `<rect x="${x0}" y="${top - 12}" width="${x1 - x0}" height="${ST - top + 12}" fill="#06050a" opacity=".18"/>`;
-      // the dark lantern on the floor: a tin box, its little door open a crack toward the kegs
-      bg += K.localGlow(u, { x: LAMP.x, y: LAMP.y - 3, color: '#ffb850', power: .55, radius: 30 }, { core: false })
-        + `<path d="M${LAMP.x - 2.4} ${LAMP.y}V${LAMP.y - 5.4}L${LAMP.x} ${LAMP.y - 7}L${LAMP.x + 2.4} ${LAMP.y - 5.4}V${LAMP.y}Z" fill="#1a1612" stroke="#060404" stroke-width=".35"/><rect x="${LAMP.x - 1.2}" y="${LAMP.y - 4.6}" width="2.2" height="3.2" fill="#ffd68a"/><path d="M${LAMP.x} ${LAMP.y - 7}v-1.4" stroke="#1a1612" stroke-width=".5"/></g>`;
-      // the arch: dressed stones round it, the keystone; the threshold
-      { const R = rng(5); for (let i = 0; i <= 8; i++) { const t = i / 8, ax = (1 - t) * (1 - t) * x0 + 2 * t * (1 - t) * mx + t * t * x1, ay = (1 - t) * (1 - t) * jamb + 2 * t * (1 - t) * (top - 12) + t * t * jamb, w = i === 4 ? 6.4 : 5;
-          bg += `<rect x="${f(ax - w / 2)}" y="${f(ay - 5)}" width="${w}" height="5.2" fill="${mix('#3e404c', '#545664', R())}" stroke="#16171e" stroke-width=".4" transform="rotate(${f((t - .5) * 64)} ${f(ax)} ${f(ay)})"/>`; } }
-      for (const jx of [x0 - 2.6, x1 + 2.6]) for (let y = jamb; y < ST; y += 7.6) bg += `<rect x="${jx - 2.8}" y="${y}" width="5.6" height="7.2" fill="#464854" stroke="#16171e" stroke-width=".4"/>`;
-      bg += `<path d="M${x1 + 5.4} ${jamb}V${ST}" stroke="#d8e0f0" stroke-width=".6" opacity=".6"/><path d="M${x0 - 4} ${ST - .6}H${x1 + 4}" stroke="#5a5c68" stroke-width="1.6"/>`;
-      // the doors thrown open outward: plank leaves with iron straps, the left one swung to us (its edge nearer and
-      // lower), the right one the same; the hasp torn out of the right leaf, hanging by a nail
-      const leaf = (hx, ox, k) => { const pts = [[hx, ST + .4], [hx, jamb - 2], [ox, jamb - 3.4], [ox, ST + 4.6]], dd = 'M' + pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z', lg = nid('lf', u);
-        let s = `<defs>${linGrad(lg, hx, 0, ox, 0, [[0, k > 0 ? '#2a2018' : '#3a2c20', 1], [1, k > 0 ? '#4a3a2a' : '#22180f', 1]])}</defs><path d="${dd}" fill="url(#${lg})" stroke="#0c0806" stroke-width=".5"/>`;
-        for (let i = 1; i < 4; i++) { const t = i / 4, xa = hx + (ox - hx) * t; s += `<path d="M${f(xa)} ${f(jamb - 2 - 1.4 * t)}V${f(ST + .4 + 4.2 * t)}" stroke="#0c0806" stroke-width=".35"/>`; }
-        for (const t of [.18, .78]) { const ya = jamb - 2 + (ST - jamb + 2) * t; s += `<path d="M${hx} ${f(ya)}L${ox} ${f(ya - 1.4 + 5.6 * t)}" stroke="#14141a" stroke-width="1.5"/>`; }
-        if (k > 0) s += `<path d="M${ox} ${jamb}V${ST + 4.4}" stroke="#cfe0ff" stroke-width=".5" opacity=".55"/>`;
-        return s; };
-      bg += leaf(x0 - 5.4, x0 - 16, -1) + leaf(x1 + 5.4, x1 + 16.6, 1);
-      bg += `<path d="M${x1 + 15.4} 101.6l.6 4.4" stroke="#2a2a30" stroke-width="1.1"/><rect x="${x1 + 15}" y="105.6" width="2.2" height="5" rx=".4" fill="#2a2a30" transform="rotate(-8 ${x1 + 16} 106)"/>`; }
+    // the upper floor: two windows (one lit — a sleepy clerk), the balcony on brackets, its wrought rail, the patterned sign
+    bg += `<rect x="78" y="24" width="18" height="22" fill="#0c0e16" stroke="#2a2c36" stroke-width="1.6"/><path d="M87 24v22M78 35h18" stroke="#2a2c36" stroke-width=".9"/>`
+      + `<rect x="108" y="24" width="18" height="22" fill="#e8a850" opacity=".85" stroke="#2a2c36" stroke-width="1.6"/><path d="M117 24v22M108 35h18" stroke="#3a2c1a" stroke-width=".9"/>` + K.localGlow(u, { x: 117, y: 35, color: '#ffb050', power: .4, radius: 14 }, { core: false })
+      + `<path d="M58 52h88v3.6h-88z" fill="#3a3a46"/><path d="M58 55.6h88" stroke="#0a0a10" stroke-width="2"/>` + [64, 104, 140].map(x => `<path d="M${x} 55.6l3 6v-6z" fill="#2a2a34"/>`).join('')
+      + `<path d="M60 44h84" stroke="#1a1a22" stroke-width="1.3"/>` + Array.from({ length: 14 }, (_, k) => `<path d="M${62 + k * 6} 52v-8" stroke="#1a1a22" stroke-width=".8"/>` + (k % 2 ? `<path d="M${62 + k * 6} 48q3 -3 6 0" stroke="#1a1a22" stroke-width=".5" fill="none"/>` : '')).join('')
+      + `<rect x="58" y="56" width="88" height="10" fill="#08080e" opacity=".45"/>`;
+    { const sg = nid('sg', u); bg += `<defs>${linGrad(sg, 0, 30, 0, 46, [[0, '#7a5030', 1], [1, '#3a2210', 1]])}</defs><rect x="68" y="32" width="64" height="12" rx="1.5" fill="url(#${sg})" stroke="#1a0e06" stroke-width=".6"/>`
+        + Array.from({ length: 6 }, (_, k) => `<path d="M${74 + k * 9.4} 38q2.3 -3.4 4.6 0t4.6 0" stroke="#e8c46a" stroke-width=".8" fill="none"/>`).join('') + `<rect x="71" y="34.4" width="58" height="7.2" fill="none" stroke="#c9a048" stroke-width=".5"/><path d="M74 32v-6M126 32v-6" stroke="#2a2a2a" stroke-width=".7"/>`; }
+    // the torn shutter hanging on one hinge by the ground-floor window on the left
+    bg += `<rect x="16" y="50" width="20" height="28" fill="#0c0e16" stroke="#2a2c36" stroke-width="1.4"/><path d="M26 50v28" stroke="#2a2c36" stroke-width=".8"/>`
+      + `<g transform="rotate(26 36 52)"><rect x="36" y="52" width="10" height="27" fill="#34503e" stroke="#16241a" stroke-width=".6"/>${[0, 1, 2, 3, 4, 5].map(k => `<path d="M37 ${56 + k * 4}h8" stroke="#16241a" stroke-width=".7"/><path d="M37 ${56.7 + k * 4}h8" stroke="#5a7a62" stroke-width=".3"/>`).join('')}</g>`
+      + `<circle cx="36" cy="52" r="1" fill="#2a2a2a"/>`;
+    // the breach: a ragged hole, the brick courses showing in its edge, the vault inside (shelves, bags, a dropped lamp)
+    { const hole = [[42, ST], [41, 104], [46, 92], [52, 86], [58, 80], [66, 76], [74, 72], [84, 70], [96, 71], [106, 74], [114, 80], [119, 88], [122, 98], [125, 112], [126, ST]], hg = nid('hg', u), hc = nid('hc', u);
+      const d = 'M' + hole.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
+      bg += `<defs>${radGrad(hg, 84, 112, 46, [[0, '#1a1410', 1], [1, '#040406', 1]])}<clipPath id="${hc}"><path d="${d}"/></clipPath></defs><path d="${d}" fill="url(#${hg})"/>`
+        + `<g clip-path="url(#${hc})"><path d="M44 96h80M44 108h80" stroke="#1e160e" stroke-width="1.6"/>`
+        + [[48, 92], [56, 91], [62, 92], [102, 92], [110, 91], [50, 104], [104, 104]].map(([x, y], i) => `<path d="M${x} ${y}q2 -4 4 0z" fill="#3a2a18" opacity="${.6 + i % 2 * .2}"/>`).join('')
+        // gold in the vault's open left side (the safe hides the rest): a stack of ingots on the upper shelf, a burst
+        // bag and coins on the lower one, a heap on the floor — warmed by the dropped lamp
+        + ingot(u, 54, 96, 1) + ingot(u, 63.6, 96, 1) + ingot(u, 58.8, 92.8, 1)
+        + `<path d="M48 108q-1 -6 3 -8q5 -1 6 3q1 3 -1 5z" fill="#4a3418" stroke="#1a1006" stroke-width=".3"/><path d="M50.6 100.4l1.4 -1.6l1.6 1.4" stroke="#1a1006" stroke-width=".5" fill="none"/>`
+        + [[57.6, 107.4], [60.4, 107.6], [62.8, 107.2], [59, 106.4], [65.2, 107.6]].map(([x, y], i) => `<ellipse cx="${x}" cy="${y}" rx="1.3" ry=".5" fill="${i % 2 ? '#b8954a' : '#8a6a2a'}" stroke="#3a2808" stroke-width=".2"/>`).join('')
+        + `<path d="M56 128q6 -7 13 0z" fill="#7a5c24"/>` + [[58, 125.6], [61.6, 123.8], [64.6, 125.4], [62, 126.8]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="1.4" ry=".55" fill="#c0a050" stroke="#3a2808" stroke-width=".2"/>`).join('')
+        + K.localGlow(u, { x: 58, y: 98, color: '#ffc060', power: .3, radius: 10 }, { core: false })
+        + K.localGlow(u, { x: 60, y: 120, color: '#ff9a40', power: .25, radius: 16 }, { core: false }) + `</g>`;
+      // the ragged rim: plaster edge, then broken bricks in courses
+      const R = rng(12); let rim = '';
+      for (let i = 0; i < hole.length - 1; i++) { const [x0, y0] = hole[i], [x1, y1] = hole[i + 1], n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / 4.5));
+        for (let j = 0; j < n; j++) { const t = (j + .5) / n, x = lerp(x0, x1, t), y = lerp(y0, y1, t), nx = (x - 84), ny = (y - 112), l = Math.hypot(nx, ny) || 1, ox = nx / l * 2.4, oy = ny / l * 2.4, w = 3.6 + R() * 1.6;
+          rim += `<rect x="${f(x + ox - w / 2)}" y="${f(y + oy - 1.1)}" width="${f(w)}" height="2.2" fill="${mix('#6a3626', '#9a5a40', R())}" stroke="#24120a" stroke-width=".3" transform="rotate(${f((R() - .5) * 20)} ${f(x + ox)} ${f(y + oy)})"/>`; } }
+      bg += rim + `<path d="${d.replace('Z', '')}" fill="none" stroke="#7a7a86" stroke-width=".8" opacity=".7"/>`; }
     // the street: cobbles in perspective, wet under the moon
     bg += cobbles(u, L, ST, 285) + `<path d="M-4 ${ST}H${CORNER}" stroke="#08080c" stroke-width="1.4"/><path d="M-4 ${ST + .6}H${CORNER}" stroke="#4a4c58" stroke-width=".5" opacity=".6"/>`;
-    // the lantern's warmth out of the door onto the threshold
-    bg += K.localGlow(u, { x: 80, y: ST + 3, color: '#ffb050', power: .3, radius: 26 }, { squash: .3, core: false });
+    // the watchman's lantern light on the wall and the cobbles at the left
+    bg += K.localGlow(u, { x: GUARD.x + 10, y: GUARD.y - 16, color: '#ffb050', power: .55, radius: 34 }, { core: false }) + K.localGlow(u, { x: GUARD.x + 12, y: GUARD.y + 6, color: '#ffb050', power: .45, radius: 26 }, { squash: .35, core: false });
     let fg = '';
-    // on the cobbles by the door: the broken padlock (its shackle cut) and the crowbar leant on the left jamb
-    fg += K.contactShadow(u, 122, 141, 6, L, { ry: .6, opacity: .6 }) + `<rect x="119.6" y="137.4" width="4.6" height="3.8" rx=".8" fill="#3a3832" stroke="#0c0c0a" stroke-width=".35"/><path d="M120.6 137.6q.2 -2.6 1.8 -2.8M123.6 137.4q.4 -1.4 -.2 -2" stroke="#3a3832" stroke-width=".7" fill="none"/><path d="M124.2 138v3" stroke="#cfe0ff" stroke-width=".35" opacity=".6"/>`
-      + `<path d="M52.4 ${ST + 1}L46.4 104.6q-.6 -2.2 1.2 -2.8" stroke="#1a1a20" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M52.8 ${ST + .6}L47 105" stroke="#8a96a8" stroke-width=".3" opacity=".5"/>`;
-    // pirate B coming out of the door hugging a keg (the keg drawn over his arms: his hands are behind it)
-    fg += K.castShadow(u, L, { x: PB.x + 2, y: PB.y, w: 14, h: 36, horizon: HZ, d: .5, opacity: .45 }) + K.contactShadow(u, PB.x + 1, PB.y, 16, L, { ry: 1.1, opacity: .6 });
-    fg += pirate(u, L, PB.x, PB.y, 'carry');
-    fg += K.barrel(u, L, { x: PB.x - 4.4, y: PB.y - 23.6, s: KS, kind: 'powder', rot: 90, ell: .3, contact: false, seed: 6 });
-    // pirate A rolling a keg over the cobbles to the right (his hands on its far side, behind it)
-    fg += K.castShadow(u, L, { x: PA.x + 4, y: PA.y, w: 16, h: 30, horizon: HZ, d: .5, opacity: .45 }) + K.contactShadow(u, PA.x, PA.y, 18, L, { ry: 1.1, opacity: .6 });
-    fg += pirate(u, L, PA.x, PA.y, 'push', { band: '#5a1e1a' });
-    { const kx = 147, ky = 135.6 - 6.8; fg += K.contactShadow(u, kx, 135.6, 14, L, { ry: 1, opacity: .75 }) + kegEnd(u, kx, ky, 6, { depth: 2.6, moon: .9, warm: 0 }); }
-    // keg C rolling on toward the corner and the harbour: a little smaller (further), the cobbles' wet shine round it
-    { const kx = 177, ky = 134.6 - 5.6; fg += K.contactShadow(u, kx, 134.6, 12, L, { ry: .9, opacity: .7 }) + kegEnd(u, kx, ky, 5.2, { depth: 2.2, moon: 1, warm: 0 })
-        + `<path d="M${kx - 12} 133.2h5M${kx - 14} 135h6" stroke="#cfe0ff" stroke-width=".4" opacity=".45" stroke-linecap="round"/>`; }
+    // rubble at the foot of the breach, brick bits on the cobbles
+    { const R = rng(21); for (let i = 0; i < 16; i++) { const x = 40 + R() * 90, y = ST + 1 + R() * 18, w = 2 + R() * 3.4, a = R() * 180;
+        fg += K.contactShadow(u, x, y + 1, w * 1.4, L, { ry: .7, opacity: .5 }) + `<rect x="${f(x - w / 2)}" y="${f(y - w * .3)}" width="${f(w)}" height="${f(w * .55)}" fill="${mix('#6a3626', '#a86a4a', R())}" stroke="#24120a" stroke-width=".3" transform="rotate(${f(a)} ${f(x)} ${f(y)})"/>`; } }
+    // dust from the breach drifting left in the moonlight
+    fg += K.smoke(u, L, { x: 52, y: ST - 2, w: 34, h: 26, wind: -.6, seed: 9, opacity: .45 });
+    // the coins: a trail from the hole to the safe's sprung door, glinting
+    { const R = rng(31), cg = nid('co', u); fg += `<defs>${linGrad(cg, 0, 0, 3, 0, [[0, '#6a4a18', 1], [.55, '#b8954a', 1], [1, '#e2cc8a', 1]])}</defs>`;
+      for (let i = 0; i < 34; i++) { const t = R(), x = lerp(50, 132, t) + (R() - .5) * 10, y = ST + 4 + R() * 16 + t * 4, r = 1.1 + (y - ST) * .05;
+        fg += `<ellipse cx="${f(x)}" cy="${f(y + .4)}" rx="${f(r)}" ry="${f(r * .38)}" fill="#3a2a0a"/><ellipse cx="${f(x)}" cy="${f(y)}" rx="${f(r)}" ry="${f(r * .38)}" fill="url(#${cg})" stroke="#4a320a" stroke-width=".2"/>` + (i % 5 === 0 ? `<path d="M${f(x + r * .3)} ${f(y - r * .2)}h${f(r * .6)}" stroke="#fff4d0" stroke-width=".3" opacity=".75"/>` : ''); }
+      fg += ingot(u, 60, ST + 7, 1.15, -8); }
+    // the safe: iron box with a chunk of the brick wall still on its back, on castors, chains round it
+    { const { x, y, w, h } = SAFE, x0 = x - w / 2, top = y - h - 4;
+      fg += K.castShadow(u, L, { x, y, w: w * .9, h: h, horizon: HZ, d: .6, opacity: .6 });
+      // the wall chunk behind the top left: bricks with mortar, plaster on its face
+      // the body: front, top and the right side lit by the moon (box faces)
+      fg += K.shadeBox(u, K.boxFaces(x0, y - 4, w, h, 6, 5), L, 'iron', { seed: 4 });
+      // the chunk of the bank's wall torn out with it, lying on its top: brick courses, a plaster face, a broken edge
+      { const cy0 = y - h - 4.6, R = rng(61); let ch = '';
+        const rows = [[x0 + 2, 6], [x0 + 4, 5], [x0 + 3, 4], [x0 + 6, 2]];
+        rows.forEach(([bx0, n], r) => { for (let c = 0; c < n; c++) { const bx = bx0 + c * 6.8 + (r % 2) * 3.4, by = cy0 - (r + 1) * 3.9; ch += `<rect x="${f(bx)}" y="${f(by)}" width="6.4" height="3.6" fill="${mix('#6a3626', '#a86a4a', R())}" stroke="#2a1410" stroke-width=".45"/><path d="M${f(bx + .3)} ${f(by + .4)}h5.8" stroke="#d89a78" stroke-width=".3" opacity=".6"/>`; } });
+        ch += `<path d="M${f(x0 + 1)} ${f(cy0)}L${f(x0 + 1.4)} ${f(cy0 - 9)}L${f(x0 + 5)} ${f(cy0 - 12)}L${f(x0 + 3.6)} ${f(cy0 - 8)}L${f(x0 + 4)} ${f(cy0)}Z" fill="#5a5c6a" stroke="#1a1a20" stroke-width=".4"/>`
+          + `<path d="M${f(x0 + 1)} ${f(cy0 + .3)}H${f(x0 + 44)}" stroke="#08080c" stroke-width="1"/>`;
+        fg += K.contactShadow(u, x0 + 22, cy0 + .6, 44, L, { ry: 1.2, opacity: .7 }) + ch; }
+      // the door: an inset panel, brass edging, the dial, the handle; sprung a little, coins in the gap
+      const dg = nid('dg', u); fg += `<defs>${linGrad(dg, x0, 0, x0 + w, 0, [[0, '#1a1e24', 1], [.7, '#2a3038', 1], [1, '#3a424c', 1]])}</defs><rect x="${f(x0 + 4)}" y="${f(y - h)}" width="${f(w - 8)}" height="${f(h - 8)}" rx="1.5" fill="url(#${dg})" stroke="#c9a048" stroke-width="1"/>`
+        + `<path d="M${f(x0 + w - 4.2)} ${f(y - h + 1)}v${f(h - 10)}" stroke="#ffd27a" stroke-width=".8" opacity=".7"/>`;
+      const dx = x - 6, dy = y - h / 2 - 4; fg += K.shadeCyl(u, dx, dy, dx, dy - 1, 6.4, L, 'brass', { ell: 1, face: 1, outline: .4 }) + `<circle cx="${dx}" cy="${dy - .5}" r="2.6" fill="#2a1e0a"/>`
+        + Array.from({ length: 16 }, (_, k) => { const a = k * Math.PI / 8; return `<path d="M${f(dx + Math.cos(a) * 4.6)} ${f(dy - .5 + Math.sin(a) * 4.6)}L${f(dx + Math.cos(a) * 5.8)} ${f(dy - .5 + Math.sin(a) * 5.8)}" stroke="#5a4010" stroke-width=".4"/>`; }).join('')
+        + K.shadeCyl(u, x + 12, dy - 6, x + 12, dy + 6, 1.1, L, 'brass', { outline: .3 }) + K.shadeSphere(u, x + 12, dy - 6.4, 1.6, L, 'brass') + K.shadeSphere(u, x + 12, dy + 6.4, 1.6, L, 'brass');
+      // rivets along the edges
+      for (let i = 0; i < 9; i++) { const rx = x0 + 2 + i * (w - 4) / 8; fg += `<circle cx="${f(rx)}" cy="${f(y - h - 2.4)}" r=".6" fill="#6a7480"/><circle cx="${f(rx)}" cy="${f(y - 5.6)}" r=".6" fill="#6a7480"/>`; }
+      // castors and the sparks where the iron scrapes the cobbles
+      for (const cx of [x0 + 7, x0 + w - 6]) fg += K.contactShadow(u, cx, y + 1, 9, L, { ry: 1.2, opacity: .8 }) + K.shadeCyl(u, cx - 3, y - 2, cx + 3, y - 2, 2.6, L, 'iron', { ell: 1, face: 2, outline: .35 });
+      { const R = rng(41); for (let i = 0; i < 12; i++) { const sx = x0 + 3 + R() * 6, sy = y - R() * 2, l = 2 + R() * 4, a = Math.PI + (R() - .5) * 1.2; fg += `<path d="M${f(sx)} ${f(sy)}l${f(Math.cos(a) * l)} ${f(Math.sin(a) * l - R() * 2)}" stroke="#ffd070" stroke-width=".45" stroke-linecap="round" opacity=".9"/>`; }
+        fg += K.localGlow(u, { x: x0 + 4, y: y - 1, color: '#ffc060', power: .5, radius: 7 }); }
+      // coins spilling from the door's gap down the front
+      { const R = rng(51); for (let i = 0; i < 8; i++) { const cx = x0 + w - 6 + i * 1.8 + R() * 2, cy = y - h * .5 + i * 3.6; fg += `<ellipse cx="${f(cx)}" cy="${f(cy)}" rx="1.5" ry=".7" fill="${i % 2 ? '#c8a656' : '#a8883e'}" stroke="#4a320a" stroke-width=".25" transform="rotate(${f(R() * 60 - 30)} ${f(cx)} ${f(cy)})"/>`; } }
+      // the chains: from the safe's straps to the swingletree behind the team (taut, straight-ish)
+      fg += K.chain(u, L, [[x0 + w + 2, y - h + 8], [129, 97], [137, 101]], { link: 2.4, seed: 3 }) + K.chain(u, L, [[x0 + w + 2, y - 16], [129, 112], [137, 112]], { link: 2.4, seed: 7 });
+      fg += K.shadeCyl(u, 137, 98, 137, 115, 1.4, L, 'oak', { outline: .35 }); }
+    // the horses, whole, pulling away to the right: the far one first (darker, a little higher, its head up), then
+    // the near one; from the swingletree the trace chains run along their flanks to the hames of the collars
+    const NH = { x: 141, y: 129, s: .9, lift: -8 }, FH = { x: 147, y: 118, s: .8, lift: 24 };
+    const hm = (H, lx, ly) => { const q = bend(lx, ly, H.lift); return [H.x + q[0] * H.s, H.y + q[1] * H.s]; };
+    fg += K.castShadow(u, L, { x: 165, y: 121, w: 40, h: 30, horizon: HZ, d: .5, opacity: .45 }) + horse(u, L, FH.x, FH.y, FH.s, ['#3a2a20', '#2a1c14', '#140c08'], { seed: 5, rim: '#a8b8d0', lift: FH.lift });
+    { const a = hm(FH, 38.6, -31); fg += K.chain(u, L, [[137, 104], [156, 102.4], [a[0], a[1]]], { link: 1.8, seed: 11 }); }
+    fg += K.castShadow(u, L, { x: 167, y: 129, w: 46, h: 34, horizon: HZ, d: .5, opacity: .55 }) + horse(u, L, NH.x, NH.y, NH.s, ['#7a4a2a', '#4a2a16', '#1e120a'], { seed: 3, lift: NH.lift });
+    { const a = hm(NH, 38.6, -30); fg += K.chain(u, L, [[137, 108], [158, 107.6], [a[0], a[1]]], { link: 1.8, seed: 13 }); }
+    // the watchman
+    fg += watchman(u, L, GUARD.x, GUARD.y) + K.localGlow(u, { x: GUARD.x + 11.2, y: GUARD.y - 14.5, color: '#ffd080', power: .85, radius: 9 });
     // light: the moon's veil, the dark under the glass
     fg += gloom(u, 160, 40, 0, 100, .3, '#04060c') + gloom(u, 100, 140, 100, 280, .62, '#020408');
     return [bg, fg];

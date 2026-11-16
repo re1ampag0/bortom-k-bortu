@@ -1,10 +1,10 @@
 // «Обезьянка Джек» (Жемчужина, ПРИКАЗ: возьмите случайную карту из руки игрока-противника), variant A of the method
 // trial (docs/progress/print-kit.md «Проба способа»): the first-round scene (portrait-pearl.cjs SCENES['Обезьянка
 // Джек']) at its best. Night in the cabin, seen in one-point perspective (floor, walls, ceiling beams and carlings
-// all run to one vanishing point; the far wall with its door stands deep in the room): the monkey in its short green
-// jacket stands on the near edge of the table among the gold and holds up high the card it has just pulled out of the
+// all run to one vanishing point; the far wall with its door stands deep in the room): the monkey in its little red
+// coat stands on the near edge of the table among the gold and holds up high the card it has just pulled out of the
 // hand spread on the table (a gap in the fan where it was), a gold coin in its other paw; the moon through the window
-// in the left wall lays a patch of light on the right wall.
+// in the left wall throws its shadow on the right wall — a monkey skeleton in the same pose.
 // Fixed against the first round: the window hung skewed on a flat wall and the room had no depth — now it is a room
 // in perspective with a high ceiling; the card was held by the tail and the paws went through things — now the
 // palm is behind the card's lower edge and the fingers curl over it in front, the coin is pinched the same way;
@@ -13,9 +13,6 @@
 // Second pass: the raised arm leaves the coat at the shoulder beside the head (red sleeve to mid-forearm, cuff at
 // the wrist); the candle stub stands on the window sill, so both lights come from the left and the skeleton's
 // shadow falls away from them onto the right wall, darker than before.
-// Review fix: the paw held the card with all five fingers in front — now four fingers curl over the card's lower edge
-// and the thumb goes up behind it (only its root shows under the edge); the skeleton's shadow on the wall is gone (the
-// moon patch stays, empty); the long red frock coat is now a short bottle-green jacket with a straight hem.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -29,9 +26,9 @@ const CS = { x: 32, y: 80.6, s: .8, len: 6 };     // a candle stub on the window
 const CSF = CS.y - (3.4 + CS.len + 3) * CS.s;    // its flame
 const light = { time: 'night', haze: .3, key: { type: 'moon', az: 290, el: 14, color: '#cfe0ff', power: .85 }, fill: { color: '#2e4466', power: .35 },
   rim: { az: 300, color: '#ffb860', power: .45 }, locals: [{ x: CS.x, y: CSF, color: '#ffb050', power: .6, radius: 60 }] };
-const skel = { horizon: HZ, eye: 1.2, light: 'the moon through the window in the left wall (low, from the left): its patch falls on the right wall; candle stub on the window sill = warm light from the same side', items: [
+const skel = { horizon: HZ, eye: 1.2, light: 'the moon through the window in the left wall (low, from the left): the shadow falls on the right wall; candle stub on the window sill = warm light from the same side', items: [
   ['far wall', 62, 86, 76, 64, 'room, depth .38'], ['door', 116, 86, 15, 30, 'far wall'], ['left window', 22, 82, 18, 36, 'left wall'], ['moon patch', 156, 96, 38, 76, 'right wall'],
-  ['table', 34, 128, 132, 28, 'floor (legs)'],
+  ['skeleton shadow', 160, 98, 36, 66, 'right wall, in the patch'], ['table', 34, 128, 132, 28, 'floor (legs)'],
   ['monkey', 66, MK.y, 46, 60, 'stands on the table near edge'], ['card', 60, 66, 18, 26, 'in its raised left paw'], ['coin', 107, 88, 7, 7, 'in its right paw'],
   ['fan', 108, 120, 54, 14, 'table top'], ['chest + gold', 42, 127, 40, 20, 'table top'], ['mug', 114, 104, 10, 12, 'table top'], ['candle stub', 28, 81, 8, 12, 'window sill']] };
 
@@ -60,7 +57,7 @@ function monkey(u, L, o) {
   let out = `<g transform="translate(${f(x)} ${f(y)}) scale(${f(s)})">`
     + `<defs>${radGrad(fur, -6, -44, 18, [[0, '#a8794c', 1], [.55, '#6e4626', 1], [1, '#3a2210', 1]])}${linGrad(furD, -10, 0, 10, 0, [[0, '#8a6038', 1], [.6, '#4a2c16', 1], [1, '#7a4a24', 1]])}`
     + `${radGrad(face, -1.5, -46, 9, [[0, '#f8e6c8', 1], [.7, '#d8b08a', 1], [1, '#a87a56', 1]])}${radGrad(ear, 0, 0, 4, [[0, '#d8a888', 1], [1, '#7a4a30', 1]])}`
-    + `${linGrad(coat, -14, 0, 14, 0, [[0, '#5a9a68', 1], [.35, '#2e6a44', 1], [.75, '#0e3420', 1], [.92, '#1a4a2c', 1], [1, '#6a8a3e', 1]])}${linGrad(coatS, 0, -36, 0, -10, [[0, '#000', 0], [1, '#000', .3]])}</defs>`;
+    + `${linGrad(coat, -14, 0, 14, 0, [[0, '#d8483a', 1], [.35, '#b8302a', 1], [.75, '#6a1410', 1], [.92, '#8a2418', 1], [1, '#c8582e', 1]])}${linGrad(coatS, 0, -36, 0, -10, [[0, '#000', 0], [1, '#000', .3]])}</defs>`;
   // the tail grows from under the coat tails at the back and curls up behind on the left
   const tail = 'M-5 -14C-16 -10 -26 -14 -27 -26C-28 -36 -20 -42 -14 -38C-10 -35 -12 -30 -16 -31';
   out += `<path d="${tail}" stroke="#2a1608" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="${tail}" stroke="url(#${furD})" stroke-width="3.2" fill="none" stroke-linecap="round"/>`
@@ -71,22 +68,22 @@ function monkey(u, L, o) {
     out += `<path d="${leg}" fill="url(#${fur})" stroke="#2a1608" stroke-width=".5"/>`
       + `<path d="M${5 * e} -1.4C${7 * e} -3.2 ${14 * e} -3.4 ${17 * e} -1.6C${18 * e} -.4 ${17 * e} .8 ${15 * e} .8L${6 * e} .8C${4.6 * e} .4 ${4.4 * e} -.6 ${5 * e} -1.4Z" fill="#3a2212" stroke="#1a0c04" stroke-width=".4"/>`
       + [0, 1, 2].map(k => `<path d="M${(13 + k * 1.6) * e} .6q${.3 * e} 1.4 ${-.2 * e} 2.2" stroke="#2a1608" stroke-width=".9" stroke-linecap="round"/>`).join(''); }
-  // the jacket: a short sailor's jacket with a straight hem at the hips, lapels, a white shirt front, gilt trim and buttons
-  const body = 'M-12 -37C-6 -40 6 -40 12 -37L13.4 -24C13.8 -20 13.8 -17.4 13.2 -14.6C6 -13 -6 -13 -13.2 -14.6C-13.8 -17.4 -13.8 -20 -13.4 -24Z';
-  out += `<path d="${body}" fill="url(#${coat})" stroke="#0a1e10" stroke-width=".6"/><path d="${body}" fill="url(#${coatS})"/>`
-    + `<path d="M-12.8 -15.6C-6 -14 6 -14 12.8 -15.6" stroke="#d8b050" stroke-width=".5" fill="none" opacity=".75"/>`
+  // the coat: a little frock coat with flared tails, lapels, a white shirt front, gilt trim and buttons
+  const body = 'M-12 -37C-6 -40 6 -40 12 -37L14 -22C15 -17 16 -14 17 -11L9 -13C4 -11 -4 -11 -9 -13L-17 -11C-16 -14 -15 -17 -14 -22Z';
+  out += `<path d="${body}" fill="url(#${coat})" stroke="#3a0806" stroke-width=".6"/><path d="${body}" fill="url(#${coatS})"/>`
+    + `<path d="M-9 -13C-4 -15 4 -15 9 -13" stroke="#2a0404" stroke-width=".6" fill="none" opacity=".7"/><path d="M-1 -14v-2" stroke="#2a0404" stroke-width=".5"/>`
     + `<path d="M-4.4 -38L0 -27L4.4 -38Z" fill="#efe6d2"/><path d="M-3 -36.4q3 1.6 6 0M-2.4 -33.6q2.4 1.2 4.8 0M-1.6 -31q1.6 .8 3.2 0" stroke="#b8ac98" stroke-width=".35" fill="none"/>`
-    + `<path d="M-5.6 -38.6L0 -25.6L5.6 -38.6" stroke="#d8b050" stroke-width=".9" fill="none"/><path d="M-12 -37C-11.4 -30 -11 -22 -10.6 -14.2M12 -37C11.4 -30 11 -22 10.6 -14.2" stroke="#d8b050" stroke-width=".6" fill="none" opacity=".8"/>`
-    + `<path d="M-5.6 -38.6L-9 -32L-4 -30Z" fill="#3a7a4c" stroke="#0a1e10" stroke-width=".35"/><path d="M5.6 -38.6L9 -32L4 -30Z" fill="#123a22" stroke="#0a1e10" stroke-width=".35"/>`;
+    + `<path d="M-5.6 -38.6L0 -25.6L5.6 -38.6" stroke="#d8b050" stroke-width=".9" fill="none"/><path d="M-12 -37C-11 -30 -10.4 -22 -9 -13M12 -37C11 -30 10.4 -22 9 -13" stroke="#d8b050" stroke-width=".6" fill="none" opacity=".8"/>`
+    + `<path d="M-5.6 -38.6L-9 -32L-4 -30Z" fill="#9a221a" stroke="#3a0806" stroke-width=".35"/><path d="M5.6 -38.6L9 -32L4 -30Z" fill="#5a100c" stroke="#3a0806" stroke-width=".35"/>`;
   for (const yy of [-28, -23, -18]) for (const e of [-1, 1]) { const bx = e * (4.8 + (yy + 28) * .05); out += K.shadeSphere(u, bx, yy, .95, L, 'brass', { outline: .25 }); }
-  // the left arm (ours) raised high: it leaves the coat at the shoulder seam beside the head (not behind it), the green
+  // the left arm (ours) raised high: it leaves the coat at the shoulder seam beside the head (not behind it), the red
   // sleeve bends at the elbow out to the side and runs up to the middle of the forearm, the white cuff at the wrist,
   // a short furry wrist, the dark palm under the card (the card and the fingers curled over its lower edge are drawn
   // by the scene, over the monkey)
   { const sl = 'M-11.6 -35.4C-15.6 -36.4 -19.4 -38.8 -20.9 -42.4C-22 -45.4 -21.6 -49.6 -21 -53.2', wr = 'M-20.6 -55.6C-20.4 -57 -20 -58.2 -19.4 -59.2';
-    out += `<path d="${sl}" stroke="#0a1e10" stroke-width="7.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${sl}" stroke="url(#${coat})" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
-      + `<path d="M-14.6 -38.6C-17.6 -40 -20.6 -42 -22.4 -45C-23.2 -47.4 -23.2 -50.4 -22.8 -52.6" stroke="#9ad0a4" stroke-width=".55" fill="none" opacity=".55" stroke-linecap="round"/>`
-      + `<path d="M-18.2 -41.6q-.9 -1.2 -1 -2.8M-17 -39.4q-1.6 -.4 -2.4 -1.4" stroke="#0a1e10" stroke-width=".55" fill="none" opacity=".7" stroke-linecap="round"/>`
+    out += `<path d="${sl}" stroke="#3a0806" stroke-width="7.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="${sl}" stroke="url(#${coat})" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+      + `<path d="M-14.6 -38.6C-17.6 -40 -20.6 -42 -22.4 -45C-23.2 -47.4 -23.2 -50.4 -22.8 -52.6" stroke="#f08a6a" stroke-width=".55" fill="none" opacity=".55" stroke-linecap="round"/>`
+      + `<path d="M-18.2 -41.6q-.9 -1.2 -1 -2.8M-17 -39.4q-1.6 -.4 -2.4 -1.4" stroke="#3a0806" stroke-width=".55" fill="none" opacity=".7" stroke-linecap="round"/>`
       + `<path d="M-13.4 -35.2C-13 -36.8 -13.2 -38.2 -14 -39.2" stroke="#d8b050" stroke-width=".5" fill="none" opacity=".75"/>`
       + `<path d="${wr}" stroke="#2a1608" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="${wr}" stroke="url(#${furD})" stroke-width="3.3" fill="none" stroke-linecap="round"/>`
       + `<path d="M-24 -54.6q2.9 .9 5.8 .9q.2 -1.6 -.2 -2.2q-2.8 0 -5.4 -.8q-.6 .9 -.2 2.1z" fill="#efe6d2" stroke="#8a7a62" stroke-width=".3"/>`
@@ -95,7 +92,7 @@ function monkey(u, L, o) {
       + `<path d="M-20.2 -59.6q1.6 1 3.4 .2" stroke="#7a4a2a" stroke-width=".35" fill="none"/>`; }
   // the right arm (ours) bent at the elbow, the paw up by the shoulder holding the gold coin (coin and fingers by the scene)
   { const sl = 'M11 -35C15.4 -32.6 17.4 -29 17 -25.4', fa = 'M17 -25.4C19.6 -28 21.4 -31.4 22 -35';
-    out += `<path d="${sl}" stroke="#0a1e10" stroke-width="6.2" fill="none" stroke-linecap="round"/><path d="${sl}" stroke="url(#${coat})" stroke-width="5" fill="none" stroke-linecap="round"/>`
+    out += `<path d="${sl}" stroke="#3a0806" stroke-width="6.2" fill="none" stroke-linecap="round"/><path d="${sl}" stroke="url(#${coat})" stroke-width="5" fill="none" stroke-linecap="round"/>`
       + `<path d="M14.6 -26.4l4.8 -1.6" stroke="#efe6d2" stroke-width="2" stroke-linecap="round"/><path d="M14.4 -27.4l4.6 -1.5" stroke="#d8b050" stroke-width=".4"/>`
       + `<path d="${fa}" stroke="#2a1608" stroke-width="4.2" fill="none" stroke-linecap="round"/><path d="${fa}" stroke="url(#${furD})" stroke-width="3.1" fill="none" stroke-linecap="round"/>`
       + `<path d="M19.6 -36.4C19.4 -39 21 -40.6 22.8 -40.2C24.6 -39.8 25.2 -37.6 24.4 -35.6C23.4 -34 20.6 -34.2 19.6 -36.4Z" fill="#3a2010" stroke="#140804" stroke-width=".4"/>`; }
@@ -113,7 +110,7 @@ function monkey(u, L, o) {
     if (py > -40 && Math.abs(px) < 6) continue;
     out += `<path d="M${f(px)} ${f(py)}l${f(Math.cos(a + (R() - .5) * .6) * l)} ${f(Math.sin(a + (R() - .5) * .6) * l)}" stroke="${lit ? '#c8966a' : '#2a1608'}" stroke-width=".35" stroke-linecap="round" opacity=".85"/>`; }
   // the candle's warm edge on the left of the coat (moon and candle both shine from the window side)
-  out += `<path d="M-12.4 -36C-13.6 -28 -14 -20 -13.6 -15" stroke="#ffb878" stroke-width=".55" fill="none" opacity=".6"/>`;
+  out += `<path d="M-12.4 -36C-14.4 -28 -15 -20 -16.6 -12" stroke="#ffb878" stroke-width=".55" fill="none" opacity=".6"/>`;
   return out + '</g>';
 }
 // gold coins on the table: a leaning stack of n and a few loose ones, warm metal with a dark milled edge
@@ -126,6 +123,21 @@ function gold(u, L, x, y, n, loose, seed) {
   for (let i = 0; i < n; i++) out += one(x + (R() - .5) * .5 + i * .12, y - i * .95);
   return out;
 }
+// the skeleton's shadow: a monkey skeleton in the same pose (raised arm with the card, curled tail), thrown on the
+// back wall inside the patch of moonlight, a little larger and soft
+function skeletonShadow(u, x, y, s) {
+  const b = nid('sb', u), c = '#0a0a14';
+  const st = (d, w) => `<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+  return `<defs><filter id="${b}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".5"/></filter></defs><g filter="url(#${b})" opacity=".94" transform="translate(${f(x)} ${f(y)}) scale(${f(s * .8)} ${f(s)})">`
+    + `<circle cx="0" cy="-46" r="8.6" fill="${c}"/><circle cx="-2.8" cy="-47" r="2" fill="#7c8ca8"/><circle cx="2.8" cy="-47" r="2" fill="#7c8ca8"/><path d="M-2.6 -41h5.2" stroke="#7c8ca8" stroke-width=".6"/>`
+    + `<circle cx="-10" cy="-46" r="3" fill="${c}"/><circle cx="10" cy="-46" r="3" fill="${c}"/>`
+    + st('M0 -38V-14', 2.2) + [-34, -30, -26, -22].map(yy => st(`M-7 ${yy + 2}Q0 ${yy - 1.6} 7 ${yy + 2}`, 1.3)).join('')
+    + st('M-11 -36H11', 1.6) + st('M-11 -35L-21 -43L-19.6 -60', 1.6) + st('M11 -35L17 -25L22 -36', 1.5)
+    + `<g transform="translate(-19.4 -74.5) rotate(-8)"><rect x="-8" y="-11.5" width="16" height="23" rx="1" fill="${c}"/></g><ellipse cx="23" cy="-42.6" rx="3" ry="3.4" fill="${c}"/>`
+    + st('M-8 -14Q0 -11 8 -14', 2) + st('M-6 -14L-9 -7L-8 0M6 -14L9 -7L8 0', 1.5) + st('M-12 0H-4M4 0H12', 1.4)
+    + st('M-4 -14C-16 -10 -26 -14 -27 -26C-28 -36 -20 -42 -14 -38', 1.4) + '</g>';
+}
+
 module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'accepted', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.2 }), Lo = K.makeLight({ time: 'night', haze: .3, key: { type: 'moon', x: 33, y: 60, el: 14, color: '#d8e4fa', power: .8 } }, { horizon: 74 });
@@ -171,7 +183,7 @@ module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'a
         + `<path d="M${f(wl(ka))} ${f(vy + 4 * ka)}L${f(wl(kb))} ${f(vy + 4 * kb)}" stroke="#2a180a" stroke-width="1.5"/>`
         + `<path d="M${f(wl(ka))} ${f(vy - 14 * ka)}L${f(wl(kb))} ${f(vy - 14 * kb)}" stroke="#a8c0e0" stroke-width=".4" opacity=".5"/>`
         + `<path d="${q([[wl(ka) + 1, vy + 22 * ka + 1], [wl(kb) + 1, vy + 22 * kb + 1], [wl(kb) + 4, vy + 22 * kb + 4], [wl(ka) + 3.4, vy + 22 * ka + 3.6]])}" fill="#5a3a1c" stroke="#0e0804" stroke-width=".4"/>`; }
-    // ——— the right wall: planks to the vanishing point; the moon's patch on it with the window bars' shadow ———
+    // ——— the right wall: planks to the vanishing point; the moon's patch on it with the skeleton's shadow ———
     { const sw = nid('rw', u);
       bg += `<defs>${linGrad(sw, wr(k0), 0, 200, 0, [[0, '#2e1c0e', 1], [1, '#1a0e06', 1]])}</defs><path d="${q([[wr(1.3), cy(1.3)], [wr(k0), cy(k0)], [wr(k0), fy(k0)], [wr(1.3), fy(1.3)]])}" fill="url(#${sw})"/>`;
       for (let i = 1; i < 9; i++) { const y = cy(1.3) + (fy(1.3) - cy(1.3)) * i / 9, e = ray(wr(1.3), y, k0 / 1.3); bg += `<path d="M${f(wr(1.3))} ${f(y)}L${f(e[0])} ${f(e[1])}" stroke="#060302" stroke-width=".5" opacity=".7"/>`; }
@@ -179,7 +191,8 @@ module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'a
       const pa = .56, pb = .94, pq = [[wr(pa), vy - 60 * pa], [wr(pb), vy - 60 * pb], [wr(pb), vy + 42 * pb], [wr(pa), vy + 42 * pa]], pg = nid('pt', u), bl = nid('pb', u);
       bg += `<defs>${linGrad(pg, wr(pa), 0, wr(pb), 0, [[0, '#b8cff0', .42], [1, '#b8cff0', .28]])}<filter id="${bl}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="1.3"/></filter><clipPath id="${bl}c"><path d="${q(pq)}"/></clipPath></defs>`
         + `<path d="${q(pq)}" fill="url(#${pg})" filter="url(#${bl})" style="mix-blend-mode:screen"/>`
-        + `<g opacity=".35" filter="url(#${bl})"><path d="M${f(wr((pa + pb) / 2))} ${f(vy - 60 * (pa + pb) / 2)}V${f(vy + 42 * (pa + pb) / 2)}" stroke="#0a0a14" stroke-width="1.8"/><path d="M${f(wr(pa))} ${f(vy + 4 * pa)}L${f(wr(pb))} ${f(vy + 4 * pb)}" stroke="#0a0a14" stroke-width="1.8"/></g>`; }
+        + `<g opacity=".35" filter="url(#${bl})"><path d="M${f(wr((pa + pb) / 2))} ${f(vy - 60 * (pa + pb) / 2)}V${f(vy + 42 * (pa + pb) / 2)}" stroke="#0a0a14" stroke-width="1.8"/><path d="M${f(wr(pa))} ${f(vy + 4 * pa)}L${f(wr(pb))} ${f(vy + 4 * pb)}" stroke="#0a0a14" stroke-width="1.8"/></g>`
+        + `<g clip-path="url(#${bl}c)">${skeletonShadow(u, 175, 93, .86)}</g>`; }
     // ——— the floor: planks running to the vanishing point, cross seams closer with depth ———
     { const fl = nid('fl', u); bg += `<defs>${linGrad(fl, 0, fy(k0), 0, 200, [[0, '#2a180a', 1], [1, '#140a04', 1]])}</defs><path d="${q([[wl(k0), fy(k0)], [wr(k0), fy(k0)], [wr(2.2), fy(2.2)], [wl(2.2), fy(2.2)]])}" fill="url(#${fl})"/>`;
       for (let i = -9; i <= 9; i++) { const a = [vx + i * 11 * k0, fy(k0)], e = ray(a[0], a[1], 2.2 / k0); bg += `<path d="M${f(a[0])} ${f(a[1])}L${f(e[0])} ${f(e[1])}" stroke="#080402" stroke-width=".5" opacity=".75"/>`; }
@@ -223,16 +236,15 @@ module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'a
     fg += K.castShadow(u, L, { x: MK.x, y: MK.y - 1, w: 28, h: 56, horizon: HZ, d: .5, opacity: .6 }) + K.contactShadow(u, MK.x, MK.y - .4, 36, L, { ry: 1.6, opacity: .75 });
     fg += monkey(u, L, MK);
     const W = (lx, ly) => [MK.x + lx * MK.s, MK.y + ly * MK.s];
-    // the stolen card held high: the palm behind its lower edge, four fingers curled over it in front, the thumb up
-    // behind the card (drawn first; only its root shows under the edge, left of the index finger)
+    // the stolen card held high: the palm behind its lower edge, four fingers curled over it in front
     { const cs = 1.28 * MK.s, c = W(-19.4, -61.6 - 10 * cs / MK.s), a = -8, rd = a * Math.PI / 180, bot = (dx) => { dx *= MK.s; return [c[0] + dx * Math.cos(rd) - 10 * cs * Math.sin(rd), c[1] + dx * Math.sin(rd) + 10 * cs * Math.cos(rd)]; };
-      { const p = bot(-5.2); fg += `<path d="M${f(p[0] - 1.1)} ${f(p[1] + 1.8)}C${f(p[0] - 2)} ${f(p[1] - 1)} ${f(p[0] - 1.4)} ${f(p[1] - 4)} ${f(p[0] - .2)} ${f(p[1] - 4.4)}C${f(p[0] + 1)} ${f(p[1] - 4.4)} ${f(p[0] + 1.4)} ${f(p[1] - 1.6)} ${f(p[0] + 1.6)} ${f(p[1] + 1.4)}Z" fill="#2e180a" stroke="#140804" stroke-width=".35"/>`; }
       fg += `<g transform="translate(${f(c[0] - 1.6)} ${f(c[1] + 1.4)}) rotate(${a})"><rect x="${f(-7 * cs)}" y="${f(-10 * cs)}" width="${f(14 * cs)}" height="${f(20 * cs)}" rx="1.4" fill="#0a0a14" opacity=".35"/></g>`
         + card(u, c[0], c[1], a, cs, 1, .85);
       for (const [dx, l0] of [[-3.2, 2.6], [-1.05, 3.1], [1.1, 3], [3.1, 2.4]]) { const p = bot(dx), l = l0 * MK.s;
         fg += `<path d="M${f(p[0] - 1.05)} ${f(p[1] + 1.4)}C${f(p[0] - 1.15)} ${f(p[1] - l * .6)} ${f(p[0] - .7)} ${f(p[1] - l)} ${f(p[0])} ${f(p[1] - l)}C${f(p[0] + .7)} ${f(p[1] - l)} ${f(p[0] + 1.15)} ${f(p[1] - l * .6)} ${f(p[0] + 1.05)} ${f(p[1] + 1.4)}Z" fill="#3a2010" stroke="#140804" stroke-width=".35"/>`
           + `<path d="M${f(p[0] - .5)} ${f(p[1] - l + .5)}q.5 -.3 1 0" stroke="#8a5a36" stroke-width=".3" fill="none"/>`; }
-      fg += K.localGlow(u, { x: c[0], y: c[1], color: '#e8f0ff', power: .3, radius: 16 }, { core: false }); }
+      fg += `<path d="M${f(bot(-5)[0])} ${f(bot(-5)[1] + 1.2)}q-1.6 -2.6 -.4 -4.6q1.2 .2 1.4 2.6" fill="#3a2010" stroke="#140804" stroke-width=".35"/>`
+        + K.localGlow(u, { x: c[0], y: c[1], color: '#e8f0ff', power: .3, radius: 16 }, { core: false }); }
     // the gold coin in the other paw, held up by the shoulder: the moon's glint on it, the thumb over its rim
     { const c = W(23, -42.6), r = 3.3 * MK.s, cg = nid('cn', u);
       fg += `<defs>${radGrad(cg, c[0] - 1, c[1] - 1, r * 1.3, [[0, '#fff6c8', 1], [.35, '#f2c860', 1], [.8, '#b8862a', 1], [1, '#6a4410', 1]])}</defs>`

@@ -14,12 +14,6 @@
 // perspective with stanchions and a cap rail; the hooks bite on the cap rail with their lines taut to the enemy.
 // Light: the afternoon sun high on the left behind us (key: the marines' near sides, the white belts, the steel);
 // the sky (fill); the enemy's side faces away from the sun — dark, the boarders lit only along their left edges.
-// Print review: the marines were identical copies, almost none with arms, muskets hanging at the belt and running into
-// the backs of the men nearer to us, legs black tubes — now only the nearest man levels his bayonet over the rail at
-// the boarder (nobody stands in front of him); the rank behind him shoulders arms: each musket sloped on the left
-// shoulder behind the hat, the butt in the near fist at the end of a bent sleeve with its navy cuff, each man his own
-// slope, stride, step and head; legs with breeches bent at the knee, shaped black gaiters (garter strap, buttons) and
-// buckled shoes on the deck; the boarder's flung cutlass moved up, clear of the bayonets and of her mainmast.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -41,7 +35,7 @@ const LT = [-.75, -.66];                            // picture direction to the 
 const skel = { horizon: HZ, eye: EYE, light: 'sun high on the left behind us (key) + sky (fill); the enemy in her own shadow', items: [
   ['deck', 0, 280, 200, 190, 'our ship'], ['port bulwark', -10, 290, 130, 214, 'deck, from the left edge to the bow (vp 128, 72)'],
   ['enemy side + rigging', -10, 100, 140, 100, 'water, lashed alongside (her rail y ~74)'], ['marines', 30, 165, 100, 100, 'deck: one rank, X −1.3 m, z 2–12 m'],
-  ['bayonets', -10, 112, 120, 40, 'the nearest man\'s musket levelled over our rail; the rank\'s muskets shouldered, bayonets up'], ['boarder on the rail', 22, 88, 50, 52, 'our cap rail (z 4.4), thrown back'],
+  ['bayonets', -10, 112, 120, 40, 'muskets in their hands, over our rail'], ['boarder on the rail', 22, 88, 50, 52, 'our cap rail (z 4.4), thrown back'],
   ['boarders behind', 60, 75, 46, 32, 'the enemy rail'], ['hooks', 18, 96, 70, 14, 'bite on our cap rail, lines to the enemy'], ['mainmast', 122, 95, 12, 95, 'deck']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -209,29 +203,22 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
       const hF = H.hand3(u, { at: V('wrF'), a: -12, s: k * .021, m: 1, roll: 12, pose: 'open', spread: 13, tone: SK, light: LT, sw: .3 });
       brd += limb([V('shF'), V('elF'), V('wrF')], [k * .13, k * .12, k * .105], SH, { cuff: { from: .84, k: 1.2, tone: SH } }) + hF.back + hF.front;
       // the cutlass spinning away up to the right, its arcs of motion
-      const cc = [58.5, 15.5];   // (higher than before: clear of the bayonets of the shouldered muskets and of her mainmast)
+      const cc = [78.3, 39.9];
       brd += `<g transform="rotate(-140 ${P2(cc)})"><path d="M${f(cc[0] - 7)} ${f(cc[1])}q7 -2.2 14 -.5l.3 .9q-7 .3 -14.3 1z" fill="#c8ccd0" stroke="#3a3c40" stroke-width=".3"/><path d="M${f(cc[0] - 7)} ${f(cc[1] - 1.4)}v3.4" stroke="#8a6a30" stroke-width="1"/><path d="M${f(cc[0] - 7)} ${f(cc[1] + .3)}h-3" stroke="#2a1a10" stroke-width="1.1"/></g>`
         + `<path d="M${f(cc[0] - 6)} ${f(cc[1] + 5)}a8 8 0 0 1 2 -10M${f(cc[0] + 6)} ${f(cc[1] - 5)}a8 8 0 0 1 -2 10" stroke="#ffffff" stroke-width=".35" fill="none" opacity=".45"/>`; }
     // ——— the marines: one rank along the rail, the same uniform, muskets levelled, bayonets over the rail ———
     // a marine standing at depth z, facing left (we see his left side); local metres: x forward = −x, y up
     const RED = L.ramp('paint-red', 90, 90), WHT = L.ramp('linen', 90, 90), NAVY = { lit: '#3a4c7a', half: '#1e2a4a', shadow: '#0a1020', outline: '#04060c' };
-    // a marine standing at depth z, facing left (we see his left side); local metres: x forward = −x, y up.
-    // o.pose: 'level' — the musket levelled at the hip over the rail (the nearest man only: nobody stands in front of
-    // him); 'shoulder' — the musket sloped on the left shoulder, the butt in the left hand, the bayonet up behind his
-    // head (the rank behind him: a levelled musket would run into the backs of the men nearer to us).
-    // o.slope — the musket's lean back from upright (deg), o.st — the stride, o.step — the front knee bent (a step),
-    // o.tilt — the head's tilt, o.elbow — how far the near elbow stands out
-    const marine = (z, o = {}) => { const k = FOC / z, ft = P3(XM, D, z), M = (x, y) => [ft[0] + x * k, ft[1] - y * k];
-      const sw = Math.max(.25, k * .006), pose = o.pose || 'shoulder', st = o.st || 1, step = o.step || 0;
+    const marine = (z, o = {}) => { const k = FOC / z, ft = P3(XM, D, z), M = (x, y) => [ft[0] + x * k, ft[1] - y * k], Rm = rng(o.seed || 1);
+      const sw = Math.max(.25, k * .006);
       let back = '', body = '', front = '';
-      const RS = { lit: RED.half, half: RED.core, shadow: RED.shadow, outline: '#1a0404' }, RL = { lit: RED.lit, half: RED.half, shadow: RED.shadow, outline: '#1a0404' };
-      // the legs: breeches to the knee, black gaiters shaped over the calf with a garter strap and a row of buttons, shoes
-      // with a heel and a buckle, the soles on the deck. The far leg (right, behind) first, in the shade
-      back += legM(M, k, sw, [.06, .92], [.1 + .05 * st, .5], [.05 + .15 * st, .08], true);
-      body += legM(M, k, sw, [-.03, .92], [-.13 * st - .02 - step * .1, .5 - step * .02], [-.19 * st - step * .04, .08], false);
-      // the far arm hanging at his right side, behind the body
-      if (pose === 'level') back += limbC(M(.04, 1.4), M(.18, 1.16), M(.06, .99), k * .1, RS, sw);
-      else back += limbC(M(.06, 1.4), M(.12, 1.14), M(.09, .9), k * .1, RS, sw);
+      // the musket: butt at the right hip, the barrel forward and a little up, the bayonet on its socket
+      const butt = M(.34, .9), wrist = M(.06, .99), fore = M(-.4, 1.1), muz = M(-1.12, 1.25), tip = M(-1.6, 1.36);
+      // the far leg (right, back), the far arm (behind the body)
+      back += limbC(M(.06, .9), M(.18, .5), M(.3, .04), k * .14, WHT, sw) + gaiter(M(.18, .5), M(.3, .04), k * .12);
+      back += limbC(M(.04, 1.4), M(.18, 1.16), wrist, k * .1, { lit: RED.half, half: RED.core, shadow: RED.shadow, outline: '#1a0404' }, sw);
+      // the near leg (left, forward)
+      body += limbC(M(-.04, .9), M(-.2, .5), M(-.26, .04), k * .145, WHT, sw) + gaiter(M(-.2, .5), M(-.26, .04), k * .125);
       // the coat: the body, the skirts turned back (white lining), the white crossbelt, the cartridge box behind
       body += `<path d="${H.sp([M(.12, 1.42), M(.14, 1.18), M(.16, .98), M(.24, .62), M(.06, .56), M(-.12, .74), M(-.2, .98), M(-.18, 1.22), M(-.12, 1.44), M(0, 1.5)], true)}" fill="${RED.half}" stroke="#1a0404" stroke-width="${f(sw)}"/>`
         + `<path d="${H.sp([M(-.18, 1.24), M(-.2, .98), M(-.12, .74), M(-.04, .74), M(-.08, .98), M(-.08, 1.3)])}" fill="${RED.lit}" opacity=".6"/>`
@@ -244,76 +231,28 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
         + (k > 20 ? [1.36, 1.27, 1.18].map(y => `<circle cx="${f(M(-.135, y)[0])}" cy="${f(M(-.135, y)[1])}" r="${f(k * .011)}" fill="#e0b848"/>`).join('') : '')
         // the white stock at the neck, the neck
         + `<path d="M${P2(M(-.1, 1.44))}L${P2(M(.04, 1.47))}L${P2(M(.03, 1.53))}L${P2(M(-.1, 1.52))}Z" fill="${WHT.lit}"/>`;
-      if (pose === 'level') {
-        // the musket: butt at the right hip, the barrel forward and a little up, the bayonet on its socket
-        const muz = M(-1.12, 1.25), tip = M(-1.6, 1.36), butt = M(.34, .9), mg = nid('mk', u);
-        front += `<defs>${linGrad(mg, 0, butt[1] - k * .05, 0, butt[1] + k * .05, [[0, '#a8743e'], [1, '#4a2a12']])}</defs>`
-          + `<path d="M${P2(M(.36, .84))}L${P2(M(.34, .96))}L${P2(M(.1, 1.0))}L${P2(M(-.86, 1.215))}L${P2(M(-.86, 1.185))}L${P2(M(.04, .96))}L${P2(M(.2, .9))}Z" fill="url(#${mg})" stroke="#1a0c04" stroke-width="${f(sw)}"/>`
-          + ln(`M${P2(M(.02, 1.0))}L${P2(muz)}`, k * .022, '#3a3c42') + ln(`M${P2(M(.02, 1.008))}L${P2(muz)}`, k * .007, '#e8ecf0', .8)
-          + ln(`M${P2(M(.02, .985))}L${P2(M(.1, .985))}`, k * .03, '#8a8e94')
-          + ln(`M${P2(M(-1.06, 1.237))}L${P2(muz)}`, k * .03, '#5a5e64') + ln(`M${P2(muz)}L${P2(M(-1.15, 1.275))}`, k * .012, '#5a5e64')
-          + `<path d="M${P2(M(-1.15, 1.29))}L${P2(tip)}L${P2(M(-1.15, 1.265))}Z" fill="#b8c0c8" stroke="#3a3e44" stroke-width="${f(sw * .7)}"/>`
-          + ln(`M${P2(M(-1.15, 1.285))}L${P2(tip)}`, Math.max(.2, k * .005), '#ffffff', .9);
-      } else {
-        // shoulder arms: the near arm hanging nearly straight, the elbow a little out, the fist cupping the butt; the
-        // musket resting in the hollow of the shoulder, sloped back, the bayonet up behind the hat
-        const th = (o.slope != null ? o.slope : 9) * Math.PI / 180, dv = [Math.sin(th), Math.cos(th)], nv = [-dv[1], dv[0]], B = [-.03, .88];
-        const A = (t, s2 = 0) => M(B[0] + dv[0] * t + nv[0] * s2, B[1] + dv[1] * t + nv[1] * s2);
-        const el = M(-.15 - (o.elbow || 0), 1.17), sh = M(-.04, 1.42), wr = M(-.045, .97);
-        // the sleeve's shadow on the coat behind it, the sleeve (elbow out in front, so the arm reads apart from the
-        // musket and the coat), the navy cuff at the wrist
-        front += ln(`M${P2(sh)}Q${P2([el[0] + k * .03, el[1] + k * .02])} ${P2([wr[0] + k * .03, wr[1]])}`, k * .1, '#3a0806', .45)
-          + limbC(sh, el, wr, k * .11, RL, sw)
-          + ln(`M${P2(M(-.06, 1.02))}L${P2(M(-.045, .955))}`, k * .12, NAVY.half) + ln(`M${P2(M(-.075, 1.02))}L${P2(M(-.06, .96))}`, k * .03, NAVY.lit, .8);
-        // the stock (butt, wrist, fore-end), the lock, the barrel along it, the ramrod pipe, the bayonet
-        const mg = nid('mk', u), s0 = A(.5, -.06), s1 = A(.5, .06);
-        front += `<defs>${linGrad(mg, s0[0], s0[1], s1[0], s1[1], [[0, '#4a2a12'], [.5, '#8a5a2e'], [1, '#b07c44']])}</defs>`
-          + `<path d="M${[A(0, -.05), A(.26, -.03), A(.4, -.024), A(1.4, -.018), A(1.4, .016), A(.4, .022), A(.3, .034), A(0, .055)].map(P2).join('L')}Z" fill="url(#${mg})" stroke="#1a0c04" stroke-width="${f(sw)}" stroke-linejoin="round"/>`
-          + ln(`M${P2(A(.0, .052))}L${P2(A(.0, -.048))}`, k * .016, '#c8a048')
-          + ln(`M${P2(A(.34, .0))}L${P2(A(1.55, .0))}`, k * .022, '#3a3c42') + ln(`M${P2(A(.34, .008))}L${P2(A(1.55, .008))}`, k * .007, '#e8ecf0', .8)
-          + `<path d="M${[A(.3, -.03), A(.42, -.03), A(.42, .02), A(.3, .02)].map(P2).join('L')}Z" fill="#8a8e94" stroke="#2a2c30" stroke-width="${f(sw * .6)}"/>`
-          + ln(`M${P2(A(1.5, .0))}L${P2(A(1.6, .0))}`, k * .03, '#5a5e64')
-          + `<path d="M${P2(A(1.6, .016))}L${P2(A(1.98, 0))}L${P2(A(1.6, -.012))}Z" fill="#b8c0c8" stroke="#3a3e44" stroke-width="${f(sw * .7)}"/>`
-          + ln(`M${P2(A(1.6, .012))}L${P2(A(1.98, 0))}`, Math.max(.2, k * .005), '#ffffff', .9);
-        // the fist under the butt: the fingers round its toe in front, the thumb along the far side
-        const X = (x, y) => M(x + .12, y);
-        front += `<path d="${H.sp([X(-.2, .93), X(-.17, .87), X(-.1, .86), X(-.08, .91), X(-.11, .95), X(-.17, .96)], true)}" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width="${f(sw * .7)}"/>`
-          + (k > 14 ? ln(`M${P2(X(-.18, .9))}L${P2(X(-.1, .895))}M${P2(X(-.18, .875))}L${P2(X(-.11, .87))}`, Math.max(.15, k * .004), SKIN.outline, .6) : '')
-          + ln(`M${P2(X(-.19, .94))}Q${P2(X(-.2, .9))} ${P2(X(-.17, .87))}`, Math.max(.2, k * .008), SKIN.lit, .7);
-      }
+      // the musket
+      const mg = nid('mk', u);
+      front += `<defs>${linGrad(mg, 0, butt[1] - k * .05, 0, butt[1] + k * .05, [[0, '#a8743e'], [1, '#4a2a12']])}</defs>`
+        + `<path d="M${P2(M(.36, .84))}L${P2(M(.34, .96))}L${P2(M(.1, 1.0))}L${P2(M(-.86, 1.215))}L${P2(M(-.86, 1.185))}L${P2(M(.04, .96))}L${P2(M(.2, .9))}Z" fill="url(#${mg})" stroke="#1a0c04" stroke-width="${f(sw)}"/>`
+        + ln(`M${P2(M(.02, 1.0))}L${P2(muz)}`, k * .022, '#3a3c42') + ln(`M${P2(M(.02, 1.008))}L${P2(muz)}`, k * .007, '#e8ecf0', .8)
+        + ln(`M${P2(M(.02, .985))}L${P2(M(.1, .985))}`, k * .03, '#8a8e94')
+        // the bayonet: a socket over the muzzle, a short neck, the blade (a bright edge on its top)
+        + ln(`M${P2(M(-1.06, 1.237))}L${P2(muz)}`, k * .03, '#5a5e64') + ln(`M${P2(muz)}L${P2(M(-1.15, 1.275))}`, k * .012, '#5a5e64')
+        + `<path d="M${P2(M(-1.15, 1.29))}L${P2(tip)}L${P2(M(-1.15, 1.265))}Z" fill="#b8c0c8" stroke="#3a3e44" stroke-width="${f(sw * .7)}"/>`
+        + ln(`M${P2(M(-1.15, 1.285))}L${P2(tip)}`, Math.max(.2, k * .005), '#ffffff', .9);
+      // the near arm: shoulder → elbow → the hand under the fore-end (a fist as a lump for the far ones)
+      if (!o.nearArm) { const sh = M(-.04, 1.42), el = M(-.14, 1.14);
+        front += limbC(sh, el, M(-.36, 1.08), k * .105, { lit: RED.lit, half: RED.half, shadow: RED.shadow, outline: '#1a0404' }, sw)
+          + `<path d="M${P2(M(-.31, 1.1))}L${P2(M(-.36, 1.02))}" stroke="${NAVY.half}" stroke-width="${f(k * .11)}"/>`
+          + `<ellipse cx="${f(fore[0])}" cy="${f(fore[1] + k * .01)}" rx="${f(k * .05)}" ry="${f(k * .04)}" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width="${f(sw * .7)}"/>`; }
       // the head (profile, facing left) and the tricorn, unless the caller draws them
       if (!o.ownHead) { const hc = M(-.08, 1.62), hr = k * .105;
-        if (hr > 3) { const hh = H.head(u, { c: hc, r: hr, dir: -1, tilt: o.tilt != null ? o.tilt : 4, tone: SKIN, detail: hr > 5, eye: 'open', brow: 'frown', hairColor: o.hair || '#3a2414', stubble: !!o.stubble, moustache: !!o.moustache, ear: true, warm: { color: '#fff0d8', op: .25 } }); body += hh.svg !== undefined ? hh.svg : hh; }
+        if (hr > 3) { const hh = H.head(u, { c: hc, r: hr, dir: -1, tilt: 4, tone: SKIN, detail: hr > 5, eye: 'open', brow: 'frown', hairColor: o.hair || '#3a2414', stubble: !!o.stubble, moustache: !!o.moustache, ear: true, warm: { color: '#fff0d8', op: .25 } }); body += hh.svg !== undefined ? hh.svg : hh; }
         else body += `<circle cx="${f(hc[0])}" cy="${f(hc[1])}" r="${f(hr)}" fill="${SKIN.half}" stroke="${SKIN.outline}" stroke-width="${f(sw * .7)}"/><path d="M${f(hc[0] - hr)} ${f(hc[1])}l${f(-hr * .3)} ${f(hr * .2)}l${f(hr * .3)} ${f(hr * .1)}" fill="${SKIN.half}"/>`;
         body += hatProfile(hc, hr); }
       return { back, body, front, M, k };
     };
-    // a tube along a polyline with its own widths (local metres → picture by M, k), as one closed outline
-    function tubeD(pts, ws) { const L2 = [], R2 = []; pts.forEach((p, i) => { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], t = [b[0] - a[0], b[1] - a[1]], l = Math.hypot(...t) || 1, n = [-t[1] / l, t[0] / l];
-      L2.push([p[0] + n[0] * ws[i] / 2, p[1] + n[1] * ws[i] / 2]); R2.push([p[0] - n[0] * ws[i] / 2, p[1] - n[1] * ws[i] / 2]); }); return H.sp(L2.concat(R2.reverse()), true); }
-    // a marine's leg: hip, knee, ankle in local metres; the foot points forward (left); far — the leg in his own shade
-    function legM(M, k, sw, hip, knee, ank, far) {
-      const W = far ? { lit: WHT.half, half: WHT.shadow || mix(WHT.half, '#3a3430', .4) } : { lit: WHT.lit, half: WHT.half }, G = far ? ['#121014', '#2e2e36'] : ['#1c1a20', '#5a5a66'];
-      const m = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)], P = q => M(q[0], q[1]), w = v => v * k;
-      // the breeches, bent at the knee, a lit strip on the side to the sun
-      const br = [hip, m(hip, knee, .5), m(knee, ank, .08)];
-      let s = `<path d="${tubeD(br.map(P), [w(.17), w(.15), w(.12)])}" fill="${W.half}" stroke="#2a2420" stroke-width="${f(sw)}"/>`
-        + `<path d="${tubeD(br.map(q => P([q[0] - .03, q[1]])), [w(.06), w(.05), w(.035)])}" fill="${W.lit}" opacity=".75"/>`;
-      // the gaiter: from over the knee down to the shoe, the calf swelling at the back, the ankle narrow
-      const cf = m(knee, ank, .36), ga = [m(hip, knee, .9), [cf[0] + .015, cf[1]], m(knee, ank, .72), ank];
-      s += `<path d="${tubeD(ga.map(P), [w(.12), w(.125), w(.09), w(.075)])}" fill="${G[0]}" stroke="#050406" stroke-width="${f(sw)}"/>`
-        + `<path d="${tubeD(ga.slice(0, 3).map(q => P([q[0] - .03, q[1]])), [w(.03), w(.035), w(.022)])}" fill="${G[1]}" opacity=".7"/>`;
-      // the garter strap under the knee, the buttons down the outer seam
-      { const g0 = m(knee, ank, .1), d = [ank[0] - knee[0], ank[1] - knee[1]], dl = Math.hypot(...d), n = [-d[1] / dl, d[0] / dl];
-        s += ln(`M${P2(P([g0[0] + n[0] * .065, g0[1] + n[1] * .065]))}L${P2(P([g0[0] - n[0] * .065, g0[1] - n[1] * .065]))}`, Math.max(.25, w(.022)), far ? '#2a2018' : '#4a3626');
-        if (k > 18 && !far) for (const t of [.25, .42, .59, .76]) { const b = m(knee, ank, t); s += `<circle cx="${f(P([b[0] + .025, b[1]])[0])}" cy="${f(P([b[0] + .025, b[1]])[1])}" r="${f(Math.max(.18, w(.008)))}" fill="#8a8a90"/>`; } }
-      // the shoe: heel, sole on the deck, the toe forward; the buckle on the instep
-      const F = (x, y) => M(ank[0] + x, y);
-      s += `<path d="${H.sp([F(.07, .1), F(.075, .01), F(.05, 0), F(-.17, 0), F(-.215, .015), F(-.2, .04), F(-.1, .065), F(-.03, .1)], true)}" fill="#0e0c0e" stroke="#000" stroke-width="${f(sw * .8)}"/>`
-        + `<path d="M${P2(F(.075, .03))}L${P2(F(.03, .03))}L${P2(F(.03, 0))}L${P2(F(.075, 0))}Z" fill="#040304"/>`
-        + ln(`M${P2(F(-.2, .035))}Q${P2(F(-.12, .065))} ${P2(F(-.04, .09))}`, Math.max(.2, w(.012)), far ? '#2a2a30' : '#5a5a66', .8)
-        + (k > 14 ? `<path d="M${P2(F(-.075, .085))}L${P2(F(-.03, .09))}L${P2(F(-.035, .065))}L${P2(F(-.08, .06))}Z" fill="${far ? '#8a7030' : '#d8b048'}"/>` : '');
-      return s; }
     function limbC(a, b, c, w, tn, sw) { const d = `M${P2(a)}Q${P2(b)} ${P2(c)}`; return ln(d, w + sw * 2, tn.outline || '#1a1410') + ln(d, w, tn.half) + ln(d, w * .35, tn.lit, .7); }
     function gaiter(a, b, w) { const p = [lerp(a[0], b[0], .15), lerp(a[1], b[1], .15)]; return ln(`M${P2(p)}L${P2(b)}`, w, '#141216') + ln(`M${P2(p)}L${P2(b)}`, w * .25, '#4a4a54', .7)
       + `<path d="M${f(b[0] + w * .3)} ${f(b[1] - w * .2)}l${f(-w * 1.6)} ${f(w * .1)}l${f(w * .1)} ${f(w * .45)}l${f(w * 1.6)} 0z" fill="#0e0c0e"/>`; }
@@ -325,17 +264,13 @@ module.exports = { name: 'Морская пехота', kind: 'deck', status: 'a
         + ln(`M${P2(P(-.8, -1.1))}Q${P2(P(-.5, -1.38))} ${P2(P(0, -1.4))}`, Math.max(.2, hr * .06), '#6a6a78', .7); }
 
     let ranks = '', ranksNear = '';
-    // each man of the rank his own way of standing: the slope of his musket, his stride, a step forward, the elbow, the head
-    // (the slope kept small: a musket sloped further would cross the faces of the men behind him)
-    const POSE = [{ slope: 9, st: .9, tilt: 2 }, { slope: 13, st: 1.2, step: 1, tilt: 8, elbow: .03 }, { slope: 7, st: .8, tilt: -4 }, { slope: 12, st: 1.1, tilt: 6, elbow: .05 },
-      { slope: 8, st: 1.3, step: 1, tilt: -2 }, { slope: 11, st: .95, tilt: 10, elbow: .02 }, { slope: 7, st: 1.15, step: 1, tilt: 0, elbow: .04 }, { slope: 9, st: .9, tilt: 5 }];
-    RANK.forEach((z, i) => { if (z < 2.5) return; const m = marine(z, Object.assign({ seed: i + 2, hair: ['#3a2414', '#1a1210', '#6a4a2a', '#2a1a10'][i % 4], moustache: i === 6, stubble: i === 5 }, POSE[i]));
+    RANK.forEach((z, i) => { if (z < 2.5) return; const m = marine(z, { seed: i + 2, hair: ['#3a2414', '#1a1210', '#6a4a2a', '#2a1a10'][i % 4], moustache: i === 6, stubble: i === 5 });
       const sv = K.castShadow(u, L, { x: m.M(0, 0)[0], y: m.M(0, 0)[1], w: m.k * .5, h: m.k * 1.8, horizon: HZ, opacity: .45 }) + m.back + m.body + m.front;
       if (z > 3.45) ranks += sv; else ranksNear += sv; });
 
     // ——— the nearest marine, drawn whole: a lean young face, a stern mouth, under a tricorn with white tape ———
     let near = '';
-    { const z = RANK[RANK.length - 1], m = marine(z, { seed: 11, ownHead: true, pose: 'level', st: 1.15 }), k = m.k, M = m.M;
+    { const z = RANK[RANK.length - 1], m = marine(z, { seed: 11, ownHead: true, nearArm: true }), k = m.k, M = m.M;
       near += K.castShadow(u, L, { x: M(0, 0)[0], y: M(0, 0)[1], w: k * .5, h: k * 1.8, horizon: HZ, opacity: .45 }) + m.back + m.body;
       const hc = M(-.07, 1.63), hr = k * .108;
       const hd = H.head34(u, { c: hc, r: hr, turn: .78, dir: -1, nod: 4, tone: SKIN, light: LT, warm: { color: '#fff0d8', op: .3 }, eye: 'open', look: [-.8, .05],

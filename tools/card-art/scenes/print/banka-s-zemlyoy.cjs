@@ -30,7 +30,7 @@ const skel = { horizon: HZ, eye: 3, light: 'the moon in the green fog upper left
   ['sleeve', 155, 262, 65, 140, 'from the lower right corner to the cuff at the wrist'], ['rail', -5, 186, 210, 40, 'the Pearl\'s bulwark, near']] };
 
 // the jar of earth: glass body with a thick rim and base, earth in layers with stones, a root and a sprout, a cloth
-// cap tied with twine over the cork, a paper tag on a string; rain runs on the glass. Returns { body, glass }
+// cap tied with twine over the cork, a paper tag on a string; rain drops on the glass. Returns { body, glass }
 function jar(u, L, o) {
   const { x, y, w, h } = o, rx = w / 2, top = y - h, nk = rx * .58, R = rng(7);
   // the outline: base, straight sides, a round shoulder into the neck, the lip
@@ -47,13 +47,9 @@ function jar(u, L, o) {
   // layers: a dark band of loam, a pale band of sand, the dark again; stones pressed against the glass
   body += `<path d="M${f(x - rx)} ${f(es + 13)}q${f(rx * .6)} 2 ${f(rx)} -.6t${f(rx)} .8" stroke="#a88a5a" stroke-width="2.2" fill="none" opacity=".6"/>`
     + `<path d="M${f(x - rx)} ${f(es + 22)}q${f(rx * .5)} -1.6 ${f(rx)} .4t${f(rx)} -.6" stroke="#1e120a" stroke-width="2.6" fill="none" opacity=".55"/>`;
-  // small stones: irregular, angular, dark and matte (no shine), pressed into the earth
-  for (let i = 0; i < 11; i++) { const sx = x - rx + 3 + R() * (w - 6), sy = es + 4 + R() * (h - 22), r = 1 + R() * 2.2, c = ['#4a4238', '#3a342c', '#5a4c3a', '#2e261c'][i % 4], n = 5 + (i % 3), a0 = R() * 6.3;
-    let d = ''; for (let k = 0; k < n; k++) { const a = a0 + k / n * Math.PI * 2, q = r * (.6 + R() * .5); d += `${k ? 'L' : 'M'}${f(sx + Math.cos(a) * q)} ${f(sy + Math.sin(a) * q * .7)}`; }
-    body += `<path d="${d}Z" fill="${c}" stroke="#140c06" stroke-width=".3"/>`; }
-  // grains of the earth: tiny dark crumbs, a few dull sandy ones
-  for (let i = 0; i < 40; i++) { const gx = x - rx + R() * w, gy = es + 2 + R() * (h - 18), gr = .25 + R() * .35;
-    body += `<path d="M${f(gx - gr)} ${f(gy)}L${f(gx + gr * .3)} ${f(gy - gr * .8)}L${f(gx + gr)} ${f(gy + gr * .4)}Z" fill="${R() > .7 ? '#7a5e3a' : '#1a0e06'}" opacity=".7"/>`; }
+  for (let i = 0; i < 11; i++) { const sx = x - rx + 3 + R() * (w - 6), sy = es + 4 + R() * (h - 22), r = 1 + R() * 2.2, c = ['#8a8274', '#6a6458', '#a89a80', '#5a4a3a'][i % 4];
+    body += `<ellipse cx="${f(sx)}" cy="${f(sy)}" rx="${f(r)}" ry="${f(r * .75)}" fill="${c}" stroke="#2a1e12" stroke-width=".25"/><ellipse cx="${f(sx - r * .3)}" cy="${f(sy - r * .3)}" rx="${f(r * .35)}" ry="${f(r * .22)}" fill="#e8e0cc" opacity=".45"/>`; }
+  for (let i = 0; i < 40; i++) body += `<circle cx="${f(x - rx + R() * w)}" cy="${f(es + 2 + R() * (h - 18))}" r="${f(.2 + R() * .35)}" fill="${R() > .5 ? '#c8a878' : '#1a0e06'}" opacity=".6"/>`;
   // a pale root through the earth, and a sprout from the top with two leaves
   body += `<path d="M${f(x - 4)} ${f(es + 1)}q-2 6 1 11t-3 10q-1 3 1 6M${f(x - 3)} ${f(es + 9)}q4 2 6 7" stroke="#d8c49a" stroke-width=".55" fill="none" opacity=".75"/>`;
   body += `<path d="M${f(x - 4)} ${f(es)}q-.6 -5 1 -9" stroke="#5a9a3a" stroke-width="1.1" fill="none"/>`
@@ -81,9 +77,8 @@ function jar(u, L, o) {
       + `<path d="M${f(x - nk - 1)} ${f(cy - 7)}Q${x} ${f(cy - 11)} ${f(x + nk + 1)} ${f(cy - 7)}" stroke="#f0fff8" stroke-width=".5" fill="none" opacity=".6"/>`;
     // the twine's ends and the paper tag on the right
     glass += `<path d="M${f(x + nk + 2.2)} ${f(cy - 1.4)}q3 2 4 7" stroke="#8a6a3a" stroke-width=".5" fill="none"/><g transform="translate(${f(x + nk + 7)} ${f(cy + 9)}) rotate(16)"><path d="M-3.6 -2.6h6l1.6 2.6l-1.6 2.6h-6z" fill="#d8ccb0" stroke="#5a4a30" stroke-width=".35"/><circle cx="2" cy="0" r=".5" fill="#5a4a30"/><path d="M-2.4 -.8h3M-2.4 .8h2.4" stroke="#6a5a40" stroke-width=".3"/></g>`; }
-  // rain on the glass: short wet runs trickling down, faint and greenish (streaks, not drops)
-  for (let i = 0; i < 12; i++) { const dx = x - rx + 3 + R() * (w - 6), dy = top + 8 + R() * (h - 14), l = 3 + R() * 4;
-    glass += `<path d="M${f(dx)} ${f(dy)}q${f(-.3 + R() * .6)} ${f(l * .5)} ${f(-.2 + R() * .4)} ${f(l)}" stroke="#a8d8c4" stroke-width=".45" fill="none" opacity=".4" stroke-linecap="round"/>`; }
+  // rain drops on the glass
+  for (let i = 0; i < 12; i++) { const dx = x - rx + 3 + R() * (w - 6), dy = top + 8 + R() * (h - 12); glass += `<ellipse cx="${f(dx)}" cy="${f(dy)}" rx=".7" ry="1.1" fill="#e8fff8" opacity=".6"/><circle cx="${f(dx - .2)}" cy="${f(dy - .4)}" r=".25" fill="#ffffff"/>`; }
   return { body, glass };
 }
 

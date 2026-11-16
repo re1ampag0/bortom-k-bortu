@@ -1,7 +1,7 @@
 // «Ловкость рук» (Жемчужина, РЕАКЦИЯ: карта противника после розыгрыша уходит вам в руку), refined from the
 // accepted second-round scene (portrait-pearl.cjs SCENES['Ловкость рук']): a tavern at night, the brick wall with a
 // lantern on an iron bracket and a shelf of bottles, a window on the moonlit harbour, the counter with stacks of coins.
-// Jack's hand in a wide lace cuff rises from below, closed on the card's foot — the
+// Jack's hand in a wide lace cuff rises from below with a card caught between the index and the middle finger — the
 // card has just flown from the fan of an enemy officer at the counter. From the first round and the brief we take
 // the find of the two hands: the officer's hand in a red coat sleeve with a blue facing still holds his fan — three
 // cards and a wide gap where the fourth was; he has not noticed. The card's path runs from that gap: a blurred streak
@@ -11,9 +11,6 @@
 // palm with their nails to us, the thumb laid along the palm from the wrist to them; the officer's hand is larger,
 // the fan open with the gap; the light: the lantern (key, warm, upper left) and the moon through the window (cold
 // rim on the right edges, a pale patch on the counter).
-// Review fix: the hand showed all five fingers in front of the card and the thumb bent across the palm over the ring
-// and little finger — now the hand is closed on the card's foot: four fingers curled over it in front, nails to us,
-// the thumb up the index finger's side behind the card (only its side shows), the card standing up out of the fist.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -33,7 +30,7 @@ const skel = { horizon: HZ, eye: 1.6, light: 'lantern on a bracket, upper left (
   ['lantern', 26, 78, 20, 36, 'hangs from the iron bracket in the wall'], ['shelf', 8, 100, 48, 24, 'two iron brackets in the wall'],
   ['window', WIN.x - 3, WIN.y + WIN.h + 4, WIN.w + 6, WIN.h + 7, 'set in the wall'], ['coins', 14, 126, 44, 14, 'on the counter'],
   ['officer hand + cards', 136, 122, 64, 40, 'his sleeve from the right edge, the forearm on the counter'],
-  ['card', 76, 66, 42, 54, "in Jack's fist: four fingers in front of its foot, the thumb behind"],
+  ['card', 76, 66, 42, 54, "in Jack's hand, between the index (in front) and the middle finger (behind)"],
   ['trail', 106, 104, 50, 60, 'from his fan to the card, in the air'], ['hand + sleeve', 52, 280, 92, 230, 'from the bottom edge, in front of the counter', { edge: 1 }]] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -162,17 +159,14 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'accep
       off += hd.back + K.shadeSphere(u, rg[0], rg[1], 1.2, L, 'brass', { outline: .25 }) + fan + hd.front;
     }
     // ——— the card's flight from his fan to Jack's fingers: a soft streak and two fading after-images ———
-    // Jack's (left) hand, the palm towards us: a slim hand narrowing to the wrist, closed on the card's foot
+    // Jack's (left) hand, the palm towards us: a slim hand narrowing to the wrist, the index and middle finger straight
+    // with the card between them, the ring and little finger curled down onto the palm, their nails to us, and the
+    // thumb laid across the palm from the wrist, its tip against the ring finger's nail
     const JW = [98, 118], JA = -94, JS = 9.2;
-    // the hand closed on the card's foot: the four fingers curled over it in front (their nails to us), the thumb up
-    // the index finger's side and behind the card (its tip hidden), the palm behind
-    const FLX = [[72, 96, 50], [70, 98, 50], [72, 98, 52], [76, 96, 50]], THJ = [[1.25, -1.22, -.78], [2.6, -1.75, -1.05], [3.9, -1.85, -1.1], [5, -1.6, -1.05]];
-    const jh = H.hand3(u, { at: JW, a: JA, s: JS, m: -1, roll: 172, pitch: 6, yaw: [-4, -1, 2, 6], tone: { lit: '#f6cca6', half: '#d29a72', shadow: '#7a4430', outline: '#3a1c10' },
-      light: [-.62, -.78], backFingers: ['thumb', 'palm'], sw: .5, trueDorsal: true, palmW: .84, wristW: .8, fingerW: .92, flex: FLX,
-      thumbJ: THJ, thumbOut: [0, 1, -.4] });
-    // the card: its foot on the line of the middle joints (inside the curl), centre, angle, scale
-    const CB = (() => { const q = [0, 3].map(i => jh.joints[i][1]); return [(q[0][0] + q[1][0]) / 2, (q[0][1] + q[1][1]) / 2]; })();
-    const CA = -8, CSC = 1.7, CC = [CB[0] + 13 * CSC * Math.sin(CA * Math.PI / 180), CB[1] - 13 * CSC * Math.cos(CA * Math.PI / 180) + 3];
+    const jh = H.hand3(u, { at: JW, a: JA, s: JS, m: -1, roll: 172, pitch: 6, pose: 'scissor', yaw: [-8, 5, 4, 8], tone: { lit: '#f6cca6', half: '#d29a72', shadow: '#7a4430', outline: '#3a1c10' },
+      light: [-.62, -.78], backFingers: [1], sw: .5, trueDorsal: true, palmW: .84, wristW: .8, fingerW: .92, flex: [[4, 8, 6], [8, 10, 6], [64, 96, 58], [70, 94, 56]],
+      thumbJ: [[.5, -1.4, -.8], [1.8, -1.05, -1.5], [2.6, -.4, -2.15], [3.15, .3, -2.75]], thumbOut: [0, 0, -1] });
+    const CC0 = jh.P(7.6, -.8, -.42), CA = -12, CSC = 1.56, CC = [CC0[0] + 1, CC0[1] - 14];   // the card: centre, angle, scale
     let fly = '';
     { const a0 = GD, a1 = [CC[0] + 8, CC[1] + 10], bf = blurF('fl' + u, 1.6), g = nid('fg', u);
       fly += bf + `<defs>${linGrad(g, a0[0], a0[1], a1[0], a1[1], [[0, '#f0dcb0', 0], [1, '#f0dcb0', .5]])}</defs>`
@@ -196,14 +190,13 @@ module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'accep
         + Array.from({ length: 22 }, (_, k) => `<circle cx="${f(81 + k * 1.6)}" cy="${f(134.2 + (k % 2) * 1.2)}" r=".35" fill="#9a907a" opacity=".7"/>`).join('')
         + Array.from({ length: 16 }, (_, k) => `<path d="M${f(80 + k * 2.4)} ${f(130.8 + (k % 2) * .5)}q.6 2.4 .1 4.8" stroke="#c4baa4" stroke-width=".3" fill="none"/>`).join('');
       arm += `</g>`;
-      // the hand over the lace: the palm and the thumb behind the card, the card, then the four curled fingers
+      // the hand over the lace: its back, the middle finger behind the card, the card, then the index finger and thumb
       arm += jh.back + card(u, CC, CA, CSC) + jh.front;
-      // a gold band round the index finger's first phalanx, across it, bowed the way the phalanx runs
-      { const a = jh.joints[0][0], b = jh.joints[0][1], c = [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5)], l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
-        const d = [(b[0] - a[0]) / l, (b[1] - a[1]) / l], n = [-d[1], d[0]], hw = .5 * 1.1 * .92 * JS * .92, bw = 1.4;
-        const A = [c[0] - n[0] * hw, c[1] - n[1] * hw], B = [c[0] + n[0] * hw, c[1] + n[1] * hw], M = [c[0] + d[0] * bw * 2, c[1] + d[1] * bw * 2];
-        arm += `<path d="M${P2(A)}Q${P2(M)} ${P2(B)}" stroke="url(#brass${u})" stroke-width="1.7" fill="none" stroke-linecap="round"/>`
-          + `<path d="M${P2([A[0] + n[0] * .8, A[1] + n[1] * .8])}Q${P2([M[0] - d[0] * .5, M[1] - d[1] * .5])} ${P2([B[0] - n[0] * .8, B[1] - n[1] * .8])}" stroke="#fff4c0" stroke-width=".4" fill="none"/>`; }
+      // rings: a gold band with a red stone on the index finger, a plain one on the ring finger's knuckle
+      { const a = jh.P(5.9, -1.22, -.02), b = jh.P(5.9, -1.22, -.95); const c = [lerp(a[0], b[0], .5), lerp(a[1], b[1], .5)];
+        arm += `<path d="M${f(c[0] - 5.2)} ${f(c[1] + .6)}Q${f(c[0])} ${f(c[1] + 2.6)} ${f(c[0] + 4.8)} ${f(c[1] + .2)}" stroke="url(#brass${u})" stroke-width="1.7" fill="none" stroke-linecap="round"/>`
+          + `<path d="M${f(c[0] - 4.4)} ${f(c[1] + .2)}Q${f(c[0])} ${f(c[1] + 1.9)} ${f(c[0] + 4)} ${f(c[1] - .2)}" stroke="#fff4c0" stroke-width=".4" fill="none"/>`
+          ; }
     }
     // ——— light: the lantern's glow and motes, the cold moonlight from the right, the dark round the edges ———
     let fg = K.localGlow(u, { x: FLAME.x, y: FLAME.y, color: '#ffc070', power: .9, radius: 24 })

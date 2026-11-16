@@ -22,8 +22,7 @@ const XW = .86, ZW = 1.5, YT = .25;                 // the cabin's half width, t
 const WT = pr(0, YT, ZW)[1];                        // the table's far edge against the windows (y 85)
 const CUP = { x: 84, y: 118, s: 1 };                // the saucer's centre on the table
 const POT = { x: 146, y: 102 };                     // the teapot's foot
-const SHIP = { x: 118, y: 73, scale: .56 };          // the pirate ship outside
-const HOLES = [[106, 65.4, .62, 9], [121, 64.8, .54, 3], [134, 64.2, .48, 6]];   // x, y, size, seed of the three shot holes in her side
+const SHIP = { x: 118, y: 73, scale: .56 };          // the burning ship outside
 const light = { time: 'day', haze: .3, key: { type: 'sun', az: 15, el: 28, color: '#fff2dc', power: 1 }, fill: { color: '#5a4a44', power: .42 },
   rim: { az: 10, color: '#fff4e0', power: .8 } };
 const lightOut = { time: 'day', haze: .35, key: { type: 'sun', x: 30, y: 6, color: '#fff4d8', power: 1 }, fill: { color: '#8ab4d4', power: .5 } };
@@ -49,30 +48,24 @@ function outside(u, Lo) {
   let s = K.sky(u, Lo, { horizon: VY }) + K.sunMoon(u, Lo, { r: 6 });
   for (const [x, y, w, h, sd, fr] of [[48, 30, 44, 6, 3, .3], [168, 22, 40, 6, 8, .4], [90, 48, 40, 4, 5, .65]]) s += K.cloud(u, Lo, { x, y, w, h, seed: sd, far: fr });
   s += K.water(u, Lo, { horizon: VY, bottom: 90, swell: .4, seed: 7, glitter: 30 });
-  // the ship: listing towards us a little, her sails full, her side smashed in three places (3 Hull — no Fire: nothing
-  // burns, no blast); a little grey powder smoke drifting off where the shot came from, splinters and planks in the air
+  // the ship: listing towards us a little, her sails full, the hull opened by the blast; the smoke behind her
+  // the smoke of burning tar and canvas is dark: the same light with a sooty smoke colour
+  const Ls0 = K.makeLight({ time: 'day', haze: .35, key: { type: 'sun', az: 150, el: 35, color: '#fff0d8', power: .9 }, fill: { color: '#6a7a8a', power: .4 } }, { horizon: VY, eye: 3 });
+  const Ls = Object.assign({}, Ls0, { pal: Object.assign({}, Ls0.pal, { smoke: '#2e2a28' }) });
+  s += K.smoke(u, Ls, { x: SHIP.x + 10, y: 46, w: 70, h: 60, wind: .7, seed: 3, opacity: .9, glow: { color: '#ff8a3a', power: .5 } });
   s += K.ship(u, Lo, { kind: 'pearl', ...SHIP, roll: -6, heel: 2, sails: 'full', detail: 'mid', seed: 9 });
-  for (const [x, y, sc, sd] of HOLES) s += hole(u, Lo, { x, y, s: sc, seed: sd });
-  // the spray of a shot that fell short, under her bow
-  s += K.splash(u, { x: 94, y: 71.4, w: 8, h: 7, seed: 4, L: Lo, wind: .3 });
-  // broken planks and splinters thrown out from her side, some falling into the sea
-  { const Rs = rng(12); for (let k = 0; k < 24; k++) { const [hx, hy] = HOLES[k % 3], a = Math.PI * (-.85 + Rs() * 1.1), d = 4 + Rs() * 6, l = 1 + Rs() * 2.2, x = hx + Math.cos(a) * d, y = hy - 1 + Math.sin(a) * d * .8, r = Rs() * Math.PI;
-    s += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(r) * l)} ${f(Math.sin(r) * l)}" stroke="${k % 2 ? '#3a2614' : '#e0b880'}" stroke-width="${f(.4 + Rs() * .4)}" stroke-linecap="round"/>`; }
-  }
-  { const Lg = Object.assign({}, Lo, { pal: Object.assign({}, Lo.pal, { smoke: '#a8a8a4' }) });
-    s += K.smoke(u, Lg, { x: 88, y: 70, w: 24, h: 12, wind: -.7, seed: 6, opacity: .4 }); }
+  // fire on her deck and in her rigging, the black smoke rising off it
+  for (const [x, y, w, h, sd] of [[SHIP.x - 6, 63, 14, 14, 2], [SHIP.x + 14, 62, 10, 11, 4], [SHIP.x + 26, 61, 8, 8, 6]]) s += K.fire(u, { x, y, w, h, seed: sd, wind: .4, pool: false });
+  s += K.smoke(u, Ls, { x: SHIP.x + 4, y: 58, w: 40, h: 50, wind: .8, seed: 6, opacity: .85, glow: { color: '#ff9040', power: .8 } });
+  // the blast at the waterline: a ball of fire, the burst of spray and splinters, the hole's glow
+  { const bx = SHIP.x - 14, by = 70, g = nid('bl', u), id = nid('bf', u);
+    s += K.splash(u, { x: bx, y: by + 1.4, w: 22, h: 20, seed: 4, L: Lo, wind: .3 });
+    s += `<defs>${radGrad(g, bx, by - 4, 16, [[0, '#ffffff', 1], [.2, '#fff2b0', 1], [.45, '#ffb030', .95], [.75, '#ff6010', .6], [1, '#c02008', 0]])}<filter id="${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation=".5"/></filter></defs>`
+      + `<path d="M${bx - 15} ${by - 2}Q${bx - 12} ${by - 14} ${bx - 4} ${by - 17}Q${bx + 2} ${by - 24} ${bx + 8} ${by - 15}Q${bx + 16} ${by - 12} ${bx + 14} ${by - 2}Q${bx} ${by + 3} ${bx - 15} ${by - 2}Z" fill="url(#${g})" filter="url(#${id})"/>`
+      + K.localGlow(u, { x: bx, y: by - 6, color: '#ffc060', power: 1, radius: 30 });
+    const Rs = rng(12); for (let k = 0; k < 16; k++) { const a = -Math.PI * (.1 + Rs() * .8), d = 10 + Rs() * 14, l = 1 + Rs() * 2.4, x = bx + Math.cos(a) * d, y = by - 6 + Math.sin(a) * d;
+      s += `<path d="M${f(x)} ${f(y)}l${f(Math.cos(a) * l)} ${f(Math.sin(a) * l)}" stroke="#2a1a0e" stroke-width="${f(.4 + Rs() * .5)}" stroke-linecap="round"/>`; } }
   return s;
-}
-
-/** A shot hole in a ship's side, no fire: a dark ragged mouth, the plank ends torn outwards round it (raw wood). */
-function hole(u, L, o) {
-  const R = rng(o.seed || 3), { x, y, s = 1 } = o, rp = L.ramp('oak', x, y);
-  const pts = Array.from({ length: 14 }, (_, i) => { const a = i / 14 * Math.PI * 2, r = (i % 2 ? 4.4 : 6.4 + R() * 2.4) * s; return [x + Math.cos(a) * r * 1.3, y + Math.sin(a) * r * .9]; });
-  let out = `<path d="M${pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="#0a0604" stroke="#000" stroke-width=".2"/>`;
-  for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + R() * .3, r0 = 5.2 * s, r1 = r0 + (2 + R() * 3.6) * s, w = (.6 + R() * .5) * s;
-    const ax = x + Math.cos(a) * r0 * 1.2, ay = y + Math.sin(a) * r0 * .85, bx = x + Math.cos(a + .2) * r1 * 1.25, by = y + Math.sin(a + .2) * r1 * .9;
-    out += `<path d="M${f(ax - w)} ${f(ay)}L${f(bx)} ${f(by)}L${f(ax + w)} ${f(ay + w * .6)}Z" fill="${Math.sin(a) > 0 ? rp.half : '#c8a070'}" stroke="${rp.outline}" stroke-width=".15"/>`; }
-  return out;
 }
 
 /** The cabin: the stern windows (posts, small leaded panes, the window head), the panelled sides receding, the
@@ -128,7 +121,8 @@ function table(u, L, R) {
     // the grain running to the VP, the far edge's moulding against the window
     for (let i = 0; i < 26; i++) { const x = -80 + i * 14 + R() * 4, a = [VX + (x - VX) * (WT - VY) / (220 - VY), WT]; s += `<path d="M${P2(a)}L${f(x)} 220" stroke="#0e0602" stroke-width=".3" opacity=".45"/>`; }
     s += `<path d="M-10 ${f(WT)}H210" stroke="#1a0e06" stroke-width="1.2"/><path d="M-10 ${f(WT + .9)}H210" stroke="#c89060" stroke-width=".4" opacity=".7"/>`;
-  }
+    // the fire's orange glow mirrored under the ship
+    s += K.localGlow(u, { x: SHIP.x - 10, y: WT + 8, color: '#ff9a40', power: .35, radius: 24 }, { squash: .3, core: false }); }
   // ——— the teapot (silver), behind the cup at the right ———
   s += teapot(u, L);
   // ——— the ledger, open at the front right: two pages in the table's perspective, columns of strokes ———
@@ -168,8 +162,9 @@ function teapot(u, L) {
     + `<path d="M${x - 6} ${y - 24}Q${x - 5} ${y - 30} ${x} ${y - 30.6}Q${x + 5} ${y - 30} ${x + 6} ${y - 24}Z" fill="url(#${g2})" stroke="#14161a" stroke-width=".4"/>`
     + `<ellipse cx="${x}" cy="${y - 24}" rx="6.2" ry="1.2" fill="none" stroke="#c8d0d6" stroke-width=".5"/>`
     + K.shadeSphere(u, x, y - 32, 1.7, L, 'brass', { outline: .25 })
-    // the windows mirrored as bright vertical streaks
-    + `<path d="M${x - 9} ${y - 20}q-2 8 0 16" stroke="#ffffff" stroke-width="1" fill="none" opacity=".8"/><path d="M${x + 3} ${y - 21}q1 9 0 18" stroke="#ffffff" stroke-width=".6" fill="none" opacity=".5"/>`;
+    // the windows mirrored as bright vertical streaks; the fire's orange on the left flank
+    + `<path d="M${x - 9} ${y - 20}q-2 8 0 16" stroke="#ffffff" stroke-width="1" fill="none" opacity=".8"/><path d="M${x + 3} ${y - 21}q1 9 0 18" stroke="#ffffff" stroke-width=".6" fill="none" opacity=".5"/>`
+    + `<path d="M${x - 12.6} ${y - 14}q.4 6 3 11" stroke="#ffa050" stroke-width=".7" fill="none" opacity=".5"/>`;
   return s;
 }
 
