@@ -86,7 +86,8 @@ export function lines(a: number, g: number, b: Box): string {
 // ---------------------------------------------------------------- drawing context
 
 export type Fill = 'ink' | 'mid' | 'light' | 'paper' | 'none';
-export interface Hatch { a: number; g?: number; w?: number; r?: string }
+/** a layer of hatching: angle a, gap g, width w, clipped to region r; fine layers are dropped when the icon is tiny */
+export interface Hatch { a: number; g?: number; w?: number; r?: string; fine?: boolean }
 export interface ShapeOpt { fill?: Fill; mid?: string; hi?: string; h?: Hatch[]; inner?: string; sw?: number }
 
 let seq = 0;
@@ -105,6 +106,7 @@ export class K {
     return `url(#${id})`;
   }
   hatch(h: Hatch, sb: Box): string {
+    if (h.fine && this.small) return '';
     const b = h.r ? meet(sb, bbox(h.r)) : sb;
     const g = (h.g ?? 2.8) * (this.small ? 1.3 : 1);
     const p = `<path d="${lines(h.a, g, [b[0] - 1, b[1] - 1, b[2] + 1, b[3] + 1])}" fill="none" stroke="${this.t.ink}" stroke-width="${h.w ?? 1}"/>`;
@@ -130,6 +132,54 @@ export class K {
   F(d: string, col: Fill): string { return `<path d="${d}" fill="${this.c(col)}"/>`; }
   /** hatched shadow with no contour */
   shade(d: string, a = 45, g = 1.8): string { return this.shape(d, { fill: 'none', sw: 0, h: [{ a, g }] }); }
+  /** a detail drawn only when the icon is printed large */
+  fine(s: string): string { return this.small ? '' : s; }
+  /** cast shadow of a shape, moved down-right (light from the upper left); draw it before the shape */
+  cast(d: string, dx = 3, dy = 3, g = 1.7): string { return `<g transform="translate(${f(dx)} ${f(dy)})">${this.shade(d, 45, g)}</g>`; }
+  /** graded shade of a rounded body (centre, radii) lit from the upper left: a hatch on the half turned away, a cross-hatch
+   *  on the core shadow, a fine third layer in the deepest part */
+  round(cx: number, cy: number, rx: number, ry = rx, a = 45, g = 2.4): Hatch[] {
+    const o = (u: number, s: number) => outside(circ(cx - rx * u, cy - ry * u, rx * s, ry * s));
+    return [{ a, g, r: o(0.3, 1.0) }, { a: a - 90, g: g * 1.1, r: o(0.42, 1.2) }, { a: a - 45, g: g * 1.25, w: 0.8, fine: true, r: o(0.5, 1.36) }];
+  }
+  /** graded shade across a cylinder lying along y (x0..x1), lit from the left: shade from the middle, core shadow near the
+   *  right edge with a strip of reflected light, a light hatch on the far left edge */
+  cyl(x0: number, x1: number, a = 90, g = 2.2): Hatch[] {
+    const R = (u0: number, u1: number) => rect(x0 + (x1 - x0) * u0, -60, (x1 - x0) * (u1 - u0), 220);
+    return [
+      { a, g, r: R(0.55, 1.02) }, { a: a + 55, g: g * 1.15, r: R(0.72, 0.93) },
+      { a: a - 55, g: g * 1.3, w: 0.8, fine: true, r: R(0.8, 0.9) }, { a, g: g * 1.6, w: 0.8, fine: true, r: R(-0.02, 0.08) },
+    ];
+  }
+}
+
+/** a smooth curve through the points (quadratic through the midpoints); 'M' starts a path, 'L' continues one */
+export function curve(p: Pt[], start: 'M' | 'L' = 'M'): string {
+  let d = `${start}${pp(p[0])}`;
+  for (let i = 1; i < p.length - 1; i++) d += `Q${pp(p[i])} ${pp([(p[i][0] + p[i + 1][0]) / 2, (p[i][1] + p[i + 1][1]) / 2])}`;
+  return d + `L${pp(p[p.length - 1])}`;
+}
+/** wood grain: n gently waving lines along a board x0..x1, y0..y1, broken at pseudo-random places */
+export function grain(x0: number, y0: number, x1: number, y1: number, n: number, amp = 0.7, seed = 1): string {
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const y = y0 + ((i + 0.5) * (y1 - y0)) / n, r = (j: number) => ((i * 37 + seed * 17 + j * 11) % 23) / 23;
+    const a = x0 + (x1 - x0) * r(1) * 0.25, b = x1 - (x1 - x0) * r(2) * 0.25, len = (b - a) / 3;
+    d += `M${f(a)} ${f(y)}`;
+    for (let s = 0; s < 3; s++) d += `Q${f(a + len * (s + 0.5))} ${f(y + (s % 2 ? -amp : amp) * (0.6 + r(s + 3)))} ${f(a + len * (s + 1))} ${f(y)}`;
+  }
+  return d;
+}
+/** a rope between two points: a dark cord with a light core and the twist as short slanted ticks */
+export function rope(k: K, x0: number, y0: number, x1: number, y1: number, w = 2.6): string {
+  const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L;
+  let t = '';
+  if (!k.small) for (let s = w; s < L - w * 0.5; s += w * 0.9) {
+    const cx = x0 + ux * s, cy = y0 + uy * s, h = w * 0.42;
+    t += `M${f(cx - uy * h - ux * h)} ${f(cy + ux * h - uy * h)}L${f(cx + uy * h + ux * h)} ${f(cy - ux * h + uy * h)}`;
+  }
+  const d = `M${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}`;
+  return k.S(d, w + 1.2) + k.S(d, w - 0.6, 'mid') + (t ? k.S(t, 0.7) : '');
 }
 
 // ---------------------------------------------------------------- shared motifs
@@ -173,3 +223,19 @@ export function bubble(k: K, cx: number, cy: number, r: number): string {
   return k.shape(circ(cx, cy, r), { fill: 'light', sw: r > 2.5 ? 1.5 : 1.2 }) + k.F(circ(cx - r * 0.35, cy - r * 0.35, r * 0.28), 'paper');
 }
 
+/** a billowing cloud of smoke: n lobes round an ellipse, each bulging outward; seed varies the lobes */
+export function cloud(cx: number, cy: number, rx: number, ry: number, n = 7, bump = 0.5, seed = 0): string {
+  const p: Pt[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = rad(-90 + (i * 360) / n + ((seed * 29 + i * 47) % 17) - 8), s = 0.86 + (((seed * 13 + i * 31) % 11) / 11) * 0.22;
+    p.push([cx + rx * s * Math.cos(a), cy + ry * s * Math.sin(a)]);
+  }
+  let d = `M${pp(p[0])}`;
+  for (let i = 0; i < n; i++) {
+    const a = p[i], b = p[(i + 1) % n], m: Pt = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    const ox = m[0] - cx, oy = m[1] - cy, L = Math.hypot(ox, oy) || 1, len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const c: Pt = [m[0] + (ox / L) * len * bump, m[1] + (oy / L) * len * bump];
+    d += `Q${pp(c)} ${pp(b)}`;
+  }
+  return d + 'Z';
+}
