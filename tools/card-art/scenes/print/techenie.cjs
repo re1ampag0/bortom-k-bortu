@@ -190,6 +190,12 @@ function lanes(u, L, o) {
     // a broken chain of short wedges along the same line, ahead of the streak
     if (R() > .35) { let t = th + d; for (let k = 0; k < 3; k++) { t += span(r, t, 3 + R() * 6); const e = t + span(r, t, 3 + R() * 7); s += `<path d="${flow(r, t, e, wk * .9, R() * 6, 0, true)}" fill="${foamC}" opacity="${f(.3 + R() * .35)}"/>`; t = e; } }
   }
+  // the far reach: more streaks there, the water running left under the far ship
+  for (let i = 0; i < 40; i++) { const r = lerp(.8, LOOP.r1 - .05, R()), th = lerp(.3, 2.4, R()), d = span(r, th, 6 + R() * 16);
+    s += `<path d="${flow(r, th, th + d, .03 + R() * .02, R() * 6, .004, true)}" fill="${foamC}" opacity="${f(.6 + R() * .35)}"/>`; }
+  // the turn: long white lines sweeping round it from the near reach to the far one, heads forward — the way
+  // the water takes the ships
+  for (const [r, a0, a1, wk] of [[.6, -1.6, .7, .045], [.72, -1.45, .8, .05], [.86, -1.25, .9, .052], [1.0, -1.05, 1, .055], [1.14, -.95, .95, .05]]) s += `<path d="${flow(r, a0, a1, wk, 1, .002, true)}" fill="${foamC}" opacity=".9"/>`;
   return `<g clip-path="url(#${o.clip})">${back}${s}</g>`;
 }
 // small eddies spun off the stream: a short curl of foam, an open spiral (not a whirlpool)
