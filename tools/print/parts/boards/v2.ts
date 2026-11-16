@@ -127,7 +127,7 @@ const LOOKS: Record<ShipKey, Look> = {
 const W = (s: string, size: number, o: TO = {}) => widthOf(s, size, o);
 const LABEL: TO = { font: 'Alegreya SC', w: 800, ls: '.03em' }, NOTE_O: TO = { font: 'Alegreya', italic: true, w: 500 }, NUM: TO = { w: 800 }, CAP_O: TO = { font: 'Alegreya', italic: true, w: 500 };
 const PTR: TO = { w: 800 };
-const SINK_O: TO = { font: 'Alegreya', italic: true, w: 800, ls: '.02em' };
+const SINK_O: TO = { font: 'Alegreya', italic: true, w: 500, ls: '.02em' }; // italic 500: the heaviest embedded italic (800 would be synthesised → Type 3)
 
 // ---- the layout ----
 interface Cell { n: number; x: number; y: number; start: boolean }
