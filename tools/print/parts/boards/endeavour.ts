@@ -3,10 +3,13 @@
 // bulwark at the rail, Guns along the upper row of open ports, Hull on the black strake of planking), the cells set into
 // that part (canvas, the rail, ports red inside, planks with treenails); a navy morocco binding with gilt fillets round
 // it, a red wax seal with the Company's bale mark in the header, brass dividers and a compass card in the column's foot.
-// The back: the Endeavour on the sea floor, the Company's strongbox spilling its gold beside her. B: the shared simple
-// material (paint.ts) in the Company's colours. See the interface at the top of frame.ts.
-import type { Geo, Layers, Pal, Rect, RowGeo, ShipMaterial, TrackKey, WreckGeo } from './frame';
-import { compass, rng, rope, sheet, simpleMaterial } from './paint';
+// The back: the Endeavour on the sea floor, the Company's strongbox spilling its gold beside her. B: the captain's table —
+// the Company's chart (grid, rhumb lines, a coast, a compass rose, dividers) under the tracks, every track on a brass
+// rule; the ship an engraving in blue ink in a navy frame; the right column a ruled ledger, the abilities the Company's
+// charter with its seal, the Legend and Powder notes pinned on it; a sextant, a parallel rule and the seal at its foot.
+// See the interface at the top of frame.ts.
+import { ENGRAVING, type Geo, type Layers, type Pal, type Rect, type RowGeo, type ShipMaterial, type TrackKey, type WreckGeo } from './frame';
+import { compass, engraving, rng, rope, sheet } from './paint';
 
 const r = (n: number) => Math.round(n * 100) / 100;
 type Fn = (u: string, L: unknown, o: Record<string, unknown>) => string;
@@ -218,13 +221,164 @@ async function wreckB(w: WreckGeo): Promise<Layers> {
   return { under: under + seal };
 }
 
-const simple = simpleMaterial({
-  wood: { base: '#1f3556', seam: '#0f1d33', grain: '#2a4570', nails: '#c9a35a' }, band: '#9C7A2C', hair: '#e0c27a',
-  sky: ['#d6dfe6', '#f3f1e8'], sea: ['#6f8ea4', '#355068'], focus: 0,
-  chart: { paper: '#f4ecd6', line: '#c9c0a2', coast: '#e3d6b0' }, brass: { light: '#f4dc92', mid: '#c9a04a', dark: '#6a4c16' },
-  note: '#fffcf2', noteLine: '#9fb3cf', pin: '#1f3556',
-  extraB: g => { let d = ''; for (let y = 36; y < 170; y += 6.2) d += `M11.2 ${y.toFixed(1)}H${(g.page.w - 11.2).toFixed(1)}`; return `<path d="${d}" stroke="#9fb3cf" stroke-width=".2"/><line x1="116" y1="11.2" x2="116" y2="197" stroke="#d48a8a" stroke-width=".3"/>` + waxSeal(274, 162, 6.4, 7, false); },
-  wreck: { water: ['#4c6476', '#1a2733'], sand: '#a99f86', sandDark: '#6a6252' }
-});
+// ---- B: the captain's table — the Company's chart, a ledger with its documents, brass instruments ----
+const B = {
+  chart: '#f4ead0', grid: '#b9c4cf', rhumb: '#c7b994', land: '#ead7a6', landLine: '#7d6a44', coast: '#5f7795',
+  ledger: '#fbf5e3', ledgerRule: '#c3d0e3', ink: '#1a2a44', shadow: '#0b1628'
+};
+/** a brass gradient (vertical or diagonal) */
+const brassGrad = (id: string, diag = false) => `<linearGradient id="${id}" x1="0" y1="0" x2="${diag ? 1 : 0}" y2="1"><stop offset="0" stop-color="${C.giltLight}"/><stop offset=".45" stop-color="${C.gilt}"/><stop offset="1" stop-color="${C.giltDark}"/></linearGradient>`;
+const pt = (cx: number, cy: number, a: number, d: number) => `${r(cx + Math.cos(a) * d)} ${r(cy + Math.sin(a) * d)}`;
 
-export const material: ShipMaterial = { palette: PALETTE, a: faceA, b: simple.b, wreck: wreckB };
+/** the rhumb lines and the grid of degrees stay off the words of the rows: a mask with the label lines, the notes beside
+ *  the short rows, the thresholds under the cells and the Volley's caption cut out */
+function chartLines(g: Geo, F: Rect, rose: [number, number]): string {
+  const id = `${g.uid}cm`, holes: Rect[] = [];
+  for (const rw of g.rows) {
+    const c0 = rw.cells[0];
+    holes.push({ x: rw.x0 - 1, y: rw.top - 0.8, w: Math.max(rw.lineEnd, rw.x1) + 3 - rw.x0, h: c0.y - rw.top + 0.8 });
+    holes.push({ x: rw.x0 - 1, y: c0.y + c0.h, w: 46, h: 4 });
+    if (rw.x1 < 60) holes.push({ x: rw.x1 + 1.5, y: rw.cy - 3.4, w: 50, h: 6 });
+  }
+  for (const v of g.slots.filter(sl => sl.kind === 'volley')) holes.push({ x: v.x - 6, y: v.y - 9, w: v.w + 26, h: 9 });
+  let grid = '';
+  for (let x = F.x + 14.5; x < F.x + F.w; x += 29) grid += `M${r(x)} ${r(F.y)}V${r(F.y + F.h)}`;
+  for (let y = F.y + 9; y < F.y + F.h; y += 29) grid += `M${r(F.x)} ${r(y)}H${r(F.x + F.w)}`;
+  let rh = '', rd = '';
+  for (let i = 0; i < 32; i++) { const a = i * Math.PI / 16, l = `M${pt(rose[0], rose[1], a, 11)}L${pt(rose[0], rose[1], a, 320)}`; if (i % 2) rd += l; else rh += l; }
+  return `<defs><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="${g.page.w}" height="${g.page.h}">${rect(F, '#fff')}${holes.map(h => rect(h, '#000', ' rx="1"')).join('')}</mask></defs>` +
+    `<g mask="url(#${id})"><path d="${grid}" stroke="${B.grid}" stroke-width=".25"/><path d="${rh}" stroke="${B.rhumb}" stroke-width=".2"/><path d="${rd}" stroke="${B.rhumb}" stroke-width=".16" stroke-dasharray="1.2 1.1"/></g>`;
+}
+/** the coast between the header and the middle column, an island off it: land tint, the coastline and its water lines */
+function coast(): string {
+  const pts: [number, number][] = [[79, 30.4], [81.5, 33.2], [86, 34.4], [89.5, 37.6], [94.5, 38.2], [98.5, 41.6], [103.5, 42.4], [106.5, 46], [111, 47.6], [113.5, 51.2], [117, 52.8]];
+  const line = (dx: number, dy: number) => 'M' + pts.map(([x, y]) => `${r(x + dx)} ${r(y + dy)}`).join('L');
+  const land = `${line(0, 0)}L117 30.4Z`, R = rng(41);
+  let hach = '';
+  for (let i = 0; i < 46; i++) { const k = R() * (pts.length - 1), j = Math.floor(k), t = k - j, x = pts[j][0] + (pts[j + 1][0] - pts[j][0]) * t, y = pts[j][1] + (pts[j + 1][1] - pts[j][1]) * t, d = 0.8 + R() * 2.4; if (x + d * 0.7 < 116.6 && y - d > 30.6) hach += `M${r(x + d * 0.5)} ${r(y - d)}l.9 -.5`; }
+  const isle = 'M108.4 89.6c1.4 -1.6 3.6 -1.5 4.6 -.4c.9 1 2.4 .8 2.5 2c.1 1.3 -1.5 1.7 -3 1.8c-1.6 0 -2.3 1 -3.6 .6c-1.3 -.4 -1.4 -2.8 -.5 -4Z';
+  return `<path d="${land}" fill="${B.land}"/><path d="${hach}" stroke="${B.landLine}" stroke-width=".2" stroke-opacity=".7"/>` +
+    `<path d="${line(0, 0)}" fill="none" stroke="${B.landLine}" stroke-width=".35" stroke-linejoin="round"/>` +
+    [[-0.6, 0.9, 0.22], [-1.3, 1.9, 0.18], [-2.1, 3, 0.15]].map(([dx, dy, w]) => `<path d="${line(dx, dy)}" fill="none" stroke="${B.coast}" stroke-width="${w}" stroke-opacity=".75"/>`).join('') +
+    `<path d="${isle}" fill="${B.land}" stroke="${B.landLine}" stroke-width=".3"/><path d="${isle}" fill="none" stroke="${B.coast}" stroke-width=".18" stroke-opacity=".7" transform="translate(111.6 91) scale(1.35) translate(-111.6 -91)"/>` +
+    // rocks off the coast: little crosses, no soundings (no numbers on the chart)
+    [[90, 41.8], [96.4, 44.6], [108.6, 52]].map(([x, y]) => `<path d="M${x - 0.6} ${y}h1.2M${x} ${y - 0.6}v1.2" stroke="${B.landLine}" stroke-width=".25"/>`).join('');
+}
+/** the Company's rule under a track row: brass, an engraved border, a graduation mark in every gap, screws at the ends;
+ *  its top stays under the numbers' baseline, its foot over the thresholds under the cells */
+function companyRule(g: Geo, rw: RowGeo, i: number): string {
+  const c0 = rw.cells[0], cl = rw.cells[rw.cells.length - 1], volley = rw.key === 'guns' ? g.slots.filter(sl => sl.kind === 'volley') : [];
+  const last = volley.length ? volley[volley.length - 1] : cl, x0 = c0.x - 1.3, x1 = last.x + last.w + (volley.length ? 2.4 : 1.3);
+  const y0 = c0.y - 0.45, y1 = c0.y + c0.h + 0.6, id = `${g.uid}cr${i}`, out: string[] = [];
+  out.push(`<defs>${brassGrad(id)}</defs><rect x="${r(x0 + 0.5)}" y="${r(y0 + 0.6)}" width="${r(x1 - x0)}" height="${r(y1 - y0)}" rx=".9" fill="${B.shadow}" fill-opacity=".28"/>`);
+  out.push(`<rect x="${r(x0)}" y="${r(y0)}" width="${r(x1 - x0)}" height="${r(y1 - y0)}" rx=".9" fill="url(#${id})" stroke="${C.giltDark}" stroke-width=".3"/>`);
+  out.push(`<rect x="${r(x0 + 0.35)}" y="${r(y0 + 0.25)}" width="${r(x1 - x0 - 0.7)}" height="${r(y1 - y0 - 0.5)}" rx=".6" fill="none" stroke="${C.giltDark}" stroke-width=".14"/>`);
+  let d = '';
+  const cells = [...rw.cells, ...volley];
+  for (let k = 1; k < cells.length; k++) { const gx = (cells[k - 1].x + cells[k - 1].w + cells[k].x) / 2; if (cells[k].x - cells[k - 1].x - cells[k - 1].w > 4) continue; d += `M${r(gx)} ${r(y0 + 0.3)}v3.2M${r(gx)} ${r(y1 - 0.3)}v-3.2M${r(gx)} ${r(c0.y + c0.h / 2 - 0.8)}v1.6`; }
+  // between the last Guns cell and the «Залп дан» cell: a run of fine graduation
+  if (volley.length) { const a = cl.x + cl.w, b = volley[0].x; for (let x = a + 0.8; x < b - 0.4; x += 0.8) d += `M${r(x)} ${r(y1 - 0.3)}v${(x - a) % 2.4 < 0.8 ? -2.4 : -1.2}M${r(x)} ${r(y0 + 0.3)}v${(x - a) % 2.4 < 0.8 ? 2.4 : 1.2}`; }
+  out.push(`<path d="${d}" stroke="${C.giltDark}" stroke-width=".22"/>`);
+  out.push(`<line x1="${r(x0 + 0.6)}" y1="${r(y0 + 0.5)}" x2="${r(x1 - 0.6)}" y2="${r(y0 + 0.5)}" stroke="#fff3c6" stroke-width=".18" stroke-opacity=".8"/>`);
+  for (const sx of [x0 + 0.65, x1 - (volley.length ? 1.2 : 0.65)]) out.push(`<circle cx="${r(sx)}" cy="${r(rw.cy)}" r=".5" fill="${C.giltLight}" stroke="${C.giltDark}" stroke-width=".15"/><path d="M${r(sx - 0.35)} ${r(rw.cy + 0.2)}l.7 -.4" stroke="${C.giltDark}" stroke-width=".14"/>`);
+  return out.join('');
+}
+/** a brass sextant lying on the ledger: apex up, the arc with its graduation down, the index arm, mirrors, telescope */
+function sextant(ax: number, ay: number, R0: number, id: string): string {
+  const a1 = Math.PI / 3, a2 = 2 * Math.PI / 3, Ri = R0 - 2.6, out: string[] = [];
+  const bar = (a: number, w: number, to: number) => { const ux = Math.cos(a), uy = Math.sin(a), px = -uy * w / 2, py = ux * w / 2; return `M${r(ax + px)} ${r(ay + py)}L${r(ax + ux * to + px)} ${r(ay + uy * to + py)}L${r(ax + ux * to - px)} ${r(ay + uy * to - py)}L${r(ax - px)} ${r(ay - py)}Z`; };
+  const limb = `M${pt(ax, ay, a1, R0)}A${R0} ${R0} 0 0 1 ${pt(ax, ay, a2, R0)}L${pt(ax, ay, a2, Ri)}A${Ri} ${Ri} 0 0 0 ${pt(ax, ay, a1, Ri)}Z`;
+  const brace = `M${pt(ax, ay, a1, R0 * 0.55 - 0.7)}A${R0 * 0.55} ${R0 * 0.55} 0 0 1 ${pt(ax, ay, a2, R0 * 0.55 - 0.7)}`;
+  const frame = `${limb}${bar(a1, 1.7, Ri)}${bar(a2, 1.7, Ri)}`;
+  out.push(`<defs>${brassGrad(id, true)}</defs><g transform="translate(.5 .6)" fill="${B.shadow}" fill-opacity=".3"><path d="${frame}"/></g>`);
+  out.push(`<path d="${frame}" fill="url(#${id})" stroke="${C.giltDark}" stroke-width=".25" stroke-linejoin="round"/><path d="${brace}" fill="none" stroke="${C.giltDark}" stroke-width="1.5"/><path d="${brace}" fill="none" stroke="${C.gilt}" stroke-width="1"/>`);
+  // the silver scale on the arc
+  out.push(`<path d="M${pt(ax, ay, a1 + 0.02, R0 - 0.3)}A${R0 - 0.3} ${R0 - 0.3} 0 0 1 ${pt(ax, ay, a2 - 0.02, R0 - 0.3)}" fill="none" stroke="#dfe3e6" stroke-width="1.3"/>`);
+  let d = '';
+  for (let k = 0; k <= 30; k++) { const a = a1 + 0.03 + k * (a2 - a1 - 0.06) / 30, l = k % 5 ? 0.7 : 1.3; d += `M${pt(ax, ay, a, R0 - 0.05)}L${pt(ax, ay, a, R0 - l)}`; }
+  out.push(`<path d="${d}" stroke="#3a3f45" stroke-width=".13"/>`);
+  // the telescope across the frame, the horizon mirror on the left bar
+  const ty = ay + R0 * 0.36;
+  out.push(`<rect x="${r(ax - R0 * 0.36)}" y="${r(ty - 0.75)}" width="${r(R0 * 0.62)}" height="1.5" rx=".4" fill="${C.ochreDark}" stroke="#3b2a0c" stroke-width=".2"/>` +
+    [-0.3, 0.05, 0.22].map(k => `<rect x="${r(ax + R0 * k)}" y="${r(ty - 0.95)}" width=".7" height="1.9" fill="${C.giltLight}" stroke="${C.giltDark}" stroke-width=".12"/>`).join(''));
+  const hx = ax + Math.cos(a2) * R0 * 0.72, hy = ay + Math.sin(a2) * R0 * 0.72;
+  out.push(`<rect x="${r(hx - 1.3)}" y="${r(hy - 1.6)}" width="2.6" height="3.2" fill="#c9d3dc" stroke="#4a5058" stroke-width=".2" transform="rotate(-30 ${r(hx)} ${r(hy)})"/>`);
+  // the index arm on its pivot, the vernier at the arc, the index mirror at the apex
+  const ia = Math.PI * 0.46, ux = Math.cos(ia), uy = Math.sin(ia);
+  out.push(`<path d="${bar(ia, 1.3, R0 + 0.6)}" fill="${C.gilt}" stroke="${C.giltDark}" stroke-width=".2"/><rect x="${r(ax + ux * (R0 - 1.4) - 1.6)}" y="${r(ay + uy * (R0 - 1.4) - 0.9)}" width="3.2" height="1.8" rx=".3" fill="#dfe3e6" stroke="#4a5058" stroke-width=".15" transform="rotate(${r(ia * 180 / Math.PI - 90)} ${r(ax + ux * (R0 - 1.4))} ${r(ay + uy * (R0 - 1.4))})"/>`);
+  out.push(`<rect x="${r(ax - 1.8)}" y="${r(ay - 1.2)}" width="3.6" height="2.4" fill="#c9d3dc" stroke="#4a5058" stroke-width=".2"/><circle cx="${r(ax)}" cy="${r(ay + 1.6)}" r="1.1" fill="${C.giltLight}" stroke="${C.giltDark}" stroke-width=".2"/><circle cx="${r(ax)}" cy="${r(ay + 1.6)}" r=".35" fill="${C.giltDark}"/>`);
+  return out.join('');
+}
+/** a brass parallel rule: two bars, two links with rivets */
+function parallelRule(x: number, y: number, w: number, id: string): string {
+  const h = 3.2, gap = 4.6, out: string[] = [`<defs>${brassGrad(id)}</defs>`];
+  const bars = [y, y + h + gap];
+  out.push(bars.map(by => `<rect x="${r(x + 0.5)}" y="${r(by + 0.6)}" width="${w}" height="${h}" rx=".5" fill="${B.shadow}" fill-opacity=".3"/>`).join(''));
+  const links = [x + w * 0.22, x + w * 0.7].map(lx => [lx, y + h / 2, lx + 3.2, y + h + gap + h / 2]);
+  out.push(links.map(([x1, y1, x2, y2]) => `<line x1="${r(x1)}" y1="${r(y1)}" x2="${r(x2)}" y2="${r(y2)}" stroke="${C.giltDark}" stroke-width="1.6" stroke-linecap="round"/><line x1="${r(x1)}" y1="${r(y1)}" x2="${r(x2)}" y2="${r(y2)}" stroke="${C.gilt}" stroke-width="1.1" stroke-linecap="round"/>`).join(''));
+  out.push(bars.map(by => `<rect x="${r(x)}" y="${r(by)}" width="${w}" height="${h}" rx=".5" fill="url(#${id})" stroke="${C.giltDark}" stroke-width=".25"/><line x1="${r(x + 0.5)}" y1="${r(by + 0.45)}" x2="${r(x + w - 0.5)}" y2="${r(by + 0.45)}" stroke="#fff3c6" stroke-width=".16"/>`).join(''));
+  out.push(links.map(([x1, y1, x2, y2]) => [[x1, y1], [x2, y2]].map(([cx, cy]) => `<circle cx="${r(cx)}" cy="${r(cy)}" r=".55" fill="${C.giltLight}" stroke="${C.giltDark}" stroke-width=".15"/>`).join('')).join(''));
+  return out.join('');
+}
+/** the ledger the Company's documents lie on: under the right column, ruled in blue, a red double margin */
+function ledger(g: Geo): string {
+  const c = g.zones.col, L: Rect = { x: c.x - 1.2, y: c.y - 2.4, w: g.page.w - 11.2 - c.x + 1.2, h: g.zones.strip.y - 0.6 - c.y + 2.4 };
+  let d = ''; for (let y = L.y + 6; y < L.y + L.h - 0.5; y += 5.2) d += `M${r(L.x + 0.6)} ${r(y)}H${r(L.x + L.w - 0.6)}`;
+  return `<rect x="${r(L.x - 0.9)}" y="${r(L.y + 0.9)}" width="${r(L.w)}" height="${r(L.h)}" rx=".8" fill="${B.shadow}" fill-opacity=".25"/>` +
+    `<rect x="${r(L.x - 0.45)}" y="${r(L.y + 0.45)}" width="${r(L.w)}" height="${r(L.h)}" rx=".8" fill="#efe6cc" stroke="#b8a77e" stroke-width=".2"/>` +
+    `<rect x="${r(L.x)}" y="${r(L.y)}" width="${r(L.w)}" height="${r(L.h)}" rx=".8" fill="${B.ledger}" stroke="#b8a77e" stroke-width=".25"/>` +
+    `<path d="${d}" stroke="${B.ledgerRule}" stroke-width=".22"/>` +
+    [L.x + 5.4, L.x + 6.1].map(x => `<line x1="${r(x)}" y1="${r(L.y + 0.4)}" x2="${r(x)}" y2="${r(L.y + L.h - 0.4)}" stroke="${C.red}" stroke-width=".22"/>`).join('');
+}
+/** a hard shadow under a field of the frame: the documents lie on the chart */
+const dropShadow = (b: Rect, pad = 0) => `<rect x="${r(b.x - pad + 0.6)}" y="${r(b.y - pad + 0.7)}" width="${r(b.w + 2 * pad)}" height="${r(b.h + 2 * pad)}" rx="2" fill="${B.shadow}" fill-opacity=".22"/>`;
+/** the engraving: the kit ship in the Company's blue ink on plate paper, a navy frame with gilt fillets */
+async function engravingB(g: Geo): Promise<string> {
+  const E = ENGRAVING, base = await engraving(g, { paper: '#f8f1dc', ink: B.ink, frame: C.navy, frameDark: C.navyDeep, sails: 'full', seed: 5 });
+  const gilt = `<rect x="1.55" y="1.55" width="${E.w - 3.1}" height="${E.h - 3.1}" rx=".9" fill="none" stroke="${C.gilt}" stroke-width=".3"/>` +
+    `<rect x="2.6" y="2.6" width="${E.w - 5.2}" height="${E.h - 5.2}" fill="none" stroke="${C.giltLight}" stroke-width=".35"/>` +
+    `<rect x="4.4" y="4.4" width="${E.w - 8.8}" height="${E.h - 8.8}" fill="none" stroke="${B.ink}" stroke-width=".18"/>` +
+    [[1.55, 1.55], [E.w - 1.55, 1.55], [1.55, E.h - 1.55], [E.w - 1.55, E.h - 1.55]].map(([x, y]) => `<circle cx="${r(x)}" cy="${r(y)}" r=".7" fill="${C.gilt}"/>`).join('');
+  return base + gilt;
+}
+/** the wax seal as a small SVG for CSS (it sits on an HTML box, above the material's SVG layers) */
+const sealUri = () => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -5 10 10">${waxSeal(0, 0, 4.1, 13, false)}</svg>`)}`;
+
+async function faceB(g: Geo): Promise<Layers> {
+  const F: Rect = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 }, rose: [number, number] = [98, 66], z = g.zones, col = z.col, m = z.mid;
+  const E = z.engraving, eh = E ? Math.min(E.w / ENGRAVING.w, E.h / ENGRAVING.h) * ENGRAVING.h : 0, ew = E ? Math.min(E.w / ENGRAVING.w, E.h / ENGRAVING.h) * ENGRAVING.w : 0;
+  const foot = col.y + col.h;
+  const under = [
+    binding(g),
+    `<rect x="${r(F.x)}" y="${r(F.y)}" width="${r(F.w)}" height="${r(F.h)}" rx="1.2" fill="${B.chart}"/>`,
+    chartLines(g, F, rose),
+    coast(),
+    compass(rose[0], rose[1], 10, { line: '#41546f', fill: B.chart, accent: C.wax }),
+    dividers(rose[0] + 2, rose[1] + 20, Math.PI * 0.63, Math.PI * 0.37, 17, `${g.uid}dv`),
+    ledger(g),
+    // the documents of the frame lie on the chart: hard shadows under the header, the Fires, the strip, the footer
+    dropShadow(z.header, 0.4), dropShadow(g.boxes[0]), dropShadow({ x: m.x, y: m.y - 0.6, w: m.w, h: 5.6 }, 0.4),
+    dropShadow({ x: z.strip.x, y: z.strip.y - 0.6, w: z.strip.w, h: z.strip.h + 1.2 }, 0.6),
+    dropShadow({ x: z.footer.x + 30, y: z.footer.y - 0.2, w: z.footer.w - 60, h: z.footer.h + 0.4 }, 0.6),
+    E ? `<rect x="${r(E.x + (E.w - ew) / 2 + 0.7)}" y="${r(E.y + (E.h - eh) / 2 + 0.9)}" width="${r(ew)}" height="${r(eh)}" rx="1.2" fill="${B.shadow}" fill-opacity=".3"/>` : '',
+    ...g.rows.map((rw, i) => companyRule(g, rw, i)),
+    // the ledger's foot under the column's documents: the sextant, the parallel rule, the Company's seal
+    sextant(col.x + 13, foot - 17.6, 16, `${g.uid}sx`),
+    parallelRule(col.x + 28, foot - 13.6, 30, `${g.uid}pr`),
+    waxSeal(col.x + col.w - 12, foot - 11.2, 5.4, 7)
+  ].join('');
+  // over: a red double rule under the header, as at the head of a ledger page
+  const h = z.header, over = `<path d="M${r(h.x + 21)} ${r(h.y + h.h - 1.2)}H${r(h.x + h.w - 1.5)}M${r(h.x + 21)} ${r(h.y + h.h - 0.7)}H${r(h.x + h.w - 1.5)}" stroke="${C.red}" stroke-width=".2"/>`;
+  const s = g.scope, margin = `linear-gradient(90deg,transparent 1mm,${C.red} 1mm,${C.red} 1.2mm,transparent 1.2mm,transparent 1.5mm,${C.red} 1.5mm,${C.red} 1.7mm,transparent 1.7mm)`;
+  const pin = `content:'';position:absolute;left:50%;top:-1.3mm;width:2.6mm;height:2.6mm;margin-left:-1.3mm;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6d8 0,${C.gilt} 45%,${C.giltDark} 100%)`;
+  const css = `${s} .bo2-col .bo2-box{border-color:${C.rule};box-shadow:none}` +
+    // the abilities: the Company's charter — a navy head band with an ochre line, the ledger margin, the seal by the title
+    `${s} .bo2-ab{border-top:1.6mm solid ${C.navy};background:${margin},var(--f);box-shadow:inset 0 .45mm 0 ${C.ochre}}` +
+    `${s} .bo2-ab::after{content:'';position:absolute;right:20mm;top:.5mm;width:7.4mm;height:7.4mm;background:url("${sealUri()}") center/contain no-repeat}` +
+    // the Legend and the Powder: notes pinned to the ledger with brass pins
+    `${s} .bo2-legend{background:${margin},#fcf1d2}${s} .bo2-powder{background:${margin},var(--f)}` +
+    `${s} .bo2-legend::before,${s} .bo2-powder::before{${pin}}`;
+  return { under, over, css, engraving: await engravingB(g) };
+}
+
+export const material: ShipMaterial = { palette: PALETTE, a: faceA, b: faceB, wreck: wreckB };
