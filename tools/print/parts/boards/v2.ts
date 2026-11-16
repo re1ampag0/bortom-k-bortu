@@ -744,7 +744,7 @@ function logInner(ship: Ship, L: Look, id: string): string {
   return `<div class="v2-h">${esc(TXT.abilities)}</div>${ab}${extra}`;
 }
 /** the «раз в ход» cell beside an ability: a 13 mm cell like the tracks', floated right in the log */
-const onceCell = (L: Look, id: string) => `<svg viewBox="0 0 13 13" style="width:13mm;height:13mm;display:block"><rect x=".2" y=".2" width="12.6" height="12.6" rx="1.8" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><rect x="1" y="1" width="11" height="11" rx="1.1" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".2"/></svg>`.replace('url(#' + id, 'url(#' + id);
+const onceCell = (L: Look, id: string) => `<svg viewBox="0 0 13 13" style="width:13mm;height:13mm;display:block;flex:none"><rect x=".2" y=".2" width="12.6" height="12.6" rx="1.8" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><rect x="1" y="1" width="11" height="11" rx="1.1" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".2"/></svg>`.replace('url(#' + id, 'url(#' + id);
 
 /** every line of the log has one line height (--lh), so the baselines stay on the ruled lines; a heading's larger size sits
  *  its baseline 0.33·Δem lower in the same line box and is lifted back (--lift-h, --lift-n) */

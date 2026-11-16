@@ -13,7 +13,7 @@ const T = JSON.parse(fs.readFileSync(path.join(HERE, 'text/howto.json'), 'utf8')
 
 /** Text of howto.json → HTML: `name` is a file name, **x** is bold. */
 /** Russian typography: no line break after a number, around × and before a dash. */
-const typo = (s: string) => s.replace(/(\d) (?=\S)/g, '$1\u00a0').replace(/ × /g, '\u00a0×\u00a0').replace(/ — /g, '\u00a0— ');
+const typo = (s: string) => s.replace(/(^|[\s(«])([ВвКкСсУуОоИиАа]) (?=\S)/g, '$1$2\u00a0').replace(/(\d) (?=\S)/g, '$1\u00a0').replace(/ × /g, '\u00a0×\u00a0').replace(/ — /g, '\u00a0— ');
 const fmt = (s: string) => esc(typo(s)).replace(/\d[\d,]*–\d[\d,]*(?:\u00a0[^\s<,.;:)]+)?/g, m => `<span class="hw-nb">${m}</span>`).replace(/`([^`]+)`/g, '<span class="hw-f">$1</span>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
 const n3 = (v: number) => String(Math.round(v * 1000) / 1000);
 const plural = (n: number) => `${n} ${T.plural[n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2]}`;
@@ -170,7 +170,7 @@ const CSS = `
 .hw-t th:nth-child(1){width:36.5mm}.hw-t th:nth-child(3){width:22mm}.hw-t th:nth-child(4){width:31mm}.hw-t td:nth-child(4){padding-right:0}
 .hw-t tr.hw-dx td{background:${lighten(BRASS, .84)}}
 .hw-t tr.hw-no td{color:${MUTED}}
-.hw-pill{display:inline-block;padding:.5mm 1.8mm .6mm;border-radius:.8mm;background:${RED};color:#fff;font:800 8.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.06em;white-space:nowrap}
+.hw-pill{display:inline-block;max-width:100%;box-sizing:border-box;padding:.5mm 1.8mm .6mm;border-radius:.8mm;background:${RED};color:#fff;font:800 8.5pt/1.2 'Alegreya Sans',sans-serif;letter-spacing:.06em}
 .hw-dl{margin:1.6mm 0 0 !important;padding:1.6mm 3mm 1.8mm;border:.4mm solid ${RED};border-radius:1.5mm;font-size:11pt;text-align:center}
 .hw-2{display:flex;gap:7mm;margin-top:.4mm}.hw-2>div{flex:1 1 0;min-width:0}
 .hw-ul,.hw-ol{list-style:none;margin:0;padding:0}
