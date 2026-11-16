@@ -34,7 +34,7 @@ const skel = { horizon: HZ, eye: 4, light: 'the low morning sun behind us on the
 const ang = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
 const lerp2 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 
-module.exports = { name: 'Флот на горизонте', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Флот на горизонте', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     L.pal = Object.assign({}, L.pal, { sea: ['#86b4cc', '#3a6c86', '#16323f'], sky: ['#3a74bc', '#6a9ed2', '#b0cfe6', '#efe4cc'] });

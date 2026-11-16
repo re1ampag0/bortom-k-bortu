@@ -64,7 +64,7 @@ function stream(u, x, y0, y1, w0, w1, seed, o = {}) {
   return s;
 }
 
-module.exports = { name: 'Уйти на глубину', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Уйти на глубину', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 }), R = rng(23);
     // ——— the green fog at night: the moon a pale disc through it, torn cloud, the sea dark under it ———

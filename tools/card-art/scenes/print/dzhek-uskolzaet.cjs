@@ -27,7 +27,7 @@ const skel = { horizon: HZ, eye: 3, light: 'the moon low on the left behind the 
     ['wake', 60, 122, 30, 12, 'water: from the spot to her stern'],
   ] };
 
-module.exports = { name: 'Джек ускользает', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Джек ускользает', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     let bg = K.sky(u, L, { horizon: HZ, stars: 50, seed: 8 }) + K.sunMoon(u, L, { r: 6.4 });

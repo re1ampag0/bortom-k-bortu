@@ -265,7 +265,7 @@ function waterlineFoam(u, L, o) {
   return `<path d="${smooth(top.concat(bot))}" fill="${c}" opacity=".9"/>` + K.foam(u, { x: o.x, y: o.y + .4, w: 70 * o.scale, h: 1.8, seed: 8, L });
 }
 
-module.exports = { name: 'Течение', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Течение', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2.5 });
     L.pal = Object.assign({}, L.pal, { sky: ['#7fa6c0', '#a6c2d0', '#cfdcd8', '#ebe6d6'], sea: ['#7fb4b8', '#1f6474', '#0c2f3a'] });

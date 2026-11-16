@@ -26,7 +26,7 @@ const skel = { horizon: HZ, eye: 3, light: 'the wall of fire in front of her (ke
   ['bow fire', 40, 100, 34, 44, 'her head, stem and bowsprit, above the wall'],
   ['slick', 0, 132, 200, 16, 'water towards us: burning patches']] };
 
-module.exports = { name: 'Огненная стена', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Огненная стена', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, { sky: ['#0c0810', '#22101a', '#561c1c', '#9a3a1e'], sea: ['#8a3a22', '#301218', '#0c060c'], cloudLit: '#b85032', cloudShade: '#24101c' });

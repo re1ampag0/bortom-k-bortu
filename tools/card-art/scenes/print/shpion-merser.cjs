@@ -50,7 +50,7 @@ const GRIP_T = 30;
 const CLOAK = [[70.4, 62.6], [66.6, 69], [60, 76], [52.6, 87], [46, 99], [40.4, 110], [36, 121], [62, 124], [92, 124], [99.6, 116], [98.4, 104], [96.6, 92], [93.6, 82], [88.4, 74], [82.6, 69.6], [81.4, 64]];
 const CAPE = [[71, 63.4], [64, 71], [58.6, 79.4], [55.4, 88.6], [60.6, 92.4], [66, 90], [72, 94.4], [79, 92], [86, 96.6], [93, 93.4], [98.6, 95.6], [97.4, 86], [93.4, 77.6], [87.4, 71], [81.6, 66.6]];
 
-module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Шпион Мерсер', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 }), R = rng(17);
     const ln = (d, w = .5, c = '#0a0c12', op = 1) => `<path d="${d}" stroke="${c}" stroke-width="${f(w)}" fill="none" opacity="${op}" stroke-linecap="round"/>`;

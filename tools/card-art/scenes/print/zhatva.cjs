@@ -114,7 +114,7 @@ function sailor(u, x, railY, s, pose, flip, C) {
 // where a pose's soul leaves him (his chest) and where his raised hand is, in scene units
 const at = (x, railY, s, pose, flip, p) => { const M = flip ? -1 : 1; return [x + p[0] * s * M, railY + 3.3 * s + p[1] * s]; };
 
-module.exports = { name: 'Жатва', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Жатва', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
     // ——— the night sky in the green fog, the moon low on the right, torn cloud ———

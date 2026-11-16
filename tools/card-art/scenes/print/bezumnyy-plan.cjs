@@ -52,7 +52,7 @@ function card(u, c, a, s, sq = .62) {
     + `<rect x="-6.6" y="-10.6" width="13.2" height="21.2" rx=".7" fill="none" stroke="#c8d4e4" stroke-width=".35"/><path d="M-8.4 -12.6h16.4" stroke="#ffffff" stroke-width=".5" opacity=".6"/></g>`;
 }
 
-module.exports = { name: 'Безумный план', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Безумный план', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: 40 }), R = rng(13);
     // ——— the back wall: dark vertical planks, the beams overhead running to the vanishing point ———

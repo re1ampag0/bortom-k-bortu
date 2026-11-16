@@ -36,7 +36,7 @@ function hit(u, L, o) {
   return out;
 }
 
-module.exports = { name: 'Залп с обоих бортов', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Залп с обоих бортов', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2.2 });
     const R = rng(17);

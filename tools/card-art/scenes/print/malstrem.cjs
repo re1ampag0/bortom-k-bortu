@@ -148,7 +148,7 @@ function vortex(u, L, o = {}) {
 }
 
 module.exports = {
-  name: 'Мальстрём', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+  name: 'Мальстрём', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     L.pal = Object.assign({}, L.pal, PAL);

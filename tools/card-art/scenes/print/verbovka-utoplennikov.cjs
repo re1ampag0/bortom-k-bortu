@@ -82,7 +82,7 @@ function foot(A, d, sz, tn) {
     + `<path d="M${P2(P(7, 2.6))}L${P2(P(7.4, 1))}M${P2(P(8.4, 2.6))}L${P2(P(8.6, 1.4))}" stroke="${tn.shadow}" stroke-width=".3"/>`;
 }
 
-module.exports = { name: 'Вербовка утопленников', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Вербовка утопленников', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: 0, eye: 1.6 });
     // ——— the sea: bright surface overhead, deep teal below, the light fanning down past the hull ———

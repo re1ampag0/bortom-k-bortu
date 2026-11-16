@@ -60,7 +60,7 @@ function scallop(u, x, y, r, a, col = '#d8c8b0') {
     + `<path d="M${f(-r * .35)} ${f(r * .05)}h${f(r * .7)}l${f(-r * .1)} ${f(r * .3)}h${f(-r * .5)}z" fill="${mix(col, '#2a1a10', .3)}"/></g>`;
 }
 
-module.exports = { name: 'Морские наросты', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Морские наросты', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VP[1], eye: 2 }), R = rng(5);
     // ——— the water: bright surface overhead, deep teal below; the hull runs into the murk on the left ———

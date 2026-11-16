@@ -76,7 +76,7 @@ function burst(u, x, y, k, seed) {
     + Array.from({ length: 2 }, () => `<circle cx="${f(x + (r() - .65) * 7 * k)}" cy="${f(y + (r() - .2) * 4 * k)}" r="${f(.18 + r() * .2)}" fill="#ffd86a"/>`).join('');
 }
 
-module.exports = { name: 'Залп всей батареей', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Залп всей батареей', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 7.7 });
     L.pal = Object.assign({}, L.pal, { sky: ['#2f6aa8', '#5f98cc', '#a8cbe4', '#eee6cc'], sea: ['#7eb0c4', '#2f6a84', '#0f2f3e'] });

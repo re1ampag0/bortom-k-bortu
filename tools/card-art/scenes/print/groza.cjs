@@ -131,7 +131,7 @@ function rain(u, L, o) {
 }
 
 module.exports = {
-  name: 'Гроза', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+  name: 'Гроза', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, PAL);

@@ -35,7 +35,7 @@ const SKIN = { lit: '#f0c094', half: '#c4865a', core: '#a46a44', shadow: '#5e342
 function handAt(u, base, g, t, a0) { let a = a0, h; for (let k = 0; k < 5; k++) { h = H.hand3(u, { ...base, a, grip: g }); const ang = Math.atan2(h.axis[1], h.axis[0]) * 180 / Math.PI;
   let d = t - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; } return h; }
 
-module.exports = { name: 'Право на переговоры', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Право на переговоры', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), R = rng(41);
     // ——— the night over the bay ———

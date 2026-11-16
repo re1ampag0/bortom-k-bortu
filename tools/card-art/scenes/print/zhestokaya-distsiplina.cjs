@@ -33,7 +33,7 @@ const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const CAMX = -2.3;                                          // we stand to port of the centre line: the foremast clears the main mast
 const pr = (X, Y, z) => [100 + (X - CAMX) * FOC / z, HZ + (EYE - Y) * FOC / z];   // metres across, up from the deck, ahead -> picture
 
-module.exports = { name: 'Жестокая дисциплина', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Жестокая дисциплина', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Ls = K.makeLight(lightSky, { horizon: HZ }), R = rng(29);
     Ls.pal = Object.assign({}, Ls.pal, { sky: ['#0a0306', '#240a10', '#4e1618', '#8a3420'], sea: ['#6a2a22', '#24100e', '#0a0506'], cloudLit: '#c0583a', cloudShade: '#1e0a10' });

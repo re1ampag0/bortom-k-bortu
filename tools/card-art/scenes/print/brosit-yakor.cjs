@@ -25,7 +25,7 @@ const PORTS = [-22, -2, 18].map(X => { const sp = K.SHIP_SPECS.pearl, t = X / (s
 const skel = { horizon: HZ, eye: 3, items: [['pearl', 46, WL, 136, 83, 'water'], ['chain', 58, 74, 30, 8, 'hawse -> ring (running out)'],
   ['anchor', 38, 66, 36, 46, 'plunging: the stock and ring over the surface, the crown in the water'], ['splash', 48, 66, 26, 20, 'water at the shank'], ['enemy', 14, 65, 22, 14, 'water (far)'], ['wake', 2, 86, 184, 20, 'water (round the chain)'], ['flashes', 94, 82, 50, 8, 'near ports'], ['smoke', 60, 82, 84, 26, 'ports -> enemy']] };
 
-module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Бросить якорь', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     const R = rng(31);

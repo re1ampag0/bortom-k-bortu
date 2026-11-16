@@ -58,7 +58,7 @@ function headFrame(c, r, yawDeg, nodDeg) {
   return { Q: (x, y, z) => { const q = rot([x, y, z]); return [c[0] + q[0] * r, c[1] + q[1] * r]; }, depth: (x, y, z) => rot([x, y, z])[2] };
 }
 
-module.exports = { name: 'Ужас Карибского моря', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ужас Карибского моря', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     L.pal = Object.assign({}, L.pal, { sky: ['#0c0408', '#2a0c10', '#6a1e14', '#c2501e'], sea: ['#b4502a', '#401812', '#0e0406'], cloudLit: '#e07040', cloudShade: '#2a0e14', smoke: '#3a2220' });

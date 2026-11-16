@@ -52,7 +52,7 @@ const PARTS = {
 };
 const SOLES = [[-13.4, 9.6, 6.2, 4.6, 14], [14, 10, 6.2, 4.6, -12]];
 
-module.exports = { name: 'Кукла вуду', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Кукла вуду', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: .9 }), R = rng(23);
     // ——— the ceiling: dark planks overhead, the beams running to the vanishing point ———

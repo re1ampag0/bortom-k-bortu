@@ -172,7 +172,7 @@ function splash(u, a, b) {
   return out;
 }
 
-module.exports = { name: 'Ром для всех', kind: 'deck', status: 'draft', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ром для всех', kind: 'deck', status: 'accepted', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.2 }), Lo = K.makeLight(lightOut, { horizon: 88 });
     const [vx, vy] = VP, ray = (x, y, k) => [vx + (x - vx) * k, vy + (y - vy) * k];

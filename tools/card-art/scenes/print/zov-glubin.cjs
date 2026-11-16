@@ -82,7 +82,7 @@ function ghostArm(u, o) {
   return out;
 }
 
-module.exports = { name: 'Зов глубин', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Зов глубин', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
     L.pal = Object.assign({}, L.pal, { sky: ['#06100e', '#0e1e1a', '#1a302a', '#2e4a42'], sea: ['#2a4a44', '#122a26', '#040c0a'], cloudLit: '#7a9a90', cloudShade: '#0a1412' });

@@ -76,7 +76,7 @@ function sinkingSoul(u, x, y, r) {
   return s;
 }
 
-module.exports = { name: 'Часть корабля — часть команды', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Часть корабля — часть команды', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HEAD.c[1], eye: 1.6 });
     // ——— over the rail: the green fog at night, the moon's glow upper left ———

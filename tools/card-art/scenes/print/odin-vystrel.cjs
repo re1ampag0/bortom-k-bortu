@@ -184,7 +184,7 @@ function horn(u, L) {
   return s;
 }
 
-module.exports = { name: 'Один выстрел', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Один выстрел', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.2 });
     // the night: stars, the moon upper right, thin clouds lit at the edges

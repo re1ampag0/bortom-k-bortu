@@ -38,7 +38,7 @@ const P2 = p => `${f(p[0])} ${f(p[1])}`;
 // a point on a sheet: a across, b down from its far edge, interpolated on the table (true perspective)
 const SP = (a, b, Q = CW) => { const t = [lerp(Q[0][0], Q[1][0], a), lerp(Q[0][1], Q[1][1], a)], d = [lerp(Q[3][0], Q[2][0], a), lerp(Q[3][1], Q[2][1], a)]; return PW([lerp(t[0], d[0], b), lerp(t[1], d[1], b)]); };
 
-module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Выгодная сделка', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, SCH.cam);
     const R = rng(41);

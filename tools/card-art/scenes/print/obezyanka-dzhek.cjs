@@ -138,7 +138,7 @@ function skeletonShadow(u, x, y, s) {
     + st('M-4 -14C-16 -10 -26 -14 -27 -26C-28 -36 -20 -42 -14 -38', 1.4) + '</g>';
 }
 
-module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'draft', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'accepted', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.2 }), Lo = K.makeLight({ time: 'night', haze: .3, key: { type: 'moon', x: 33, y: 60, el: 14, color: '#d8e4fa', power: .8 } }, { horizon: 74 });
     const [vx, vy] = VP, ray = (x, y, k) => [vx + (x - vx) * k, vy + (y - vy) * k];   // a point slid along its line to the vanishing point

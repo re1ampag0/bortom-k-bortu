@@ -48,7 +48,7 @@ function sp(P, closed) {
   return d + (closed ? 'Z' : '');
 }
 
-module.exports = { name: 'Тортуга', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Тортуга', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 }), LF = K.makeLight(lightFar, { horizon: HZ, eye: 1.6 });
     // the blue hour: the sky still deep blue over the hill, the lamps already lit

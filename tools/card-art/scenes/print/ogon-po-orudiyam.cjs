@@ -79,7 +79,7 @@ function raisedLid(u, x, y, s) {
   return o;
 }
 
-module.exports = { name: 'Огонь по орудиям', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Огонь по орудиям', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ });
     // the things inside the smashed port are lit by the fire behind and under them, not by the sun

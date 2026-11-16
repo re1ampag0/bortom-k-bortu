@@ -89,7 +89,7 @@ function mud(u, pts, seed) {
     return o; }).join('');
 }
 
-module.exports = { name: 'Норрингтон на борту', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Норрингтон на борту', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.7 });
     // ——— the fog: the sky, the moon behind it, the sea; the Endeavour alongside, a shot hole in her side ———

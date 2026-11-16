@@ -213,7 +213,7 @@ function mirrorOf(u, L, body, y, h, op) {
   return `<defs>${defs}</defs><g mask="url(#${mk})" opacity="${f(op)}"><g filter="url(#${fi})"><g transform="translate(0 ${f(2 * y)}) scale(1 -1)">${b}</g></g></g>`;
 }
 
-module.exports = { name: 'Штиль', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Штиль', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
     // a hot evening: deep blue overhead going to amber at the horizon; the sea series' water, holding the sky like glass

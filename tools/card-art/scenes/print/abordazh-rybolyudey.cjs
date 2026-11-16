@@ -190,7 +190,7 @@ function claw(u, L, el, wr, ang) {
   return { svg: s, tipUp: P(46, -1.8), tipDn: P(45.4, 1.6) };
 }
 
-module.exports = { name: 'Абордаж рыболюдей', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Абордаж рыболюдей', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
     // ——— the night fog: the sky, a bright patch behind him, the sea, the Dutchman far on the right ———

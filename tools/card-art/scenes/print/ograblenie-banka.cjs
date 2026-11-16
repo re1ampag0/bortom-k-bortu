@@ -154,7 +154,7 @@ function ingot(u, x, y, s, rot = 0) {
     + `<path d="M-3.8 -2.4L-3 -3.4H3L3.8 -2.4Z" fill="url(#${t})" stroke="#3a2808" stroke-width=".2"/><path d="M3.8 -2.4L5 0" stroke="#f0dca0" stroke-width=".35" opacity=".8"/><path d="M-2.6 -2.9h4" stroke="#7a5a1c" stroke-width=".2"/></g>`;
 }
 
-module.exports = { name: 'Ограбление банка', kind: 'deck', status: 'draft', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ограбление банка', kind: 'deck', status: 'accepted', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
     // the sky over the roofs on the right: stars, the moon, a cloud; the far roofs and a palm in silhouette

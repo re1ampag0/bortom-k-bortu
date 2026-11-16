@@ -37,7 +37,7 @@ const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const dirOf = t => [Math.cos(t * Math.PI / 180), Math.sin(t * Math.PI / 180)];
 const SKIN = { lit: '#eab68c', half: '#b87a54', core: '#9a6040', shadow: '#5a3222', outline: '#24100a' };
 
-module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Гиббс за штурвалом', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), R = rng(23);
     // ——— the night: sky, moon, the sea with the moon's path ———

@@ -151,7 +151,7 @@ function kegHoops(x, y, rot) {
   return `<g transform="rotate(${rot} ${x} ${y})">${out}</g>`;
 }
 
-module.exports = { name: 'Бочки с порохом', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Бочки с порохом', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.2 });
     let bg = K.sky(u, L, { horizon: HZ, stars: 70, seed: 8 }) + K.sunMoon(u, L, { r: 6.4 })

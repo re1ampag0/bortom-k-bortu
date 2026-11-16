@@ -98,7 +98,7 @@ function swivel(u, L, o) {
   return { svg: out, muzzle: { x: m[0], y: m[1], dir: a * 180 / Math.PI }, grip, gax, r: .55 * k };
 }
 
-module.exports = { name: 'Ответный огонь', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ответный огонь', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     L.pal = Object.assign({}, L.pal, { sky: ['#3a6a9c', '#76a2c8', '#c8d8e0', '#f2e8cc'] });

@@ -219,7 +219,7 @@ function rays(u) {
   return s;
 }
 
-module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft', cam: CAM, light, skel,
+module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'accepted', cam: CAM, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: .75 });
     L.pal = Object.assign({}, L.pal, PAL);

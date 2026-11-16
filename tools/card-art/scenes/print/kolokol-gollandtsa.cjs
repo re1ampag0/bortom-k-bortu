@@ -44,7 +44,7 @@ function weed(x, y, len, n, seed, col = '#3e7a5a') {
       + `<path d="M${f(x0 + .3)} ${f(y)}q${f(sw)} ${f(l * .4)} ${f(sw * .3)} ${f(l * .7)}" stroke="#9ad8b0" stroke-width=".25" fill="none" opacity=".45"/>`; }
   return out;
 }
-module.exports = { name: 'Колокол «Голландца»', kind: 'deck', status: 'draft', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Колокол «Голландца»', kind: 'deck', status: 'accepted', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
     // the sky: green fog over a dark sea, the moon low on the left through it, torn clouds

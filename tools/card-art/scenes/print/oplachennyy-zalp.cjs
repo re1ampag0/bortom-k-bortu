@@ -44,7 +44,7 @@ const SKIN = { lit: '#f0c49a', half: '#c48a62', core: '#ae7650', shadow: '#6a402
 
 // cam: the frame starts 20 units down — this card's glass is taller (three lines of text), the ledger and the port
 // stand clear of it
-module.exports = { name: 'Оплаченный залп', kind: 'deck', status: 'draft', cam: { x: 0, y: 20, w: 200 }, light, skel,
+module.exports = { name: 'Оплаченный залп', kind: 'deck', status: 'accepted', cam: { x: 0, y: 20, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: HZ }), R = rng(41);
     let bg = `<rect x="-10" y="-10" width="220" height="340" fill="#140c08"/>`;

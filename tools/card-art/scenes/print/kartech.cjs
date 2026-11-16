@@ -69,7 +69,7 @@ function grape(u, L, o) {
   return out;
 }
 
-module.exports = { name: 'Картечь', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Картечь', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: HZ });
     const m0 = K.cannon.muzzle({ ...GUN, x: 0 }), gun = { ...GUN, x: HX - 4 - m0.x }, m = K.cannon.muzzle(gun), by = m.y;

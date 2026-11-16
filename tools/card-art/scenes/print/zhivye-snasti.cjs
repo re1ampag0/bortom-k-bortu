@@ -38,7 +38,7 @@ const RIP0 = 22, RIP1 = 82, LACE = 54;
 const ripX = y => 126 + (y - RIP0) * .06;
 const gap = y => y > LACE ? 1.4 : Math.sin(Math.PI * (y - RIP0) / (LACE + 8 - RIP0)) * 8.5 + 1.4;
 
-module.exports = { name: 'Живые снасти', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Живые снасти', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), R = rng(5);
     // ——— the sunset: sky, sun, clouds, the sea ahead with the sun's path ———

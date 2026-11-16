@@ -53,7 +53,7 @@ function hoist(u, A, B, n, size, seed, op = 1) {
   return out;
 }
 
-module.exports = { name: 'Строй линии', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Строй линии', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     const R = rng(29);

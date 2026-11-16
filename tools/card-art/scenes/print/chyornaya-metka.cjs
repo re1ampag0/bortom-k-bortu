@@ -33,7 +33,7 @@ const skel = { horizon: HZ, eye: 1.7, light: 'the moon in the fog upper right (k
   ['drops', 80, 122, 36, 40, 'down the wrist']] };
 const SKIN = { lit: '#e4c2a0', half: '#b68e6e', shadow: '#5e4434', outline: '#22140c' };
 
-module.exports = { name: 'Чёрная метка', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Чёрная метка', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.7 });
     // ——— the night: green fog, the moon a blur upper right, the sea ———

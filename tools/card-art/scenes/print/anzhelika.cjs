@@ -241,7 +241,7 @@ function spyglass(u, L, x0, y, x1) {
     + K.shadeCyl(u, x0 + (x1 - x0) * .38, y, x0 + (x1 - x0) * .43, y, 2.4, L, 'brass', { outline: .3 })
     + K.shadeCyl(u, x0 - .6, y, x0 + .8, y, 2.4, L, 'brass', { outline: .3, ell: .3, face: 1 });
 }
-module.exports = { name: 'Анжелика', kind: 'deck', status: 'draft', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Анжелика', kind: 'deck', status: 'accepted', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.3 }), Lo = K.makeLight(lightOut, { horizon: HZ });
     // the stern wall: dark planking, warmer towards the candle

@@ -80,7 +80,7 @@ function shelf(u, L, x0, x1, y) {
     + [x0 + 22, x1 - 18].map(x => `<path d="M${x} ${y + 4.6}v9l7 -9z" fill="#1a1410" stroke="#0a0806" stroke-width=".4"/><path d="M${x + .6} ${y + 5.2}v6" stroke="#6a5a4a" stroke-width=".4" opacity=".6"/>`).join('');
 }
 
-module.exports = { name: 'Корабль в бутылке', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Корабль в бутылке', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.3 }), Lo = K.makeLight(lightOut, { horizon: HZ });
     // the stern wall: dark planking, warm round the candle, red from the window

@@ -77,7 +77,7 @@ function background(u, L) {
   return s;
 }
 
-module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Зомби-офицеры', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: EYE });
     L.pal = Object.assign({}, L.pal, { sky: ['#0a0306', '#2a0a10', '#6a1e16', '#b04a2a'], sea: ['#7a2c1c', '#3a1210', '#140606'], cloudLit: '#e88a68', cloudShade: '#2a0a10', smoke: '#5a3a3a' });

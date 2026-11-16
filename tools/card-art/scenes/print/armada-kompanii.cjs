@@ -18,7 +18,7 @@ const skel = { horizon: HZ, eye: 1.4, light: 'the sun high on the left (lit side
   ['first line', 0, 115, 200, 46, 'sea, broadside'], ['smoke', 0, 112, 200, 26, 'over the water in front of the line'],
   ['pearl', 40, 138, 40, 34, 'sea, foreground'], ['revenge', 128, 137, 36, 30, 'sea, foreground'], ['splashes', 20, 141, 170, 20, 'round the pirates']] };
 
-module.exports = { name: 'Армада Компании', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Армада Компании', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.4 });
     const R = rng(17);

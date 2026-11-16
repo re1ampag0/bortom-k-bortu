@@ -59,7 +59,7 @@ function flung(x, y, s, a, seed) {
     + `<circle cx="0" cy="-3.3" r="1.05" fill="#0a120e"/><path d="M.9 -3.6a1 1 0 0 1 -.2 1.4M.6 -2L.7 1.4" stroke="#c8ffe4" stroke-width=".3" fill="none" opacity=".7"/></g>`;
 }
 
-module.exports = { name: 'Кракен', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Кракен', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.5 });
     // the sky: green fog, the moon behind it over the ship, torn cloud

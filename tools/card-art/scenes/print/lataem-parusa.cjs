@@ -39,7 +39,7 @@ const LEECH = y => 178 + (y - 16) * .05 + Math.sin((y - 16) / 70) * 3;   // x of
 // a ragged closed outline round (cx, cy): radii rx, ry, jagged by `j`
 function ragged(R, cx, cy, rx, ry, n, j) { const pts = []; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, k = 1 - j * .5 + R() * j * (i % 2 ? .6 : 1.2); pts.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); } return pts; }
 
-module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Латаем паруса', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Ls = K.makeLight(lightSky, { horizon: 150 }), R = rng(23);
     const holeP = ragged(rng(5), 74, 70, 26, 24, 22, .3), holeD = 'M' + holeP.map(P2).join('L') + 'Z';

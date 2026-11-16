@@ -107,7 +107,7 @@ function pour(u, x, y0, y1, w, seed, o = {}) {
   return s;
 }
 
-module.exports = { name: 'Ответ из пучины', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ответ из пучины', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 }), R = rng(17);
     // ——— the green fog at night over the sea; the Dutchman a ghost on the horizon ———

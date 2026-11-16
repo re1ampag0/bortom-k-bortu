@@ -94,7 +94,7 @@ function grapnel(u, L, x, y, s, seed, toward) {
   return { back, front, ring };
 }
 
-module.exports = { name: 'На абордаж!', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'На абордаж!', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4.7 }), R = rng(37);
     L.pal = Object.assign({}, L.pal, { sky: ['#2a0e18', '#6e2220', '#c8582c', '#f2a458'], sea: ['#c8683a', '#4a1e1e', '#140808'], cloudLit: '#ffb070', cloudShade: '#4a1a22' });

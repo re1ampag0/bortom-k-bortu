@@ -86,7 +86,7 @@ const ropeX = (u, L, pts, r, seed) => `<path d="${H.sp(pts)}" stroke="#030604" s
   + `<g transform="translate(${f(-r * .3)} ${f(-r * .35)})"><path d="${H.sp(pts)}" stroke="#d8ecc8" stroke-width="${f(r * .5)}" fill="none" stroke-linecap="round" opacity=".42"/></g>`;
 const drop = (x, y) => `<path d="M${f(x)} ${f(y)}q-.9 1.4 0 2.2q.9 -.8 0 -2.2z" fill="#c8fff0" opacity=".75"/>`;
 
-module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Прихлоп Билл', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VP[1], eye: 1.6 });
     // ——— the hold in 2.5D: the hull side (back wall), the deckhead with beams, the bulkheads at the sides, the floor ———

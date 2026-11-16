@@ -93,7 +93,7 @@ function seaFire(u, L, o) {
   return s;
 }
 
-module.exports = { name: 'Греческий огонь', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Греческий огонь', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 6 });
     // a late, deep-red sunset: the fire, not the sky, is the brightest thing in the picture

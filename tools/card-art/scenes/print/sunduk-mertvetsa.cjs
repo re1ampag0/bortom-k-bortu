@@ -79,7 +79,7 @@ function palm(x, y, h, lean, col) {
   return o;
 }
 
-module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Сундук мертвеца', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: .9 }), Wc0 = C.W, D0 = C.D;
     // ——— the sky: dusk in the green fog, the moon a pale blur low on the left ———

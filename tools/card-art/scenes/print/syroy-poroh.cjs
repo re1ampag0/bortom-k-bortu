@@ -93,7 +93,7 @@ function stain(u, cx, cy, rx, ry, seed) {
   return out;
 }
 
-module.exports = { name: 'Сырой порох', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Сырой порох', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VY, eye: 1.2 });
     const R = rng(9);

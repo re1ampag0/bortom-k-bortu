@@ -47,7 +47,7 @@ const ln = (d, w = .5, c = '#0a0604', op = 1) => `<path d="${d}" stroke="${c}" s
 function handAt(u, base, g, t, a0) { let a = a0, h; for (let k = 0; k < 6; k++) { h = H.hand3(u, { ...base, a, grip: g }); const ang = Math.atan2(h.axis[1], h.axis[0]) * 180 / Math.PI;
   let d = t - ang; while (d > 90) d -= 180; while (d < -90) d += 180; a += d; } return h; }
 
-module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Сделка с Сяо Фэном', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: .55 }), R = rng(57);
     // ——— outside the window: the night harbour, the moon, the junk at anchor ———

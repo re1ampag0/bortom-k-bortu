@@ -77,7 +77,7 @@ function bony(h, tn, k = 1) {
   return s;
 }
 
-module.exports = { name: 'Зомби у пушек', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Зомби у пушек', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: EYE }), Lo = K.makeLight(lightOut, { horizon: HZ }), R = rng(23);
     Lo.pal = Object.assign({}, Lo.pal, { smoke: '#8a6a68' });

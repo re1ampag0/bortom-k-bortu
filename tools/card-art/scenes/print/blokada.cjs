@@ -29,7 +29,7 @@ const skel = { horizon: HZ, eye: 2.4, light: 'sun high ahead right', items: [
   ['chain + floats', 54, 110, 134, 16, 'water, capstan → post'], ['far rock + post', 172, 100, 28, 16, 'sea'],
   ['ship 1', 74, 90, 80, 46, 'sea beyond the chain'], ['ship 2', 150, 85, 50, 30, 'sea beyond'], ['boat', 84, 122, 46, 18, 'water against the chain']] };
 
-module.exports = { name: 'Блокада', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Блокада', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2.4 });
     const R = rng(17);

@@ -106,7 +106,7 @@ function fall(u, L, top, leave, sea, w, seed, o = {}) {
   return out;
 }
 
-module.exports = { name: 'Всплытие', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Всплытие', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
     const g = K.shipGeom('dutch', DU);

@@ -41,7 +41,7 @@ const ang = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
 const tone = (L, c, x, y) => { const k = L.keyColor; return { lit: mix(c, mix(k, '#ffffff', .3), .42), half: c, core: c, shadow: mix(c, '#0c121c', .5), outline: '#120c08' }; };
 const SKIN = { lit: '#f2c69c', half: '#c98e66', core: '#b47a54', shadow: '#6e4430', outline: '#2e180c' };
 
-module.exports = { name: 'Прицельный огонь', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Прицельный огонь', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: HZ }), R = rng(23);
     const [px0, py0, px1, py1] = PORT;

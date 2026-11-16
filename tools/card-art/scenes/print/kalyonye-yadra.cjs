@@ -53,7 +53,7 @@ function hotShot(u, x, y, r, heat = 1) {
     + `<path d="M${f(x - r * .9)} ${f(y + r * .2)}A${f(r)} ${f(r * .35)} 0 0 0 ${f(x + r * .9)} ${f(y + r * .2)}" stroke="${c[3]}" stroke-width=".35" fill="none" opacity=".6"/>`;
 }
 
-module.exports = { name: 'Калёные ядра', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Калёные ядра', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: HZ }), R = rng(31);
     const [px0, py0, px1, py1] = PORT;
