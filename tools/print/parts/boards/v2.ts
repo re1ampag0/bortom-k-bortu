@@ -473,7 +473,7 @@ export const V2_CSS = `
 .v2-abs{position:absolute}
 .v2-log{font:500 var(--fs) Alegreya,serif;line-height:var(--lh);color:var(--ink);overflow:hidden}
 .v2-log *{line-height:var(--lh)}
-.v2-h{font:italic 800 11.5pt Alegreya,serif;color:var(--c);position:relative;top:var(--lift-h)}
+.v2-h{font:italic 500 11.5pt Alegreya,serif;color:var(--c);position:relative;top:var(--lift-h)}
 .v2-an{display:flex;align-items:baseline;gap:1.4mm;font:800 10pt 'Alegreya SC',serif;letter-spacing:.04em;color:var(--c);position:relative;top:var(--lift-n)}
 .v2-an span{flex:1}
 .v2-an i{display:inline-flex;align-items:center;gap:.8mm;font:italic 500 var(--fs) Alegreya,serif;letter-spacing:0;color:var(--soft)}

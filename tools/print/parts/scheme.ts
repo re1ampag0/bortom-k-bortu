@@ -70,7 +70,13 @@ const text = (x: number, y: number, s: string, size: number, o: TO2 = {}) => {
   const a = `x="${r(x)}" y="${r(y)}" font-family="${o.font ?? 'Alegreya Sans'}" font-weight="${o.w ?? 500}"${o.italic ? ' font-style="italic"' : ''} font-size="${r(pt(size))}"${o.anchor ? ` text-anchor="${o.anchor}"` : ''}${o.ls ? ` letter-spacing="${o.ls}"` : ''}`;
   // several lines (\n) are one element: tspans lh mm apart
   const body = s.includes('\n') ? s.split('\n').map((l, i) => `<tspan x="${r(x)}" y="${r(y + i * (o.lh ?? pt(size) * 1.2))}">${esc(l)}</tspan>`).join('') : esc(s);
-  const halo = o.halo ? `<text ${a} fill="none" stroke="${LOOK.halo}" stroke-width="${r(pt(size) * 0.28)}" stroke-opacity=".9" stroke-linejoin="round">${body}</text>` : '';
+  // the halo is a soft paper patch under the words, not a stroke round the glyphs: stroked text goes into the PDF as a Type 3 font
+  let halo = '';
+  if (o.halo) {
+    const lines = s.split('\n'), lh = o.lh ?? pt(size) * 1.2, w = Math.max(...lines.map(l => W(l, size, o))), em = pt(size), pad = 0.9;
+    const x0 = o.anchor === 'middle' ? x - w / 2 : o.anchor === 'end' ? x - w : x;
+    halo = `<rect x="${r(x0 - pad)}" y="${r(y - em * 0.78 - pad)}" width="${r(w + 2 * pad)}" height="${r(em * 1.06 + (lines.length - 1) * lh + 2 * pad)}" rx="${r(em * 0.45)}" fill="${LOOK.halo}" fill-opacity=".82"/>`;
+  }
   return `${halo}<text${o.in ? ` data-in="${o.in}"` : ''}${o.name ? ` data-name="${esc(o.name)}"` : ''} ${a} fill="${o.color ?? INKC}">${body}</text>`;
 };
 const plateRect = (id: string, b: Rect) => `<rect data-plate="${id}" x="${r(b.x)}" y="${r(b.y)}" width="${r(b.w)}" height="${r(b.h)}" fill="none" stroke="none"/>`;
