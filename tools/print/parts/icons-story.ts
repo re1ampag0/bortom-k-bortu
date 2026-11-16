@@ -150,7 +150,7 @@ function greekFire(k: K): string {
 }
 
 function tritonSword(k: K): string {
-  // a cutlass of the sea: a scallop shell for the guard, a branch of coral for the knuckle-bow, a pearl for the pommel;
+  // a cutlass of the sea: a scallop shell for the guard, a branch of coral for the knuckle-bow, a whelk for the pommel;
   // a wave curls up round the blade and throws spray
   let o = k.shape('M40 98L98 98L98 56C97 46 89 40 80 41C71 42 66 50 69 56C71 60 77 61 79 57C80 54.6 78 52.6 75.6 53.6C77 48.6 85 47.6 89 52C94 58 91 69 81 74C70 79 58 80 50 87C46 91 43 94 40 98Z', {
     fill: 'mid', sw: 2.2,
@@ -170,12 +170,25 @@ function tritonSword(k: K): string {
     inner: k.S('M6 -1.6Q44 -3.2 74 -11.4', 1.1) + k.S('M5 -3.2Q40 -4.6 70 -11.6', 1.6, 'paper') +
       (k.small ? '' : k.S('M12 3Q15 1.2 18 2.8Q21 1 24 2.6Q27 0.8 30 2.4Q33 0.6 36 2Q39 0.2 42 1.6', 0.8)),
   });
-  // grip, ferrule, pearl pommel
+  // the grip
   s += k.shape(rrect(-26, -3.6, 21, 7.2, 2.4), {
     fill: 'mid', sw: 2,
     h: [{ a: 60, g: 1.6, w: 0.9 }, ...(k.small ? [] : [{ a: -60, g: 2.4, w: 0.6 }]), { a: 0, g: 1.2, r: rect(-30, 1.4, 30, 4) }],
   });
-  s += k.shape(circ(-30, 0, 5.4), { fill: 'light', sw: 2, h: [{ a: 45, g: 1.4, r: outside(circ(-31.6, -1.6, 5.4)) }], hi: circ(-31.6, -1.8, 1.8) });
+  // the whelk pommel: its mouth takes the end of the grip, the body whorl swells and the spire steps down whorl by whorl
+  // to a point; the sutures run aslant (a helix), the shoulder is knobbed, the half turned from the light is hatched
+  const whelk = 'M-25.2 -3.6C-26.2 -6.2 -29.8 -7.2 -32.6 -6L-33.4 -4.2L-36.4 -3.5L-37 -2.2L-39.4 -1.7L-39.8 -0.8L-41.8 0.5' +
+    'L-40.4 1.3L-39.8 2.5L-38 2.7L-37.4 4L-34.6 4.4L-33.8 6C-30 7.4 -26.4 6.4 -25.2 3.6Z';
+  s += k.shape(whelk, {
+    fill: 'light', sw: 2,
+    mid: 'M-46 1L-24 1L-24 10L-46 10Z',
+    h: [{ a: 0, g: 1.3, r: rect(-46, 1, 22, 10) }],
+    hi: k.small ? '' : 'M-26.6 -3.4C-27.6 -5.2 -30 -5.8 -31.8 -5L-31.2 -4C-29.8 -4.4 -28.4 -4.1 -27.4 -3Z',
+    inner: k.S('M-33.4 -4.2C-32.6 -1.4 -33 2.4 -34.6 4.4M-37 -2.2C-36.6 -0.8 -36.8 1.4 -38 2.7M-39.8 -0.8C-39.6 0 -39.8 0.8 -40.4 1.3', k.small ? 1.4 : 1.1) +
+      (k.small ? '' : k.S('M-28.4 -5.4C-27.6 -2 -27.8 2.4 -28.8 5.6M-30.8 -5.8C-30.2 -2 -30.4 2.6 -31.6 6', 0.6)),
+  });
+  // knobs on the shoulder of the body whorl
+  if (!k.small) s += k.shape('M-28.2 -6.2Q-28.8 -8.6 -30 -6.6ZM-30.8 -6.6Q-31.8 -8.8 -32.6 -6.2Z', { fill: 'light', sw: 1 });
   // the coral knuckle-bow from the shell to the pommel, on the edge side
   const bow = 'M-6 14C-13 16 -22 13 -27 5';
   s += k.S(bow, 3.6) + (k.small ? '' : k.S(bow, 1.4, 'mid') +
