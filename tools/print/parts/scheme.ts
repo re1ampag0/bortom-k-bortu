@@ -12,7 +12,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { HERE, data, esc, fontCss, type Ctx, type Part } from '../kit';
-import { darken } from '../colors';
 import { chartSvg, type Rect } from '../map/chart';
 import { rasterJpeg } from '../map/raster';
 import { icon, TONE, type IconName } from './icons';
@@ -39,13 +38,13 @@ const PAGE = { w: 297, h: 210 };
 /** the chart: the preview's scale; Tortuga put at this point of the sheet */
 const VIEW = { mmPerDeg: 11.2, anchor: { lon: -72.8, lat: 20.05, x: 124, y: 64 }, inset: 4 };
 /** the left column */
-const COL = { x: 7, w: 67, top: 6, bottom: 204 };
+const COL = { x: 7, w: 67, top: 6, bottom: 201.5 };
 /** a ship nest: brass frame, opening 31 mm (the token 30 × 30 with 0.5 mm round it) */
 const NEST = { size: 35, rim: 2 };
-const NX = [160, 242], NY = { company: 6, pirates: 56.5 };
+const NX = [160, 242], NY = { company: 6, pirates: 56 };
 /** a card nest: brass frame 1.5 mm, opening 64 × 89 (a card 63 × 88 lies in it whole); its label above */
-const SLOT = { w: 67, h: 92, rim: 1.5, y: 112, xs: [79, 151, 223] };
-const LABEL = { y: 94.5, h: 16.5 };
+const SLOT = { w: 66, h: 91, rim: 1, y: 110.5, xs: [79, 151, 223] };
+const LABEL = { y: 93.5, h: 16.5 };
 /** a berth of the phase rail: 15 mm brass, the well 13 mm (the 11 mm mark) */
 const BERTH = { size: 15, rim: 1, pitch: 19 };
 
@@ -53,13 +52,13 @@ const BERTH = { size: 15, rim: 1, pitch: 19 };
 const INKC = '#2a1c0c';
 const NOTE_INK = '#2a2018';
 const PIRATES = '#2b2420';
-const COMPANY = '#8a6520';
-const COMPANY_INK = darken(COMPANY, 0.4);
+/** the red of the Company's flag, deepened for the name plate and its words */
+const COMPANY_RED = '#7c1d15';
 const SEA_INK = '#1f4654';
 const LOOK = { paper: '#f1e4c2', paperLine: '#5a4024', soft: '#4f3d28', cell: '#f7eed6', cellDeep: '#e3d1a6', brass: ['#f3d68c', '#c4954a', '#5e4214'] as const, halo: '#efe3c6' };
 const SIDE = {
-  company: { name: S.company, ink: COMPANY_INK, plate: COMPANY_INK, tint: '#efe2c0' },
-  pirates: { name: S.pirates, ink: PIRATES, plate: PIRATES, tint: '#e9e2d2' }
+  company: { name: S.company, ink: COMPANY_RED, plate: COMPANY_RED, tint: '#f2d2c8' },
+  pirates: { name: S.pirates, ink: PIRATES, plate: PIRATES, tint: '#d9d6d2' }
 };
 type Side = keyof typeof SIDE;
 
@@ -134,10 +133,10 @@ const nestBox = (side: Side, i: number): Rect => ({ x: NX[i], y: NY[side], w: NE
 const nestC = (side: Side, i: number) => { const b = nestBox(side, i); return { x: b.x + b.w / 2, y: b.y + b.h / 2 }; };
 function nestSvg(side: Side, i: number): string {
   const b = nestBox(side, i), m = NEST.rim, o = NEST.size - 2 * m, t = 30, g = (o - t) / 2, sd = SIDE[side];
-  const out = [frame(`nest-${side}-${i}`, b, m, 2.4, mix(LOOK.cell, sd.tint, 0.6))];
+  const out = [frame(`nest-${side}-${i}`, b, m, 2.4, sd.tint)];
   // where the token lies: a fine dashed square; the side's flag faint in the well (seen while the nest is empty)
   out.push(`<rect x="${r(b.x + m + g)}" y="${r(b.y + m + g)}" width="${t}" height="${t}" rx=".8" fill="none" stroke="${LOOK.paperLine}" stroke-opacity=".55" stroke-width=".22" stroke-dasharray="1.4 1"/>`);
-  out.push(`<g opacity=".16">${flag(side, b.x + b.w / 2 - 5.5, b.y + b.h / 2 + 8.5, 1, 17)}</g>`);
+  out.push(`<g opacity=".32">${flag(side, b.x + b.w / 2 - 5.5, b.y + b.h / 2 + 8.5, 1, 17)}</g>`);
   for (const [dx, dy] of [[1.25, 1.25], [b.w - 1.25, 1.25], [1.25, b.h - 1.25], [b.w - 1.25, b.h - 1.25]]) out.push(rivet(b.x + dx, b.y + dy, 0.62));
   // the flag of the side on a pin at the nest's outer upper corner
   const outer = i === 0 ? -1 : 1, fx = i === 0 ? b.x - 2.4 : b.x + b.w + 2.4;
