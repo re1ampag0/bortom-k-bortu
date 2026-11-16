@@ -251,7 +251,10 @@ function slotSvg(p: Place, x: number): string {
   // the words of the tab: the name, then one line (its size fitted to the tab)
   // one size for the line on all three tabs: the largest at which the longest fits
   const ts = 9.5, ls = Math.min(...places().map(q => fitSize(q.line, TAB_SIZES, tb.w - 5, TAB_L))), b1 = tb.y + 1.65 + pt(ts) * ASC;
-  out.push(text(cx, b1, p.title, ts, { ...TAB_T, color: INKC, anchor: 'middle', in: `label-${p.key}` }));
+  // the name with its icon at the left, the pair centred on the tab
+  const tw = W(p.title, ts, TAB_T), iw = 4.4, ig = 1.4, gx = cx - (iw + ig + tw) / 2;
+  out.push(ico(p.icon, gx + iw / 2, b1 - pt(ts) * 0.34, iw, `label-${p.key}-icon`));
+  out.push(text(gx + iw + ig, b1, p.title, ts, { ...TAB_T, color: INKC, in: `label-${p.key}` }));
   out.push(text(cx, b1 + pt(ts) * DESC + 0.15 + pt(ls) * ASC, p.line, ls, { ...TAB_L, color: LOOK.soft, anchor: 'middle', in: `label-${p.key}` }));
   return out.join('');
 }
