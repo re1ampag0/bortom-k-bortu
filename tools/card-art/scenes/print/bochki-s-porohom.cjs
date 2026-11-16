@@ -61,12 +61,12 @@ function net(u, L, G, kegs) {
   // the bag: a short neck at the gather, full round the kegs, a rounded bottom sagging under them
   const env = `M${f(G0 - 2)} ${G1}C${f(x0 - 1)} ${f(G1 + 6)} ${f(x0 - 5)} ${f(yb - 12)} ${f(x0 + 3)} ${f(yb)}Q${G0} ${f(yb + 5)} ${f(x1 - 3)} ${f(yb)}C${f(x1 + 5)} ${f(yb - 12)} ${f(x1 + 1)} ${f(G1 + 6)} ${f(G0 + 2)} ${G1}Z`, cid = nid('nc', u);
   // the mesh: two families of cords crossing in diamonds, each sagging a little
-  let d = ''; for (let c = -90; c <= 90; c += 5.6) for (const sg of [1, -1]) { const ax = G0 + c - sg * 50, ay = G1 - 6, bx = G0 + c + sg * 50, by = G1 + 94;
+  let d = ''; for (let c = -90; c <= 90; c += 8.4) for (const sg of [1, -1]) { const ax = G0 + c - sg * 50, ay = G1 - 6, bx = G0 + c + sg * 50, by = G1 + 94;
     d += `M${f(ax)} ${f(ay)}Q${f((ax + bx) / 2 - sg * 2)} ${f((ay + by) / 2 + 2)} ${f(bx)} ${f(by)}`; }
   // the cords from the gather to the bag's mouth
   let neck = ''; for (let i = 0; i < 6; i++) { const t = i / 5, bx = x0 + 2 + (x1 - x0 - 4) * t; neck += `M${G0} ${G1}Q${f(G0 + (bx - G0) * .7)} ${f(G1 + 4)} ${f(bx)} ${f(G1 + 14)}`; }
-  return `<defs><clipPath id="${cid}"><path d="${env}"/></clipPath></defs><g clip-path="url(#${cid})"><path d="${d}" stroke="#1a140c" stroke-width=".75" fill="none" opacity=".7"/>`
-    + `<path d="${d}" stroke="#e8d098" stroke-width=".3" fill="none" opacity=".55" transform="translate(-.25 -.25)"/>`
+  return `<defs><clipPath id="${cid}"><path d="${env}"/></clipPath></defs><g clip-path="url(#${cid})"><path d="${d}" stroke="#1a140c" stroke-width=".6" fill="none" opacity=".6"/>`
+    + `<path d="${d}" stroke="#e8d098" stroke-width=".25" fill="none" opacity=".45" transform="translate(-.25 -.25)"/>`
     + `<path d="${neck}" stroke="#1a140c" stroke-width=".8" fill="none" opacity=".75"/><path d="${neck}" stroke="#e8d098" stroke-width=".3" fill="none" opacity=".5"/></g>`;
 }
 
@@ -140,14 +140,21 @@ function portLids(L, svg) {
   });
 }
 
-// a keg brought up a little: lighter staves (the flash on them), the iron hoops with a lit edge and their rivets
+// a keg made to read at print size: a dark outline round its bellied silhouette, the stave seams following the bulge,
+// bold iron hoops with a lit edge and their rivets, the head's rim at the top
 function kegHoops(x, y, rot) {
   const H = 30 * KS, r = 9.2 * KS, bulge = .17, rr = t => r * (1 + bulge * 4 * t * (1 - t)), k = .18;
-  let out = `<path d="M${f(x - r)} ${f(y)}C${f(x - rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x - rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x - r)} ${f(y - H)}L${f(x + r)} ${f(y - H)}C${f(x + rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x + rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x + r)} ${f(y)}Z" fill="#f0cc90" opacity=".3"/>`;
-  for (const t of [.05, .2, .8, .95]) { const q = rr(t), yh = y - H * t, sag = k * q;
-    out += `<path d="M${f(x - q)} ${f(yh)}Q${f(x)} ${f(yh + sag * 2)} ${f(x + q)} ${f(yh)}" stroke="#241c16" stroke-width="1.15" fill="none"/>`
-      + `<path d="M${f(x - q)} ${f(yh - .45)}Q${f(x)} ${f(yh - .45 + sag * 2)} ${f(x + q)} ${f(yh - .45)}" stroke="#e8d2a4" stroke-width=".32" fill="none" opacity=".75"/>`;
-    for (const v of [-.62, 0, .62]) { const px = x + v * q, py = yh + sag * (1 - v * v); out += `<circle cx="${f(px)}" cy="${f(py)}" r=".34" fill="#f2e2bc" stroke="#1a120c" stroke-width=".12" opacity=".9"/>`; } }
+  const sil = `M${f(x - r)} ${f(y)}C${f(x - rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x - rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x - r)} ${f(y - H)}L${f(x + r)} ${f(y - H)}C${f(x + rr(.5) * 1.12)} ${f(y - H * .7)} ${f(x + rr(.5) * 1.12)} ${f(y - H * .3)} ${f(x + r)} ${f(y)}Z`;
+  // the stave seams: curves from the bottom chime to the top one, bowed out with the belly
+  let out = ''; for (const v of [-.72, -.38, 0, .38, .72]) { const xb = x + v * r, xm = x + v * rr(.5) * 1.1;
+    out += `<path d="M${f(xb)} ${f(y - .6)}Q${f(xm)} ${f(y - H / 2)} ${f(xb)} ${f(y - H + .6)}" stroke="#2a1a0c" stroke-width=".5" fill="none" opacity=".75"/>`; }
+  for (const t of [.06, .22, .78, .94]) { const q = rr(t), yh = y - H * t, sag = k * q;
+    out += `<path d="M${f(x - q)} ${f(yh)}Q${f(x)} ${f(yh + sag * 2)} ${f(x + q)} ${f(yh)}" stroke="#140e0a" stroke-width="1.7" fill="none"/>`
+      + `<path d="M${f(x - q)} ${f(yh - .6)}Q${f(x)} ${f(yh - .6 + sag * 2)} ${f(x + q)} ${f(yh - .6)}" stroke="#e8d2a4" stroke-width=".35" fill="none" opacity=".8"/>`;
+    for (const v of [-.62, 0, .62]) { const px = x + v * q, py = yh + sag * (1 - v * v); out += `<circle cx="${f(px)}" cy="${f(py)}" r=".3" fill="#8a7a64" stroke="#1a120c" stroke-width=".12"/>`; } }
+  // the top head: its rim (an ellipse seen a little from below, so only the front edge shows) and the outline
+  out += `<path d="M${f(x - r)} ${f(y - H)}Q${f(x)} ${f(y - H + 2.2)} ${f(x + r)} ${f(y - H)}" stroke="#140e0a" stroke-width=".7" fill="none"/>`
+    + `<path d="${sil}" fill="none" stroke="#0e0804" stroke-width="1"/>`;
   return `<g transform="rotate(${rot} ${x} ${y})">${out}</g>`;
 }
 
@@ -174,11 +181,9 @@ module.exports = { name: 'Бочки с порохом', kind: 'deck', status: '
         + `<path d="M${top[0] - .5} ${top[1]}Q${top[0] + 1.1} ${(top[1] + GATHER[1]) / 2} ${GATHER[0] - .5} ${GATHER[1]}" stroke="#c8b48a" stroke-width=".4" fill="none" opacity=".6" stroke-dasharray="1 .8"/>`
         + K.shadeCyl(u, top[0] - 4, top[1] + 1, top[0] + 4, top[1] + 1, 1.1, L, 'oak', { outline: .3, cap: 'round', grain: false }); }
     // the kegs in the net against her side (the lower row hangs a little clear of the water; the upper row stands on it)
-    // the powder mark burnt into each keg: a small red flame
-    const brand = (x, y, rot) => `<g transform="rotate(${rot} ${x} ${y}) translate(${x} ${f(y - 30 * KS * .52)}) scale(${f(KS * 1.5)})"><path d="M0 3.4q-2.6 -.4 -2.4 -3q.2 -1.8 1.4 -3.2q0 1.6 .9 1.8q-.2 -2 1.4 -3.6q-.2 2 1 3.2q.8 1 .2 2.4q-.6 2.2 -2.5 2.4z" fill="#a82a18" opacity=".85"/><path d="M0 2.2q-1 -.6 -.6 -1.8q.4 .6 1 .4q.2 .8 -.4 1.4z" fill="#e8a040" opacity=".7"/></g>`;
     { const cid = nid('kw', u); let kg = '';
-      for (const [x, y, sd] of KEGS.slice(0, 3)) kg += K.barrel(u, L, { x, y, s: KS, kind: 'water', seed: sd, rot: (sd % 2 ? 3 : -3), contact: false }) + kegHoops(x, y, sd % 2 ? 3 : -3) + brand(x, y, sd % 2 ? 3 : -3);
-      for (const [x, y, sd] of KEGS.slice(3)) kg += K.barrel(u, L, { x, y, s: KS, kind: 'water', seed: sd, rot: (sd % 2 ? -4 : 5), contact: false }) + kegHoops(x, y, sd % 2 ? -4 : 5) + brand(x, y, sd % 2 ? -4 : 5);
+      for (const [x, y, sd] of KEGS.slice(0, 3)) kg += K.barrel(u, L, { x, y, s: KS, kind: 'water', seed: sd, rot: (sd % 2 ? 3 : -3), contact: false }) + kegHoops(x, y, sd % 2 ? 3 : -3);
+      for (const [x, y, sd] of KEGS.slice(3)) kg += K.barrel(u, L, { x, y, s: KS, kind: 'water', seed: sd, rot: (sd % 2 ? -4 : 5), contact: false }) + kegHoops(x, y, sd % 2 ? -4 : 5);
       fg += `<defs><clipPath id="${cid}"><rect x="0" y="0" width="200" height="${WL + 1.2}"/></clipPath></defs><g clip-path="url(#${cid})">${kg}${glow(u, FL.x + 14, FL.y - 4, 34, 30, '#ffb050', .5)}${net(u, L, GATHER, KEGS)}</g>`;
       // the gather: the net's mouth bound to the line with a seizing
       fg += `<ellipse cx="${GATHER[0]}" cy="${GATHER[1] + 1}" rx="2.6" ry="1.8" fill="#2a2016" stroke="#0e0a06" stroke-width=".4"/><path d="M${GATHER[0] - 2} ${GATHER[1] + .4}h4M${GATHER[0] - 2.2} ${GATHER[1] + 1.6}h4.4" stroke="#c8b48a" stroke-width=".3" opacity=".6"/>`;

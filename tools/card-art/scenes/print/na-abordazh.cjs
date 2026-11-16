@@ -6,10 +6,12 @@
 // port row, the channels and shrouds, the masts going up out of the picture); the three swingers were stick
 // silhouettes without hands or feet — now one boarder, big and whole, mid-swing towards us: his near fist round the
 // rope (people.cjs hand3), the cutlass up in the other fist, one sleeve from shoulder to cuff on each arm, breeches,
-// boots with soles and heels, a red sash and a head scarf; the hooks were bent strokes — now forged four-fluked
+// boots with soles and heels, a red sash and a knitted cap; the hooks were bent strokes — now forged four-fluked
 // grapnels biting our rail in the foreground, splinters at the bite. We stand on the enemy's deck: our rail across
 // the bottom. Light: the low sun behind the Revenge's foremast rigging, upper left (key, contre-jour: warm rims on
 // him, the blade and the lines; her side towards us in half shade); the warm haze of the sunset (fill).
+// Print review: the red head scarf, the moustache over a chin tuft and the gold earring put him close to a film
+// character — now a sailor's knitted wool cap (slate blue, a rolled brim), a short brown beard, short hair, no earring.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -127,7 +129,7 @@ module.exports = { name: 'На абордаж!', kind: 'deck', status: 'accepted
     // ——— the boarder, mid-swing towards us ———
     let man = '';
     const hd = H.head34(u, { c: HEAD.c, r: HEAD.r, turn: .5, dir: -1, nod: 6, tone: SKIN, light: [-.85, -.35], warm: { color: '#ffa860', op: .35 },
-      eye: 'wide', look: [-.6, .3], brow: 'frown', mouth: .55, smile: -.15, hair: { style: 'long', color: '#24160e' }, hairColor: '#24160e', moustache: true, stubble: true, iris: '#3a2a1a' });
+      eye: 'wide', look: [-.6, .3], brow: 'frown', mouth: .55, smile: -.15, hair: { style: 'short', color: '#3a2414' }, hairColor: '#3a2414', beard: 'short', beardColor: '#4a2c18', moustache: true, iris: '#3a2a1a' });
     // the rope hand (his left, near): round the rope over his head; the cutlass hand (his right, far) forward and up
     const ROPE0 = [127, -34], GR = [121, 22], ropeAng = Math.atan2(GR[1] - ROPE0[1], GR[0] - ROPE0[0]) * 180 / Math.PI;
     const hR = handOn(u, { s: 1.05, m: -1, roll: 24, pitch: 10, pose: 'wrap', r: 1.15, tone: SKIN, light: [-.85, -.4], sw: .26, tilt: 8 }, GR, ropeAng, -70);
@@ -184,28 +186,28 @@ module.exports = { name: 'На абордаж!', kind: 'deck', status: 'accepted
         + `<path d="M111 79.4q3 -1 4 1.6q-1 2.6 -4 2q-1.4 -1.8 0 -3.6Z" fill="#9a2418" stroke="#2a0604" stroke-width=".3"/>`
         + `<path d="M114.6 80.6Q120 82 125 79.6Q123 83.4 126.6 86Q120 86.4 114.4 82.6Z" fill="#8a1c14" stroke="#2a0604" stroke-width=".3"/><path d="M114 82.4Q118 87 123.4 91Q119 91 116.8 93.4Q114.4 88 113.2 83.2Z" fill="#6e140e" stroke="#2a0604" stroke-width=".3"/>`
         + `<path d="M116 81.4Q120 82.8 124 81.2M115 84q3 3.6 6.6 6.2" stroke="#c04030" stroke-width=".35" fill="none" opacity=".7"/>`; }
-    // the head, its rim of sunset on the side towards the sun; the scarf over the crown, knotted behind, ends flying
+    // the head, its rim of sunset on the side towards the sun; the knitted wool cap pulled down to the brows, a rolled brim
     man += hd.svg + rimArc(hd, { r: HEAD.r, light: [.9, .3], color: RIMC, span: 55, opacity: .7 });
     { const Q = hd.Q, dp = hd.depth;
-      const pts = []; for (let k = 0; k < 36; k++) { const t = k / 36 * Math.PI * 2; for (const [y, rr] of [[-.42, 1.04], [-.75, .98], [-1.02, .62]]) pts.push(Q(Math.cos(t) * rr, y, Math.sin(t) * rr - .06)); }
-      pts.push(Q(0, -1.16, -.1));
+      const pts = []; for (let k = 0; k < 36; k++) { const t = k / 36 * Math.PI * 2; for (const [y, rr] of [[-.4, 1.07], [-.72, 1.03], [-1.02, .78], [-1.2, .4]]) pts.push(Q(Math.cos(t) * rr, y, Math.sin(t) * rr - .06)); }
+      pts.push(Q(0, -1.3, -.1));
       const hull = P => { const S = P.slice().sort((a, b) => a[0] - b[0] || a[1] - b[1]), cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); const lo = [], up = [];
         for (const p of S) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
         for (const p of S.slice().reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); } return lo.slice(0, -1).concat(up.slice(0, -1)); };
-      const cap = hull(pts), cg = nid('sc', u), c0 = Q(0, -.8, 0);
-      man += `<defs>${linGrad(cg, c0[0] - 7, c0[1] - 3, c0[0] + 7, c0[1] + 3, [[0, '#d4402a', 1], [.4, '#9a2016', 1], [1, '#4a0a08', 1]])}</defs><path d="M${cap.map(P2).join('L')}Z" fill="url(#${cg})" stroke="#2a0604" stroke-width=".35"/>`;
-      // the hem over the brow, a few folds pulled to the knot, the sun on its crown
-      const hem = []; for (let k = 0; k <= 20; k++) { const t = -Math.PI * .5 + k / 20 * Math.PI; const p = [Math.sin(t) * 1.04, -.42, Math.cos(t) * 1.04 - .06]; if (dp(...p) > -.1) hem.push(Q(...p)); }
-      if (hem.length > 2) man += `<path d="M${hem.map(P2).join('L')}" stroke="#3a0806" stroke-width=".5" fill="none"/>`;
-      for (const [a, b] of [[[.4, -.6, .9], [-.8, -.5, -.6]], [[.7, -.85, .5], [-.7, -.6, -.7]], [[.2, -1, .6], [-.6, -.8, -.75]]]) { const p = Q(...a), q = Q(...b); man += `<path d="M${P2(p)}Q${f((p[0] + q[0]) / 2)} ${f((p[1] + q[1]) / 2 - .6)} ${P2(q)}" stroke="#5a0e0a" stroke-width=".35" fill="none" opacity=".75"/>`; }
-      { const a = Q(-.3, -1.1, .3), b = Q(.6, -.9, .5); man += `<path d="M${P2(a)}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 - 1)} ${P2(b)}" stroke="${RIMC}" stroke-width=".6" fill="none" opacity=".65"/>`; }
-      // the knot at the back of the head and its two ends streaming back (to the right) in the swing
-      const kn = Q(-.05, -.55, -1.02);
-      man += `<path d="M${f(kn[0] - 1.4)} ${f(kn[1] - .8)}q2.2 -1.2 3.2 .6q-.4 2 -2.6 1.8q-1.4 -.8 -.6 -2.4Z" fill="#8a1c14" stroke="#2a0604" stroke-width=".3"/>`
-        + `<path d="M${f(kn[0] + 1.4)} ${f(kn[1] - .4)}Q${f(kn[0] + 6)} ${f(kn[1] - 2.4)} ${f(kn[0] + 10.6)} ${f(kn[1] - .6)}Q${f(kn[0] + 7)} ${f(kn[1] + .6)} ${f(kn[0] + 8.6)} ${f(kn[1] + 2.4)}Q${f(kn[0] + 4)} ${f(kn[1] + 1.4)} ${f(kn[0] + 1.2)} ${f(kn[1] + .8)}Z" fill="#9a2418" stroke="#2a0604" stroke-width=".3"/>`
-        + `<path d="M${f(kn[0] + 1)} ${f(kn[1] + .8)}Q${f(kn[0] + 4.6)} ${f(kn[1] + 3.6)} ${f(kn[0] + 7.6)} ${f(kn[1] + 6.4)}Q${f(kn[0] + 4.4)} ${f(kn[1] + 6)} ${f(kn[0] + 3.4)} ${f(kn[1] + 7.6)}Q${f(kn[0] + 2.4)} ${f(kn[1] + 4)} ${f(kn[0] + .2)} ${f(kn[1] + 1.4)}Z" fill="#701410" stroke="#2a0604" stroke-width=".3"/>`;
-      // a gold ring in the near ear
-      { const e = Q(.84, .34, -.1); if (dp(.84, .34, -.1) > -.2) man += `<circle cx="${f(e[0])}" cy="${f(e[1] + .9)}" r=".8" fill="none" stroke="url(#brass${u})" stroke-width=".4"/>`; } }
+      const cap = hull(pts), cg = nid('kc', u), bg2 = nid('kb', u), c0 = Q(0, -.85, 0);
+      man += `<defs>${linGrad(cg, c0[0] - 7, c0[1] - 3, c0[0] + 8, c0[1] + 3, [[0, '#7c8898', 1], [.35, '#46505e', 1], [1, '#161a22', 1]])}${linGrad(bg2, c0[0] - 7, 0, c0[0] + 7, 0, [[0, '#8a96a6', 1], [.4, '#525c6a', 1], [1, '#1e222a', 1]])}</defs>`
+        + `<path d="M${cap.map(P2).join('L')}Z" fill="url(#${cg})" stroke="#0c0e14" stroke-width=".35" stroke-linejoin="round"/>`;
+      // the knit: faint ribs running up the crown to the top
+      for (const t of [-.9, -.5, -.1, .3, .7]) { if (dp(Math.sin(t), -.7, Math.cos(t)) < .05) continue; const a = Q(Math.sin(t) * 1.04, -.58, Math.cos(t) * 1.04 - .06), b = Q(Math.sin(t) * .5, -1.16, Math.cos(t) * .5 - .1);
+        man += `<path d="M${P2(a)}Q${P2(Q(Math.sin(t) * .9, -.95, Math.cos(t) * .9 - .08))} ${P2(b)}" stroke="#0e1018" stroke-width=".3" fill="none" opacity=".45"/>`; }
+      // the rolled brim round the brow: a thick band with the knit's ribs across it
+      const T = []; for (let k = 0; k <= 24; k++) { const t = -Math.PI * .5 + k / 24 * Math.PI, z = Math.cos(t) * 1.1 - .06; if (dp(Math.sin(t) * 1.1, -.47, z) > -.12) T.push(t); }
+      if (T.length > 2) { const top = T.map(t => Q(Math.sin(t) * 1.1, -.6, Math.cos(t) * 1.1 - .06)), bot = T.map(t => Q(Math.sin(t) * 1.12, -.34, Math.cos(t) * 1.12 - .06));
+        man += `<path d="M${top.map(P2).join('L')}L${bot.slice().reverse().map(P2).join('L')}Z" fill="url(#${bg2})" stroke="#0c0e14" stroke-width=".35" stroke-linejoin="round"/>`
+          + T.filter((_, k) => k % 2).map(t => `<path d="M${P2(Q(Math.sin(t) * 1.1, -.58, Math.cos(t) * 1.1 - .06))}L${P2(Q(Math.sin(t) * 1.12, -.37, Math.cos(t) * 1.12 - .06))}" stroke="#0e1018" stroke-width=".22" opacity=".5"/>`).join('')
+          + `<path d="M${top.slice(0, Math.ceil(top.length * .45)).map(P2).join('L')}" stroke="${RIMC}" stroke-width=".45" fill="none" opacity=".6"/>`; }
+      // the sun on its crown
+      { const a = Q(-.3, -1.12, .35), b = Q(.55, -.95, .55); man += `<path d="M${P2(a)}Q${f((a[0] + b[0]) / 2)} ${f((a[1] + b[1]) / 2 - 1)} ${P2(b)}" stroke="${RIMC}" stroke-width=".55" fill="none" opacity=".55"/>`; } }
 
     // ——— the cutlass in his far fist: the grip through the fist, the shell guard and knuckle-bow, the curved blade up ———
     let sabre = '';

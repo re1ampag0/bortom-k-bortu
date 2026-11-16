@@ -66,14 +66,12 @@ module.exports = { name: 'Джек ускользает', kind: 'deck', status: 
     bg += rays(u, MOON, 70, [[-160, 2.5], [-120, 2], [-95, 3], [-60, 2], [-25, 2.5], [10, 2], [40, 2.5], [75, 2], [110, 2.5], [140, 2]], '#e8f0ff', .22, 1.6);
     bg += K.localGlow(u, { x: MOON.x, y: MOON.y, color: '#e0ecff', power: .45, radius: 22 });
     // her bow up and running: a big bow wave thrown forward and up, sheets of spray blown at us and to the right
-    { const st = g.nearRail(-54), y = SINK + .6;
-      bg += K.splash(u, { x: st[0] - 4, y, w: 30, h: 22, seed: 5, L, wind: 1 }) + K.splash(u, { x: st[0] + 10, y: y + 1, w: 34, h: 16, seed: 2, L, wind: 1 })
-        + K.splash(u, { x: st[0] + 24, y: y + 2.4, w: 26, h: 10, seed: 8, L, wind: 1 }) + K.foam(u, { x: st[0] + 10, y: y + 1.4, w: 50, h: 3, seed: 8, L }); }
+    { const st = g.nearRail(-56); bg += bowWave(u, L, st[0] + 2, SINK + .4); }
     // smoke from a hit on her quarter, torn off to the right low over the water
     { const q = g.nearRail(40); bg += K.smoke(u, L, { x: q[0], y: q[1] - 1, w: 20, h: 16, wind: .9, seed: 13, opacity: .45 }); }
     let fg = '';
     // spray flying across the front: droplets streaked by the wind to the right, thick by her bow
-    fg += spray(u);
+    { const st = K.shipGeom(PEARL.kind, PEARL).nearRail(-56); fg += spray(u, st[0] + 2, SINK - 2); }
     // under the glass: the near sea dark, a crest catching the moon
     { const gl = nid('gl', u); fg += `<defs>${linGrad(gl, 0, 130, 0, 280, [[0, '#04070e', 0], [.22, '#04070e', .5], [1, '#020409', .85]])}</defs><rect x="-10" y="130" width="220" height="162" fill="url(#${gl})"/>`; }
     return [bg, fg];
@@ -127,13 +125,35 @@ function awash(u, L, g) {
   return s;
 }
 
-// flying spray in front: from her bow over the right side, droplets streaked by the wind (to the right and a little
-// down), bigger and blurrier the nearer they are; lit from behind by the moon (a bright edge towards it)
-function spray(u) {
+// her bow wave: the stem cuts the sea and throws it up and forward in a flared sheet — two crescents of white water
+// rising from the cutwater, curling over at the top and breaking into lumps and drops; foam spreading back along her
+// side; backlit by the moon: a grey-blue body, a bright top edge
+function bowWave(u, L, x, y) {
+  const R = rng(61), gid = nid('bw', u);
+  let s = `<defs>${linGrad(gid, 0, y - 18, 0, y + 1, [[0, '#f4f8ff', .95], [.45, '#c4d4ea', .85], [1, '#7a90b0', .7]])}</defs>`;
+  // the sheets: [forward reach, height, thickness]
+  for (const [fw, h, th, op] of [[30, 17, 5, .7], [22, 12, 4, .9], [14, 7, 3, 1]]) {
+    const top = [x + fw * .55, y - h], tip = [x + fw, y - h * .55], d = `M${f(x - 2)} ${f(y)}C${f(x)} ${f(y - h * .6)} ${f(top[0] - fw * .3)} ${f(top[1])} ${f(top[0])} ${f(top[1])}`
+      + `C${f(top[0] + fw * .25)} ${f(top[1])} ${f(tip[0])} ${f(tip[1] - 2)} ${f(tip[0])} ${f(tip[1])}`
+      + `C${f(tip[0] - th)} ${f(tip[1] - 1)} ${f(top[0] + 1)} ${f(top[1] + th)} ${f(x + fw * .4)} ${f(y - h * .3)}Q${f(x + fw * .7)} ${f(y - 1)} ${f(x + fw * .9)} ${f(y)}Z`;
+    s += `<path d="${d}" fill="url(#${gid})" opacity="${op}"/><path d="M${f(x)} ${f(y - h * .55)}C${f(top[0] - fw * .3)} ${f(top[1])} ${f(top[0])} ${f(top[1])} ${f(top[0] + fw * .2)} ${f(top[1] + .3)}" stroke="#ffffff" stroke-width=".6" fill="none" opacity=".8" stroke-linecap="round"/>`;
+    // the curl breaking into lumps at the tip
+    for (let i = 0; i < 7; i++) { const t = R(), px = lerp(top[0], tip[0] + 3, t) + (R() - .5) * 2, py = lerp(top[1], tip[1], t) - R() * 3;
+      s += `<ellipse cx="${f(px)}" cy="${f(py)}" rx="${f(.5 + R() * 1)}" ry="${f(.4 + R() * .7)}" fill="#eef4ff" opacity="${f(.6 + R() * .4)}"/>`; } }
+  s += K.foam(u, { x: x + 8, y: y + .8, w: 40, h: 3, seed: 8, L }) + K.foam(u, { x: x - 16, y: y + .4, w: 34, h: 2, seed: 9, L });
+  return s;
+}
+
+// flying spray in front of her bow: drops on arcs out of the bow wave — up, forward and down, blown to the right;
+// each drop drawn along its flight, the near ones bigger and blurred
+function spray(u, x0, y0) {
   const R = rng(51), bl = nid('sb', u);
   let near = '', far = '';
-  for (let i = 0; i < 110; i++) { const t = R(), x = 140 + R() * 66, y = 70 + R() * 64 + (x - 140) * .1, l = 2 + t * 9, w = .35 + t * 1.1;
-    const d = `<path d="M${f(x)} ${f(y)}l${f(l)} ${f(l * .18)}" stroke="#eef6ff" stroke-width="${f(w)}" stroke-linecap="round" opacity="${f(.35 + R() * .5)}"/>`;
-    if (t > .72) near += d; else far += d; }
-  return `<defs><filter id="${bl}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".6"/></filter></defs>${far}<g filter="url(#${bl})">${near}</g>`;
+  for (let i = 0; i < 26; i++) { const vx = 10 + R() * 30, vy = -(6 + R() * 16), n = 5 + Math.floor(R() * 5), big = R() > .7;
+    for (let k = 1; k <= n; k++) { const t = k / n * (.6 + R() * .6), x = x0 + vx * t, y = y0 + vy * t + 16 * t * t;
+      if (R() < .35) continue;
+      const dx = vx, dy = vy + 32 * t, l = Math.hypot(dx, dy), len = (big ? 1.6 : .9) + R() * 1.2, r = big ? .55 + R() * .5 : .25 + R() * .35;
+      const d = `<path d="M${f(x - dx / l * len)} ${f(y - dy / l * len)}L${f(x)} ${f(y)}" stroke="#eef6ff" stroke-width="${f(r * 2)}" stroke-linecap="round" opacity="${f(.45 + R() * .5)}"/>`;
+      if (big) near += d; else far += d; } }
+  return `<defs><filter id="${bl}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".35"/></filter></defs>${far}<g filter="url(#${bl})">${near}</g>`;
 }

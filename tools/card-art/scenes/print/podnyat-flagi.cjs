@@ -124,7 +124,7 @@ function shipFlag(u, top, w, h, seed) {
 
 // the fist round the halyard (the hand's frame, see HP): the back of the hand with its knuckles, four fingers closed
 // round the rope — their first joints cross in front of it and turn away behind it, each throwing a shade on the next
-// one down — and the thumb on the far side, its tip tucked behind the rope. The lantern on the right warms the
+// one down — and the thumb closing the grip over the index finger; the rope is inside the grip, behind them. The lantern on the right warms the
 // knuckles and the bends of the fingers; the moon rims the top.
 function fist(u, L, tn) {
   const P = HP, Ps = a => a.map(p => P(p[0], p[1])), pth = (a, c = true) => H.sp(Ps(a), c);
@@ -151,14 +151,16 @@ function fist(u, L, tn) {
   // the tendons fanning to the knuckles, the knuckles lit, the wrist crease
   for (const [y] of fins) { s += `<path d="${pth([[1.5, y * .35], [7, y * .75], [11.6, y * .98]], false)}" stroke="${tn.shadow}" stroke-width=".3" fill="none" opacity=".35"/>`
     + `<path d="${pth([[2, y * .35 - .4], [7.2, y * .75 - .4], [11.4, y * .98 - .4]], false)}" stroke="${tn.lit}" stroke-width=".25" fill="none" opacity=".3"/>`; }
-  for (const [y, w] of fins) s += `<path d="${pth([[12.2, y - w * .38], [13.2, y], [12.3, y + w * .32]], false)}" stroke="#ffd8b0" stroke-width=".5" fill="none" opacity=".65" stroke-linecap="round"/>`;
-    // the thumb from the ball of the hand along the top of the index finger, round the far side of the rope; its shade
-  // on the index finger; the rope passes over its tip
+  // the knuckles lit by the lantern: a short separate dab on the crown of each, not a line running down the fist
+  // (review: a continuous pale zigzag here read as the halyard laid over the fingers)
+  for (const [y, w] of fins) s += `<path d="${pth([[12.5, y - w * .22], [12.95, y - w * .02], [12.6, y + w * .14]], false)}" stroke="#ffd8b0" stroke-width=".45" fill="none" opacity=".42" stroke-linecap="round"/>`;
+    // the thumb from the ball of the hand along the top of the index finger, round the near side of the rope and
+  // closing the grip over the index finger; its shade on the index finger. The halyard runs into the fist BEHIND the
+  // thumb and the fingers (drawn before the fist) — nothing of the rope crosses the hand
   s += `<path d="${pth([[5, -5.6], [9, -5.9], [13, -5.9], [16, -6.3]], false)}" stroke="#1a0a04" stroke-width="1.1" fill="none" opacity=".45" stroke-linecap="round"/>`;
   s += `<path d="${pth([[1, -3.5], [3.4, -6.4], [7.5, -8.4], [11.5, -9], [14.8, -8.7], [16.8, -7.8], [17, -6.8], [15.4, -6.3], [12, -6.4], [8.5, -5.7], [5, -4.3]])}" fill="url(#${th})" stroke="${tn.outline}" stroke-width=".4"/>`;
   s += `<path d="${pth([[3.6, -6.6], [7.6, -8.4], [11.6, -8.85], [14.4, -8.6]], false)}" stroke="#c8dcff" stroke-width=".35" fill="none" opacity=".55"/>`;
   s += `<path d="${pth([[11.6, -6.6], [11.9, -7.5], [11.5, -8.4]], false)}" stroke="${tn.shadow}" stroke-width=".25" fill="none" opacity=".7"/>`;
-  s += K.rope(u, L, [P(15.1, -9.8), P(15, -6.6)], { r: .42, seed: 9 });
   return s;
 }
 

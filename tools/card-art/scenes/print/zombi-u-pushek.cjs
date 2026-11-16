@@ -269,9 +269,10 @@ function gun(u, L) {
   { const fp = [P(-13.5, 0, -1), P(13.5, 0, -1), P(13.5, 0, 27.5), P(-13.5, 0, 27.5)], c = P(0, 0, 13);
     s += K.castShadow(u, L, { x: c[0], y: c[1], w: 44, h: 24, horizon: HZ, d: .8 }) + `<path d="M${fp.map(P2).join('L')}Z" fill="#050202" opacity=".55" filter="url(#soft${u})"/>`; }
   // the far side first: its trucks, the axletrees, the far cheek (front step first)
-  s += truck(-11.6, 22.5, 4.4, 3, 21) + truck(-11.6, 2.8, 4, 3, 22);
+  // (we stand to the gun's left: its -X side is the near one, the +X side the far one)
+  s += truck(11.6, 22.5, 4.4, 3, 21) + truck(11.6, 2.8, 4, 3, 22);
   s += box(-12.8, 12.8, 3.4, 5.4, 21, 24, 17) + box(-12.8, 12.8, 3, 5, 1.3, 4.3, 18);
-  for (const [z0, z1, h, sd] of [[16, 27, 12.6, 3], [8, 16, 10.4, 5], [0, 8, 8.4, 7]]) s += box(-9.6, -5.4, 2.6, h, z0, z1, sd);
+  for (const [z0, z1, h, sd] of [[16, 27, 12.6, 3], [8, 16, 10.4, 5], [0, 8, 8.4, 7]]) s += box(5.4, 9.6, 2.6, h, z0, z1, sd);
   // between the cheeks: the transom, the bed, the quoin with its handle
   s += box(-5.4, 5.4, 3, 5.8, 11, 14.5, 9) + box(-4.6, 4.6, 5.8, 7, 1.5, 12, 13) + box(-2.8, 2.8, 7, 8.8, .6, 6, 15);
   { const a = P(0, 7.9, .6), b = P(0, 7.9, -1.4); s += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.1 * scl(0, 7.9, 0), L, 'oak', { ell: .5, face: 2, outline: .35 }); }
@@ -289,9 +290,9 @@ function gun(u, L) {
   { const a = P(0, 13, -.2), b = P(0, 13, -2.6), c = P(0, 13, -3.8);
     s += K.shadeCyl(u, a[0], a[1], b[0], b[1], 1.2 * scl(0, 13, -1), L, 'iron', { outline: .35 }) + K.shadeSphere(u, c[0], c[1], 1.7 * scl(0, 13, -3.8), L, 'iron', { outline: .4 }); }
   // the near cheek (front step first), the iron capsquares over the trunnions, the near trucks
-  for (const [z0, z1, h, sd] of [[16, 27, 12.6, 4], [8, 16, 10.4, 6], [0, 8, 8.4, 8]]) s += box(5.4, 9.6, 2.6, h, z0, z1, sd);
+  for (const [z0, z1, h, sd] of [[16, 27, 12.6, 4], [8, 16, 10.4, 6], [0, 8, 8.4, 8]]) s += box(-9.6, -5.4, 2.6, h, z0, z1, sd);
   for (const sx of [-1, 1]) s += box(sx > 0 ? 5.2 : -9.8, sx > 0 ? 9.8 : -5.2, 12.6, 13.5, 21.6, 24.6, 30 + sx, 'iron');
-  for (const [z, y] of [[3, 5.6], [11, 7], [20, 8.8], [24, 6.4]]) { const b = P(9.65, y, z); s += K.shadeSphere(u, b[0], b[1], .55 * scl(9.6, y, z) * .6, L, 'iron', { outline: .25 }); }
-  s += truck(11.6, 22.5, 4.4, 3, 23) + truck(11.6, 2.8, 4, 3, 24);
+  for (const [z, y] of [[3, 5.6], [11, 7], [20, 8.8], [24, 6.4]]) { const b = P(-9.65, y, z); s += K.shadeSphere(u, b[0], b[1], .55 * scl(-9.6, y, z) * .6, L, 'iron', { outline: .25 }); }
+  s += truck(-11.6, 22.5, 4.4, 3, 23) + truck(-11.6, 2.8, 4, 3, 24);
   return { svg: s, muzzle: P(0, 13, zm), P };
 }

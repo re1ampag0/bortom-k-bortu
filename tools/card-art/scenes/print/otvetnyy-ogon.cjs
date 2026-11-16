@@ -12,7 +12,10 @@
 // After the review: the swivels larger and ~10 higher, each in a socket on the cap rail; the right one held by its
 // gunner (people.cjs hand3 round the tiller, his sleeve from the corner); the kit's small pale tear in her course
 // darkened into a scorched rent; our hole's edge charred into sharp teeth instead of curled scraps.
-// Light: the sun high behind her (key, contre-jour: her canvas glows, rims on the yards), the fire and the flashes.
+// After the print review: the card puts no Fire, so neither hit burns — the sail hole is torn canvas with frayed
+// threads and scraps (no embers, no smoke), the breach is a dark hole with smashed planks and splinters (no flames,
+// no glow inside); only the muzzle flashes of our swivels stay.
+// Light: the sun high behind her (key, contre-jour: her canvas glows, rims on the yards), the flashes.
 'use strict';
 const K = require('../kit/index.cjs');
 const H = require('./lib/people.cjs');
@@ -24,9 +27,8 @@ const RAIL = [[108, 145], [200, 93]], railY = x => RAIL[0][1] + (RAIL[1][1] - RA
 // the left (lower) one laid level at her hull, the right (higher) one up at her canvas, its gunner's hand on the tiller
 const SW = [{ x: 146, y: railY(146) - 2.2, aim: HULLHIT, len: 24, seed: 2 }, { x: 171, y: railY(171) - 2.2, aim: SAILHIT, len: 24, seed: 4, tiller: 12, gunner: true }];
 const light = { time: 'day', haze: .3, key: { type: 'sun', x: 150, y: 22, color: '#fff2d0', power: 1 }, fill: { color: '#7fa4c8', power: .5 },
-  rim: { az: 20, color: '#fff4dc', power: .6 },
-  locals: [{ x: HULLHIT.x, y: HULLHIT.y, color: '#ff9a3a', power: .7, radius: 28 }, { x: SAILHIT.x, y: SAILHIT.y, color: '#ffb050', power: .4, radius: 18 }] };
-const skel = { horizon: HZ, eye: 4, light: 'the sun high behind her (contre-jour); the fire in her side; the flashes of our guns', items: [
+  rim: { az: 20, color: '#fff4dc', power: .6 } };
+const skel = { horizon: HZ, eye: 4, light: 'the sun high behind her (contre-jour); the flashes of our guns', items: [
   ['enemy', -48, EN.y, 239, 146, 'water: broadside, bow to the left, close'],
   ['sail hole', SAILHIT.x - 11, SAILHIT.y + 9, 22, 18, 'in her main course'],
   ['breach', HULLHIT.x - 12, HULLHIT.y + 8, 24, 16, 'her side, between the ports'],
@@ -34,46 +36,44 @@ const skel = { horizon: HZ, eye: 4, light: 'the sun high behind her (contre-jour
   ['swivels', 128, 124, 70, 34, 'on our cap rail, in their yokes; the gunner\'s arm from the near corner']] };
 
 // ——— KIT-CANDIDATE (as in zalp-s-oboih-bortov.cjs): a hit on a ship's side — the smashed hole, torn plank ends,
-// splinters out the way the shot went (dir +1 right, -1 left), fire inside, smoke
+// splinters out the way the shot went (dir +1 right, -1 left); no fire (this card puts none)
 function breach(u, L, o) {
   const R = rng(o.seed || 3), { x, y, s = 1, dir = -1 } = o, rp = L.ramp('oak', x, y);
   let out = '';
-  // the hole: a dark ragged mouth, the fire inside lighting its back
+  // the hole: a dark ragged mouth, the gun deck's dark inside
   const pts = Array.from({ length: 16 }, (_, i) => { const a = i / 16 * Math.PI * 2, r = (i % 2 ? 4.4 : 6.4 + R() * 2.4) * s; return [x + Math.cos(a) * r * 1.3, y + Math.sin(a) * r * .9]; });
   out += `<path d="M${pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="#160604"/>`;
-  out += K.localGlow(u, { x, y: y + 1.5 * s, color: '#ff8a2a', power: .9, radius: 7 * s });
-  out += K.fire(u, { x: x - 1 * s, y: y + 3 * s, w: 9 * s, h: 9 * s, seed: (o.seed || 3) + 2, wind: -.4, pool: false, glow: false });
-  // the plank ends torn outwards round the mouth, lit by the fire from inside
+  // a broken frame across the dark inside
+  out += `<path d="M${f(x - 3 * s)} ${f(y - 5 * s)}L${f(x + 1.4 * s)} ${f(y + 4.4 * s)}" stroke="${rp.half}" stroke-width="${f(1.1 * s)}" stroke-linecap="round"/><path d="M${f(x - 2.6 * s)} ${f(y - 5 * s)}L${f(x + 1.8 * s)} ${f(y + 4.2 * s)}" stroke="#c8a070" stroke-width="${f(.3 * s)}" opacity=".7"/>`;
+  // the plank ends torn outwards round the mouth, their raw wood showing
   for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2 + R() * .3, r0 = 5.2 * s, r1 = r0 + (2 + R() * 3.6) * s, w = (.5 + R() * .5) * s;
     const ax = x + Math.cos(a) * r0 * 1.2, ay = y + Math.sin(a) * r0 * .85, bx = x + Math.cos(a + .2) * r1 * 1.25, by = y + Math.sin(a + .2) * r1 * .9;
-    out += `<path d="M${f(ax - w)} ${f(ay)}L${f(bx)} ${f(by)}L${f(ax + w)} ${f(ay + w * .6)}Z" fill="${Math.sin(a) > 0 ? rp.half : '#d8904a'}" stroke="${rp.outline}" stroke-width=".2"/>`; }
-  // splinters flying out the way the shot went, some burning at the ends
+    out += `<path d="M${f(ax - w)} ${f(ay)}L${f(bx)} ${f(by)}L${f(ax + w)} ${f(ay + w * .6)}Z" fill="${Math.sin(a) > 0 ? rp.half : '#c8a070'}" stroke="${rp.outline}" stroke-width=".2"/>`; }
+  // splinters flying out the way the shot went
   for (let i = 0; i < 26; i++) { const a = (dir > 0 ? 0 : Math.PI) + (R() - .5) * 2.6, d = (6 + R() * 18) * s, len = (1.2 + R() * 3.4) * s, rot = a + (R() - .5) * 1.6, w = (.3 + R() * .35) * s;
     const cx = x + Math.cos(a) * d, cy = y + Math.sin(a) * d * .7 - R() * 4 * s, dx = Math.cos(rot) * len / 2, dy = Math.sin(rot) * len / 2, nx = -dy / len * w * 2, ny = dx / len * w * 2;
-    out += `<path d="M${f(cx - dx)} ${f(cy - dy)}L${f(cx + nx)} ${f(cy + ny)}L${f(cx + dx)} ${f(cy + dy)}L${f(cx - nx * .6)} ${f(cy - ny * .6)}Z" fill="${R() > .4 ? '#f0c88a' : '#b07a42'}" stroke="#3a1e0c" stroke-width=".15"/>`
-      + (R() > .7 ? `<circle cx="${f(cx + dx)}" cy="${f(cy + dy)}" r="${f(.5 * s)}" fill="#ffb040"/>` : ''); }
+    out += `<path d="M${f(cx - dx)} ${f(cy - dy)}L${f(cx + nx)} ${f(cy + ny)}L${f(cx + dx)} ${f(cy + dy)}L${f(cx - nx * .6)} ${f(cy - ny * .6)}Z" fill="${R() > .4 ? '#f0c88a' : '#b07a42'}" stroke="#3a1e0c" stroke-width=".15"/>`;
+    R(); }   // (kept: the draw that once chose a burning tip, so the splinters stay where they were)
   return out;
 }
-// a fresh hole burnt through a sail: the sky through it, a charred ring, glowing embers along the edge, curled scraps
+// a fresh hole torn through a sail by the shot: the sky through it, the canvas's edge torn into teeth and frayed
+// threads, a few scraps of canvas blown off — no burning (this card puts no Fire)
 function sailHole(u, L, o) {
   const R = rng(o.seed || 5), { x, y, r = 9 } = o, n = 22;
   const pts = Array.from({ length: n }, (_, i) => { const a = i / n * Math.PI * 2, rr = r * (.8 + R() * .38) * (i % 3 === 0 ? .86 : 1); return [x + Math.cos(a) * rr, y + Math.sin(a) * rr * .9]; });
   const d = `M${pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z`, g = nid('sh', u);
   let out = `<defs>${radGrad(g, x + r * .3, y - r * .3, r * 1.3, [[0, '#fffdf2'], [.55, '#eef0e6'], [1, '#c8d8e2']])}</defs>`;
-  // the scorch round the hole on the canvas, then the hole with the bright sky in it
-  { const sc = Array.from({ length: n * 2 }, (_, i) => { const a = i / (n * 2) * Math.PI * 2, rr = r * (1.18 + R() * .3 + (i % 2 ? .12 : 0)); return [x + Math.cos(a) * rr, y + Math.sin(a) * rr * .9]; });
-    out += `<path d="M${sc.map(p => f(p[0]) + ' ' + f(p[1])).join('L')}Z" fill="#0c0806" opacity=".5"/>`; }
-  out += `<path d="${d}" fill="#0c0806" stroke="#0c0806" stroke-width="${f(r * .3)}" stroke-linejoin="round" opacity=".8"/>`;
+  out += `<path d="${d}" fill="#0c0806" stroke="#0c0806" stroke-width="${f(r * .22)}" stroke-linejoin="round" opacity=".8"/>`;
   out += `<path d="${d}" fill="url(#${g})"/>`;
-  // the charred edge torn into small sharp teeth pointing into the hole, all round, none of them curled
-  for (let i = 0; i < n; i++) { const p = pts[i], q = pts[(i + 1) % n], mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2, a = Math.atan2(my - y, mx - x), l = r * (.08 + R() * .16), w = r * (.05 + R() * .05);
-    out += `<path d="M${f(mx - Math.sin(a) * w)} ${f(my + Math.cos(a) * w)}L${f(mx - Math.cos(a + (R() - .5) * .5) * l)} ${f(my - Math.sin(a + (R() - .5) * .5) * l)}L${f(mx + Math.sin(a) * w)} ${f(my - Math.cos(a) * w)}Z" fill="#120a06"/>`; }
-  // the ember edge: a glowing ring, broken, brighter on the lower side where it still burns
-  out += `<path d="${d}" fill="none" stroke="#ff7a1a" stroke-width="${f(r * .08)}" stroke-dasharray="${f(r * .5)} ${f(r * .3)}" opacity=".95"/>`
-    + `<path d="${d}" fill="none" stroke="#ffe08a" stroke-width="${f(r * .035)}" stroke-dasharray="${f(r * .3)} ${f(r * .4)}"/>`;
-  // sparks drifting down the wind (to the left), smoke from the edge
-  for (let i = 0; i < 12; i++) out += `<circle cx="${f(x - R() * r * 2.6)}" cy="${f(y + (R() - .3) * r * 2)}" r="${f(.25 + R() * .4)}" fill="${R() > .5 ? '#ffd070' : '#ff8a2a'}"/>`;
-  out += K.smoke(u, L, { x: x - r * .5, y: y - r * .7, w: r * 2.2, h: r * 2.2, wind: -.8, seed: (o.seed || 5) + 3, opacity: .38, glow: { color: '#ff9a3a', power: .3 } });
+  // the canvas's edge torn into sharp teeth pointing into the hole and out the way the shot went (to the right)
+  for (let i = 0; i < n; i++) { const p = pts[i], q = pts[(i + 1) % n], mx = (p[0] + q[0]) / 2, my = (p[1] + q[1]) / 2, a = Math.atan2(my - y, mx - x), l = r * (.1 + R() * .2), w = r * (.05 + R() * .05);
+    out += `<path d="M${f(mx - Math.sin(a) * w)} ${f(my + Math.cos(a) * w)}L${f(mx - Math.cos(a + (R() - .5) * .5) * l)} ${f(my - Math.sin(a + (R() - .5) * .5) * l)}L${f(mx + Math.sin(a) * w)} ${f(my - Math.cos(a) * w)}Z" fill="#1a1612"/>`; }
+  // frayed threads hanging into the hole, lit grey against the sky
+  for (let i = 0; i < 9; i++) { const p = pts[Math.floor(R() * n)], a = Math.atan2(y - p[1], x - p[0]) + (R() - .5) * .8, l = r * (.18 + R() * .22);
+    out += `<path d="M${f(p[0])} ${f(p[1])}q${f(Math.cos(a) * l * .5 + (R() - .5) * 1.2)} ${f(Math.sin(a) * l * .5 + .6)} ${f(Math.cos(a) * l)} ${f(Math.sin(a) * l + 1)}" stroke="#4a4a4c" stroke-width=".3" fill="none" stroke-linecap="round"/>`; }
+  // scraps of black canvas blown off to the right, the way the shot went, turning in the air
+  for (let i = 0; i < 6; i++) { const cx = x + r * (1.1 + R() * 1.4), cy = y + (R() - .5) * r * 1.4, sz = r * (.1 + R() * .12), rot = R() * 180;
+    out += `<path d="M${f(cx - sz)} ${f(cy)}L${f(cx)} ${f(cy - sz * .7)}L${f(cx + sz)} ${f(cy + sz * .2)}L${f(cx - sz * .2)} ${f(cy + sz * .6)}Z" fill="#141210" stroke="#5a5a5c" stroke-width=".15" transform="rotate(${f(rot)} ${f(cx)} ${f(cy)})"/>`; }
   return out;
 }
 // a swivel gun on our rail: the barrel in an iron yoke, its pin in the rail, a tiller at the breech; (x, y) — the
@@ -122,8 +122,8 @@ module.exports = { name: 'Ответный огонь', kind: 'deck', status: 'a
         + `<path d="M${f(cx - 3.6)} ${f(cy - 2.4)}L${f(cx - 1.4)} ${f(cy - 1.6)}L${f(cx - .6)} ${f(cy - 2.6)}L${f(cx + 1.2)} ${f(cy - .2)}L${f(cx + 3.4)} ${f(cy + .6)}L${f(cx + 2.6)} ${f(cy + 1.6)}L${f(cx + .4)} ${f(cy + .9)}L${f(cx - .8)} ${f(cy + 1.8)}L${f(cx - 2.2)} ${f(cy - .4)}Z" fill="#9aa8b0" opacity=".45"/>`; }
     fg += sailHole(u, L, { x: SAILHIT.x, y: SAILHIT.y, r: 12, seed: 5 });
     fg += breach(u, L, { x: HULLHIT.x, y: HULLHIT.y, s: 1.2, dir: -1, seed: 9 });
-    fg += K.smoke(u, L, { x: HULLHIT.x - 2, y: HULLHIT.y - 4, w: 26, h: 30, wind: -.8, seed: 11, opacity: .7, glow: { color: '#ff8a2a', power: .5 } });
-    fg += K.localGlow(u, { x: HULLHIT.x, y: HULLHIT.y, color: '#ff9a3a', power: .55, radius: 24 }, { squash: .7, core: false });
+    // a puff of dust and splinters off the struck side, no glow
+    fg += K.smoke(u, L, { x: HULLHIT.x - 4, y: HULLHIT.y - 2, w: 18, h: 14, wind: -.8, seed: 11, opacity: .45 });
 
     // ——— our rail in the near corner: the inside of the bulwark (in its own shade, the sun is ahead), the cap rail
     // on top with its lit edge; two swivel guns in their yokes, just fired — flashes and smoke drifting left
