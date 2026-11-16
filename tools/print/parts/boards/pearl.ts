@@ -4,9 +4,10 @@
 // Hull on the planking. The ship stays open round the rows: the frame lays only tight plates under the words and the
 // numbers, the cells are set into her side. Right column: a worn chart on
 // tarred planks and the compass that does not point north. The back: the Pearl on the sea floor by night.
+// B («стол капитана»): a worn chart over tarred planks, the rows as knotted log-lines, the Pearl as a pinned print.
 // The interface is at the top of frame.ts; the shared helpers are in paint.ts.
-import type { Geo, Kit, Layers, Rect, ShipMaterial, WreckGeo } from './frame';
-import { compass, planks, rng, sheet, simpleMaterial } from './paint';
+import { ENGRAVING, type Geo, type Kit, type Layers, type Rect, type ShipMaterial, type WreckGeo } from './frame';
+import { compass, engraving, planks, rng, sheet } from './paint';
 
 const r = (n: number) => Math.round(n * 100) / 100;
 type KFn = (u: string, L: unknown, o: Record<string, unknown>) => string;
@@ -254,14 +255,163 @@ async function wreckPearl(w: WreckGeo): Promise<Layers> {
   return { under };
 }
 
-// B («стол капитана»): the shared simple material in the Pearl's colours (this file paints A and the back)
-const simple = simpleMaterial({
-  wood: TAR, band: '#26221F', hair: '#b8893a',
-  sky: ['#c9cfd2', '#eef0ea'], sea: ['#5d7880', '#2f444c'], focus: 4,
-  chart: { paper: '#efe2c4', line: '#c7b48a', coast: '#e0cfa2' }, brass: BRASS,
-  note: '#fffaf0', noteLine: '#c9b27a', pin: '#3a3a40',
-  extraB: g => cord(`M${r(g.zones.col.x - 1.8)} 30V172`, 1.6, { color: '#c4a676', dark: '#5a4630' }),
-  wreck: { water: ['#4f6b70', '#1d2c31'], sand: '#a99a7a', sandDark: '#6e6250' }
-});
+// ---- B («стол капитана»): Jack's table — tarred planks at the edge, a worn chart over all of it, the rows as tarred
+// log-lines with a knot between every two cells, the Pearl as an engraving pinned on the chart, brass dividers on a
+// printed rose, the compass in the foot of the right column, the abilities as notes tacked to the chart ----
+const TARRED = { color: '#76603f', dark: '#261c12' };
+const CHART = { paper: '#f4ebd2', line: '#cdb98e', rhumb: '#d3c29b', ink: '#8a6c40', land: '#ecdcb4', fox: '#b08a50' };
+const NOTE = { paper: '#fbf4e2', line: '#bfa772', shadow: 'rgba(38,28,18,.42)' };
 
-export const material: ShipMaterial = { a: faceA, b: simple.b, wreck: wreckPearl };
+/** the chart sheet: a frayed edge just inside the frame band, two corners lost to the tarred wood at the bottom */
+function chartSheet(g: Geo): string {
+  const W = g.page.w, H = g.page.h, R = rng(53), b = { x: 10.3, y: 10.3, w: W - 20.6, h: H - 20.6 }, pts: [number, number][] = [], per = 2 * (b.w + b.h);
+  for (let s = 0; s < per; s += 2.2) {
+    let x: number, y: number, nx: number, ny: number;
+    if (s < b.w) { x = b.x + s; y = b.y; nx = 0; ny = 1; }
+    else if (s < b.w + b.h) { x = b.x + b.w; y = b.y + s - b.w; nx = -1; ny = 0; }
+    else if (s < 2 * b.w + b.h) { x = b.x + b.w - (s - b.w - b.h); y = b.y + b.h; nx = 0; ny = -1; }
+    else { x = b.x; y = b.y + b.h - (s - 2 * b.w - b.h); nx = 1; ny = 0; }
+    const d = R() * 0.55;
+    pts.push([x + nx * d, y + ny * d]);
+  }
+  // the lost corners (bottom left, bottom right): only where no word or cell of the frame stands
+  const lost = (x: number, y: number) => (x < 36 && y > 190 && (x - 10) / 26 + (198 - y) / 7.5 < 1) || (x > 263 && y > 191 && (W - 10 - x) / 22 + (198 - y) / 6.5 < 1);
+  const poly = pts.filter(([x, y]) => !lost(x, y));
+  // close the cuts with a ragged tear
+  const out: [number, number][] = [];
+  for (let i = 0; i < poly.length; i++) {
+    out.push(poly[i]);
+    const p = poly[i], q = poly[(i + 1) % poly.length];
+    if (Math.hypot(q[0] - p[0], q[1] - p[1]) > 4) {
+      const n = Math.floor(Math.hypot(q[0] - p[0], q[1] - p[1]) / 1.6);
+      for (let k = 1; k < n; k++) { const t = k / n; out.push([p[0] + (q[0] - p[0]) * t + (R() - 0.5) * 0.9, p[1] + (q[1] - p[1]) * t + (R() - 0.5) * 0.9]); }
+    }
+  }
+  const P = out.map(p => `${r(p[0])},${r(p[1])}`).join(' '), id = `${g.uid}bk`, inner: string[] = [];
+  // the grid of degrees and the rhumb lines of two roses (one printed, one off the sheet)
+  for (let x = 22; x < W - 10; x += 24) inner.push(`<line x1="${x}" y1="10" x2="${x}" y2="${H - 10}" stroke="${CHART.line}" stroke-width=".2"/>`);
+  for (let y = 21; y < H - 10; y += 24) inner.push(`<line x1="10" y1="${y}" x2="${W - 10}" y2="${y}" stroke="${CHART.line}" stroke-width=".2"/>`);
+  for (const [rx, ry] of [[102, 104], [252, 152]]) for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8; inner.push(`<line x1="${rx}" y1="${ry}" x2="${r(rx + Math.cos(a) * 320)}" y2="${r(ry + Math.sin(a) * 320)}" stroke="${CHART.rhumb}" stroke-width=".16"${i % 2 ? ' stroke-dasharray="1.1 1.3"' : ''}/>`); }
+  // a coast round the foot of the tracks, right of the Hull's cells: land tint, the shore twice, soundings
+  const shore: [number, number][] = [];
+  for (let y = 137; y <= 171; y += 2.4) shore.push([168 + Math.sin(y / 4.3) * 2.6 + R() * 1.6 - (y - 137) * 0.42, y]);
+  inner.push(`<path d="M200 137L${shore.map(([x, y]) => `${r(x)} ${r(y)}`).join('L')}L200 171Z" fill="${CHART.land}"/>`);
+  for (const off of [0, -1.2, -2.6]) inner.push(`<path d="M${shore.map(([x, y]) => `${r(x + off)} ${r(y)}`).join('L')}" fill="none" stroke="${CHART.ink}" stroke-width="${off ? 0.14 : 0.28}" stroke-opacity="${off ? 0.45 : 0.75}"/>`);
+  for (let i = 0; i < 18; i++) { const y = 140 + R() * 28, x = 160 - (y - 137) * 0.42 - 4 - R() * 10; inner.push(`<circle cx="${r(x)}" cy="${r(y)}" r=".2" fill="${CHART.ink}" fill-opacity=".5"/>`); }
+  // foxing, a mug ring, the folds
+  for (let i = 0; i < 40; i++) inner.push(`<circle cx="${r(12 + R() * (W - 24))}" cy="${r(30 + R() * 140)}" r="${r(0.25 + R() * R() * 1.4)}" fill="${CHART.fox}" fill-opacity="${r(0.05 + R() * 0.1)}"/>`);
+  inner.push(`<circle cx="268" cy="132" r="7" fill="none" stroke="#8a6232" stroke-width=".7" stroke-opacity=".18"/><circle cx="268.6" cy="131.7" r="6.7" fill="none" stroke="#8a6232" stroke-width=".25" stroke-opacity=".22"/>`);
+  inner.push(`<line x1="148.5" y1="10" x2="148.5" y2="${H - 10}" stroke="#fffaf0" stroke-width=".6" stroke-opacity=".6"/><line x1="149" y1="10" x2="149" y2="${H - 10}" stroke="#9c7c4c" stroke-width=".3" stroke-opacity=".3"/>`);
+  inner.push(`<line x1="10" y1="101.5" x2="${W - 10}" y2="101.5" stroke="#fffaf0" stroke-width=".6" stroke-opacity=".6"/><line x1="10" y1="102" x2="${W - 10}" y2="102" stroke="#9c7c4c" stroke-width=".3" stroke-opacity=".3"/>`);
+  // the worn edge: a brown burn that stays in the frame band (the words of the rows start at x 11.2)
+  inner.push(`<polygon points="${P}" fill="none" stroke="#7a5426" stroke-width="1.6" stroke-opacity=".35"/>`);
+  // the printed rose under the dividers
+  inner.push(`<g opacity=".8">${compass(102, 104, 12.5, { line: '#b29a6a', fill: CHART.paper, accent: '#8c3a24' })}</g>`);
+  return `<defs><clipPath id="${id}"><polygon points="${P}"/></clipPath></defs>` +
+    `<polygon points="${P}" fill="#000" fill-opacity=".45" transform="translate(.5 .6)"/><polygon points="${P}" fill="${CHART.paper}"/>` +
+    `<g clip-path="url(#${id})">${inner.join('')}</g><polygon points="${P}" fill="none" stroke="#3e2a14" stroke-width=".22" stroke-opacity=".7"/>`;
+}
+
+/** a knot on a log-line: a bead of tarred rope, its turns crossing */
+function knot(x: number, y: number, w: number): string {
+  const rx = w * 0.66, ry = w * 1.08;
+  return `<ellipse cx="${r(x + 0.2)}" cy="${r(y + 0.35)}" rx="${r(rx)}" ry="${r(ry)}" fill="#000" fill-opacity=".35"/>` +
+    `<ellipse cx="${r(x)}" cy="${r(y)}" rx="${r(rx)}" ry="${r(ry)}" fill="${TARRED.color}" stroke="${TARRED.dark}" stroke-width=".35"/>` +
+    `<path d="M${r(x - rx * 0.8)} ${r(y - ry * 0.7)}Q${r(x + rx * 0.9)} ${r(y)} ${r(x - rx * 0.8)} ${r(y + ry * 0.7)}M${r(x + rx * 0.8)} ${r(y - ry * 0.7)}Q${r(x - rx * 0.9)} ${r(y)} ${r(x + rx * 0.8)} ${r(y + ry * 0.7)}" fill="none" stroke="${TARRED.dark}" stroke-width=".3"/>` +
+    `<path d="M${r(x - rx * 0.35)} ${r(y - ry * 0.8)}Q${r(x + rx * 0.2)} ${r(y - ry * 0.3)} ${r(x - rx * 0.1)} ${r(y + ry * 0.1)}" fill="none" stroke="#ffffff" stroke-width=".25" stroke-opacity=".3"/>`;
+}
+/** a flat (Flemish) coil: the rope comes in at the top moving right and turns clockwise inwards */
+function flemish(cx: number, cy: number, R0: number, w: number): string {
+  const step = w + 0.25, pts: string[] = [];
+  for (let t = 0; R0 - step * t / (2 * Math.PI) > w * 0.7; t += 0.12) { const rr = R0 - step * t / (2 * Math.PI), a = -Math.PI / 2 + t; pts.push(`${r(cx + Math.cos(a) * rr)} ${r(cy + Math.sin(a) * rr)}`); }
+  return `<circle cx="${r(cx + 0.4)}" cy="${r(cy + 0.6)}" r="${r(R0 + w / 2)}" fill="#000" fill-opacity=".28"/>` + cord(`M${pts.join('L')}`, w, TARRED);
+}
+/** the rows: a tarred log-line runs in over the table edge, under the cells, a knot showing between every two cells */
+function logLines(g: Geo): string {
+  const out: string[] = [], w = 2.1;
+  for (const rw of g.rows) {
+    const cy = rw.cy, last = rw.cells[rw.cells.length - 1], end = last.x + last.w;
+    const vol = rw.key === 'guns' ? g.slots.filter(s => s.kind === 'volley' || s.kind === 'volley2') : [];
+    let x1 = (vol.length ? vol[vol.length - 1] : last).x + 6.5, tail = '';
+    if (rw.key === 'hull') {
+      // the Hull's line runs out to the right and lies there in a coil on the coast
+      const cx = 177, R0 = 7.4, ty = cy + 2.2 - R0;
+      tail = cord(`M${r(end - 3)} ${r(cy)}C${r(end + 8)} ${r(cy)} ${r(cx - 9)} ${r(ty)} ${r(cx)} ${r(ty)}`, w, TARRED) + flemish(cx, cy + 2.2, R0, 1.9);
+      x1 = end - 3;
+    }
+    out.push(cord(`M8.4 ${r(cy)}H${r(x1)}`, w, TARRED) + whip(9.4, cy, w, false) + tail);
+    // a knot in every gap, one past the last cell (a stopper) and one between the Guns and «Залп дан»
+    const xs = rw.cells.slice(1).map((c, i) => (rw.cells[i].x + rw.cells[i].w + c.x) / 2);
+    let prev = end;
+    for (const s of vol) { xs.push((prev + s.x) / 2); prev = s.x + s.w; }
+    if (rw.key !== 'hull') xs.push(prev + 0.55);
+    for (const x of xs) out.push(knot(x, cy, w));
+  }
+  return out.join('');
+}
+/** brass dividers lying open on the chart: hinge (hx, hy), legs at angles a1, a2 from straight down (degrees) */
+function dividers(hx: number, hy: number, a1: number, a2: number, L: number, uid: string): string {
+  const id = `${uid}dv`, out: string[] = [`<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${BRASS.dark}"/><stop offset=".35" stop-color="${BRASS.light}"/><stop offset=".6" stop-color="${BRASS.mid}"/><stop offset="1" stop-color="${BRASS.dark}"/></linearGradient></defs>`];
+  const leg = (a: number, sh: boolean) => {
+    const t = a * Math.PI / 180, dx = Math.sin(t), dy = Math.cos(t), px = dy, py = -dx, P = (d: number, s: number) => `${r(hx + dx * d + px * s + (sh ? 0.7 : 0))},${r(hy + dy * d + py * s + (sh ? 0.9 : 0))}`;
+    if (sh) return `<polygon points="${P(0, 1.05)} ${P(L * 0.86, 0.45)} ${P(L, 0)} ${P(L * 0.86, -0.45)} ${P(0, -1.05)}" fill="#000" fill-opacity=".35"/>`;
+    return `<polygon points="${P(0, 1.05)} ${P(L * 0.86, 0.5)} ${P(L * 0.86, -0.5)} ${P(0, -1.05)}" fill="url(#${id})" stroke="${BRASS.dark}" stroke-width=".22"/>` +
+      `<polygon points="${P(L * 0.86, 0.5)} ${P(L, 0)} ${P(L * 0.86, -0.5)}" fill="#a9b0b4" stroke="#3c4246" stroke-width=".18"/>` +
+      `<line x1="${P(2, 0).split(',')[0]}" y1="${P(2, 0).split(',')[1]}" x2="${P(L * 0.8, 0).split(',')[0]}" y2="${P(L * 0.8, 0).split(',')[1]}" stroke="#fff3c8" stroke-width=".18" stroke-opacity=".7"/>`;
+  };
+  out.push(leg(a1, true), leg(a2, true), leg(a1, false), leg(a2, false));
+  out.push(`<circle cx="${r(hx + 0.6)}" cy="${r(hy + 0.8)}" r="2.3" fill="#000" fill-opacity=".35"/><circle cx="${r(hx)}" cy="${r(hy)}" r="2.3" fill="${BRASS.mid}" stroke="${BRASS.dark}" stroke-width=".3"/><circle cx="${r(hx)}" cy="${r(hy)}" r="1.5" fill="none" stroke="${BRASS.light}" stroke-width=".25"/><line x1="${r(hx - 0.8)}" y1="${r(hy)}" x2="${r(hx + 0.8)}" y2="${r(hy)}" stroke="${BRASS.dark}" stroke-width=".35"/>`);
+  // the knob above the hinge
+  out.push(`<rect x="${r(hx - 0.7)}" y="${r(hy - 5)}" width="1.4" height="3" rx=".5" fill="${BRASS.mid}" stroke="${BRASS.dark}" stroke-width=".2"/>`);
+  return out.join('');
+}
+/** the engraving's rect on the page (the frame scales ENGRAVING into its zone, centred) */
+function engravingRect(E: Rect): Rect {
+  const k = Math.min(E.w / ENGRAVING.w, E.h / ENGRAVING.h), w = ENGRAVING.w * k, h = ENGRAVING.h * k;
+  return { x: E.x + (E.w - w) / 2, y: E.y + (E.h - h) / 2, w, h };
+}
+/** the Pearl as a print: the kit ship baked to sepia by paint.engraving, a plate mark, a sky ruled like a line engraving */
+async function pearlPrint(g: Geo): Promise<string> {
+  const ink = '#33241a', paper = '#f6eedb';
+  const base = await engraving(g, { paper, ink, frame: paper, frameDark: '#4a3622', light: g.kit.LIGHTS.endeavour as Record<string, unknown>, sails: 'full', seed: 5 });
+  // where engraving() put its picture and its waterline (its own arithmetic)
+  const box = g.kit.shipBox(g.kind, { x: 0, y: 0, scale: 1 }), s = Math.min(176 / box.w, 150 / box.h), h = s * box.h + 24;
+  const kk = Math.min((ENGRAVING.w - 8) / 200, (ENGRAVING.h - 8) / h), iy = (ENGRAVING.h - h * kk) / 2, wlE = iy + (s * box.h + 6) * kk;
+  let sky = '';
+  for (let y = 3.6, i = 0; y < wlE - 0.6; y += 0.7, i++) sky += `<line x1="3.4" y1="${r(y)}" x2="${ENGRAVING.w - 3.4}" y2="${r(y)}" stroke="${ink}" stroke-width=".12" stroke-opacity="${r(0.42 - 0.3 * (y - 3.6) / (wlE - 4.2))}"/>`;
+  const E = ENGRAVING;
+  return base + sky +
+    `<rect x="4.2" y="4.2" width="${E.w - 8.4}" height="${E.h - 8.4}" fill="none" stroke="#a48a5c" stroke-width=".3"/><rect x="4.6" y="4.6" width="${E.w - 9.2}" height="${E.h - 9.2}" fill="none" stroke="#fffaf0" stroke-width=".25"/>`;
+}
+
+async function faceB(g: Geo): Promise<Layers> {
+  const W = g.page.w, H = g.page.h, c = g.zones.col, parts: string[] = [];
+  // the table: tarred planks inside the frame band; only a strip of it shows round the chart and at its lost corners
+  parts.push(sheet(g, { band: BAND, line: HAIR, ground: TAR.base, w: 1.2 }));
+  parts.push(planks({ x: 9, y: 9, w: W - 18, h: H - 18 }, { ...TAR, h: 10.5, seed: 61 }));
+  parts.push(chartSheet(g));
+  // the dividers on the printed rose, left of the print
+  parts.push(dividers(104, 89, -12, 15, 34, g.uid));
+  // a rope down between the middle and the right column, whipped at its ends
+  const vx = c.x - 1.9;
+  parts.push(cord(`M${r(vx)} 29V171.5`, 1.5, TARRED) + whip(vx, 34, 1.5, true) + whip(vx, 168, 1.5, true));
+  // the rows as log-lines
+  parts.push(logLines(g));
+  // the print's shadow on the chart
+  const E = g.zones.engraving, pr = E ? engravingRect(E) : null;
+  if (pr) parts.push(`<rect x="${r(pr.x + 0.9)}" y="${r(pr.y + 1.1)}" width="${r(pr.w - 1)}" height="${r(pr.h - 1)}" rx="1" fill="#000" fill-opacity=".35"/>`);
+  // Jack's compass, open in the foot of the right column (under the notes if they ever grow down to it)
+  parts.push(jackCompass(c.x + 26, c.y + c.h - 15, 11, `${g.uid}bj`));
+  const engr = await pearlPrint(g);
+  // over: iron nails in the band's corners, brass tacks in the print's top corners
+  const nails = [[10.1, 10.1], [W - 10.1, 10.1], [10.1, H - 10.1], [W - 10.1, H - 10.1]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".75" fill="#4a4038" stroke="#0a0806" stroke-width=".2"/><circle cx="${r(x - 0.2)}" cy="${r(y - 0.2)}" r=".25" fill="#8a7a68"/>`).join('');
+  const k = pr ? pr.w / ENGRAVING.w : 1, tacks = pr ? tack(pr.x + 2 * k, pr.y + 2 * k, `${g.uid}bt1`) + tack(pr.x + pr.w - 2 * k, pr.y + 2 * k, `${g.uid}bt2`) : '';
+  // the column clips what stands above its top: the abilities' tack sits inside its note, right of the heading
+  const s = g.scope, pin = (x: string, y = '-1.15mm') => `content:'';position:absolute;left:${x};top:${y};width:2.5mm;height:2.5mm;margin-left:-1.25mm;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3c8 0,${BRASS.mid} 42%,${BRASS.dark} 100%);box-shadow:.35mm .45mm 0 rgba(0,0,0,.4)`;
+  const css = `${s} .bo2-box{background:${NOTE.paper};border:.25mm solid ${NOTE.line};border-radius:.5mm;box-shadow:.6mm .9mm 0 ${NOTE.shadow}}` +
+    `${s} .bo2-ab{transform:rotate(-.4deg)}${s} .bo2-ptr{transform:rotate(.45deg)}${s} .bo2-legend{transform:rotate(-.3deg)}${s} .bo2-powder{transform:rotate(.35deg)}` +
+    `${s} .bo2-box::before{${pin('50%')}}${s} .bo2-ab::before{${pin('calc(100% - 3.4mm)', '.5mm')}}`;
+  return { under: parts.join(''), over: nails + tacks, css, engraving: engr };
+}
+
+export const material: ShipMaterial = { a: faceA, b: faceB, wreck: wreckPearl };
