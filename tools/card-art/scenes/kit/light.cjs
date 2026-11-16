@@ -58,6 +58,8 @@ const LIGHTS = {
   dutchman: { time: 'fog', haze: .8, key: { ...PAL.fog.key }, fill: { ...PAL.fog.fill } },
   sea: { time: 'day', haze: .3, key: { ...PAL.day.key, az: 40, el: 30 }, fill: { ...PAL.day.fill } },
 };
+/** The ambient of the day palette (its luma): the measure of m.keep — a light paint keeps its share by day, less at dusk and night. */
+const AMB_DAY = luma(mixA([1, 1, 1], rgb(PAL.day.fill.color), PAL.day.tint)) * PAL.day.fill.power;
 /** The camera the shadows are built with: horizon y, the picture's centre x, focal length (units), eye height (m). */
 const CAM = { horizon: 108, cx: 100, f: 320, eye: 1.7 };
 
@@ -140,8 +142,15 @@ function makeLight(light = {}, cam = {}) {
     const lit = clamp((I + .1) / 1.1), through = I < 0 && m.trans ? -I * m.trans : 0;
     const a = pw(I, [[-1, 1], [-.5, .95], [-.1, .7], [.3, 1], [1, 1]]);
     const rf = I < -.35 ? (-I - .35) / .65 * (m.reflexK != null ? m.reflexK : .2) : 0, B = bounce[m.reflex || 'warm'];
-    let c = base.map((b, i) => b * (keyRGB[i] * key.power * k * (lit + through) + amb[i] * a + B[i] * rf));
-    c = satA(c.map(shoulder), (1 + .22 * (1 - lit)) * (point ? Math.max(P.sat, .92) : P.sat));
+    let c = base.map((b, i) => b * (keyRGB[i] * key.power * k * (lit + through) * (m.glow || 1) + amb[i] * a + B[i] * rf));
+    // m.keep (a light paint that must read as itself in any light — the Endeavour's ochre): the side away from the light
+    // keeps this share of the base colour, dimmed by the scene's ambient and only a little tinted by it (1 — a day sky)
+    if (m.keep) { const al = luma(amb), fl = base.map((b, i) => b * m.keep * (al + (amb[i] - al) * .3) / AMB_DAY); c = c.map((v, i) => Math.max(v, fl[i])); }
+    // m.glow: the key light a little stronger on it, and the shoulder by the brightest channel (the hue kept): in full
+    // light the ochre glows golden instead of washing out to lemon and white
+    const mx = Math.max(c[0], c[1], c[2]);
+    c = m.glow ? (mx > .8 ? c.map(v => v * shoulder(mx) / mx) : c) : c.map(shoulder);
+    c = satA(c, (1 + .22 * (1 - lit)) * (point ? Math.max(P.sat, .92) : P.sat) * (m.sat || 1));
     const l = luma(c); if (l < P.floor) c = mixA(c, lift, clamp((P.floor - l) / Math.max(1e-3, luma(lift) - l)));
     return c;
   };
