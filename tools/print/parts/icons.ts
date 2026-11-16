@@ -198,30 +198,59 @@ const DRAW: Record<IconName, (k: K) => string> = {
   },
 
   fire(k) {
-    // a ship on fire: the hull side with its sheer, rail, wale and gun ports, the bowsprit; flames engulf the deck,
-    // climb the mast and burst out of a gun port; smoke billows away to the left; the fire is mirrored in the sea
-    const Q = (d: number, x2 = 100): Pt[] => [[2, 52 + d], [50, 62 + d], [x2, 44 + d - (x2 - 88) * 1.4]];
-    const qd = (p: Pt[]) => `M${pp(p[0])}Q${pp(p[1])} ${pp(p[2])}`;
-    const qr = (p: Pt[]) => `L${pp(p[2])}Q${pp(p[1])} ${pp(p[0])}`;
-    const on = (d: number, t: number): [number, number, number] => {
-      const p = Q(d, 88), m = 1 - t;
-      const x = m * m * p[0][0] + 2 * m * t * p[1][0] + t * t * p[2][0], y = m * m * p[0][1] + 2 * m * t * p[1][1] + t * t * p[2][1];
-      return [x, y, Math.atan2(2 * m * (p[1][1] - p[0][1]) + 2 * t * (p[2][1] - p[1][1]), 2 * m * (p[1][0] - p[0][0]) + 2 * t * (p[2][0] - p[1][0])) * 180 / Math.PI];
-    };
-    // smoke behind everything
-    const smoke = (cx: number, cy: number, rx: number, ry: number, n: number, seed: number) => k.shape(cloud(cx, cy, rx, ry, n, 0.42, seed), {
-      fill: 'mid', sw: 2, h: [{ a: 40, g: 2.4 }, ...k.round(cx, cy, rx, ry, -50, 2.4).slice(0, 2)],
-      inner: k.fine(k.S(`M${f(cx - rx * 0.8)} ${f(cy - ry * 0.1)}Q${f(cx - rx * 0.7)} ${f(cy - ry * 0.75)} ${f(cx - rx * 0.2)} ${f(cy - ry * 0.85)}`, 1.4, 'light') +
-        k.S(`M${f(cx - rx * 0.35)} ${f(cy + ry * 0.5)}Q${f(cx - rx * 0.4)} ${f(cy - ry * 0.1)} ${f(cx)} ${f(cy - ry * 0.05)}M${f(cx + rx * 0.25)} ${f(cy + ry * 0.45)}Q${f(cx + rx * 0.3)} ${f(cy - ry * 0.25)} ${f(cx + rx * 0.65)} ${f(cy - ry * 0.2)}`, 1.1)),
+    // fire on the deck (the idea of the first set, drawn out): a stretch of planking seen from above and in front — strakes
+    // with pitch seams, butt joints and treenails, grain, the thickness of the boards along the near edge; the bulwark with
+    // its timberheads and rail behind; in the middle the planks are charred and cracked, glowing in the cracks; flames of
+    // several heights rise from the char, each a dark outer flame round a light core; tongues break off the tips, sparks and
+    // embers fly, coals lie on the deck; smoke rolls away above
+    const V: Pt = [50, -70];
+    const px = (x: number, y: number, y2: number) => V[0] + ((x - V[0]) * (y2 - V[1])) / (y - V[1]);
+    const rows = [57, 62, 68, 75.5, 84], yEnd = 92;
+    const edgeL = (_y: number) => 2.4, edgeR = (_y: number) => 97.6;
+    const ch = { cx: 51, cy: 79, rx: 35, ry: 10.5 };
+    // two curls of smoke rising from the tallest tips (drawn first: the flames lick over them)
+    const curl = 'M44 20C40 13 44 6.6 51 6.4C58 6.2 61 12.4 57 15C54 17 51 14 53.6 12.4';
+    const wisp = 'M70 26C73 20 79 20.6 82 16C84.6 12 89 11.4 91 14C92.6 16.4 90.4 19 88.4 17.6';
+    const wisp2 = 'M27 34C24 29 18 30 15 26C12.6 22.6 9 23 8 26';
+    let o = k.S(curl, 6.6) + k.S(curl, 3.6, 'light') + k.S(wisp, 5.2) + k.S(wisp, 2.4, 'light') + k.S(wisp2, 4.4) + k.S(wisp2, 1.8, 'light');
+    // the bulwark along the back of the deck: two strakes with treenails, timberheads, a closed port lid, the rail cap
+    o += k.shape('M2.4 44L97.6 44L97.6 57.4L2.4 57.4Z', {
+      fill: 'mid', sw: 2,
+      h: [{ a: 0, g: 2.1, w: 0.8 }, { a: 60, g: 2.6, w: 0.8, r: rect(0, 52, 100, 10) }],
+      inner: k.S('M0 50.6L100 50.6', 1.2) + k.F([7, 29, 71, 93].map(x => circ(x, 47.4, 0.8) + circ(x, 54, 0.8)).join(''), 'ink') +
+        k.shape(rect(78, 46, 11, 9), { fill: 'mid', sw: 1.4, h: [{ a: 45, g: 1.6 }], inner: k.S('M79 48L88 48', 1, 'light') }),
     });
-    let o = smoke(15, 22, 11, 8, 6, 1) + smoke(30, 12, 22, 9.5, 9, 2);
-    // the mast with its top, the stay to the bowsprit, the shrouds
-    o += k.S('M57 8L94 32', 1.3) + k.S('M48 14L36 56M56 14L72 52', 1.4);
-    o += k.shape(rect(50.5, 3, 5, 58), { fill: 'mid', sw: 2, h: k.cyl(50.5, 55.5) });
-    o += k.shape(rect(49.5, 2.5, 7, 3.4), { fill: 'mid', sw: 1.6 });
-    o += k.shape('M37 25L69 13.5L70 16.5L38 28Z', { fill: 'mid', sw: 1.8, h: [{ a: -20, g: 1.4, r: 'M37 28L70 16L70 20L37 32Z' }] });
-    // the flames: sinuous tongues with a pinched waist and a thin hooked tip, tall ones behind, short ones in front;
-    // each a warm outer flame round a light core, with a line along its middle
+    for (const x of [16, 62]) o += k.shape(rect(x, 40.4, 4.4, 17), { fill: 'mid', sw: 1.6, h: k.cyl(x, x + 4.4, 90, 1.4) });
+    o += k.shape('M2.4 40L97.6 40L97.6 44.6L2.4 44.6Z', { fill: 'mid', sw: 2, hi: rect(2.4, 40.9, 95.2, 1.3), h: [{ a: 0, g: 1.4, w: 0.7, r: rect(0, 43, 100, 3) }] });
+    // the planking: one board per strake with butt joints in perspective, grain, char toward the fire
+    const scorch = circ(ch.cx, ch.cy + 0.5, ch.rx * 1.22, ch.ry * 1.55), charR = circ(ch.cx, ch.cy, ch.rx, ch.ry), coal = circ(ch.cx, ch.cy, ch.rx * 0.7, ch.ry * 0.66);
+    rows.forEach((y0, i) => {
+      const y1 = i + 1 < rows.length ? rows[i + 1] : yEnd, h = y1 - y0;
+      const st = 0;
+      const board = `M${f(edgeL(y0) + st)} ${f(y0)}L${f(edgeR(y0) - st)} ${f(y0)}L${f(edgeR(y1) - st)} ${f(y1)}L${f(edgeL(y1) + st)} ${f(y1)}Z`;
+      let butts = '', nails = '';
+      for (let x = 21 + (i % 2) * 19 + i * 5; x < 92; x += 38) {
+        butts += `M${f(px(x, y1, y0))} ${f(y0)}L${f(x)} ${f(y1)}`;
+        const r = 0.45 + h * 0.06, xm = px(x, y1, y0 + h / 2);
+        nails += circ(xm - 1.8 - h * 0.12, y0 + h / 2, r) + circ(xm + 1.8 + h * 0.12, y0 + h / 2, r);
+      }
+      o += k.shape(board, {
+        fill: 'light', sw: 0,
+        mid: scorch,
+        h: [{ a: 0, g: 2.6, w: 0.6, fine: true, r: rect(0, y0 + h * 0.66, 100, h) }, { a: 35, g: 2, w: 0.9, r: scorch }, { a: -35, g: 2.2, r: charR }],
+        inner: k.fine(k.S(grain(edgeL(y0) + 2, y0 + 0.6, edgeR(y0) - 2, y1 - 0.6, Math.max(1, Math.round(h / 2.6)), 0.5, i + 2), 0.75)) + k.S(butts, 1.3) + k.F(nails, 'ink') + k.F(coal, 'ink'),
+      });
+      o += k.S(`M${f(edgeL(y0))} ${f(y0)}L${f(edgeR(y0))} ${f(y0)}`, 1.6);
+    });
+    // the char cracks open and glows
+    o += k.fine(k.S(`M${f(ch.cx - 22)} ${f(ch.cy + 1)}L${f(ch.cx - 16)} ${f(ch.cy + 2.6)}L${f(ch.cx - 11)} ${f(ch.cy + 1.4)}M${f(ch.cx + 11)} ${f(ch.cy + 2.4)}L${f(ch.cx + 16)} ${f(ch.cy + 1)}L${f(ch.cx + 22)} ${f(ch.cy + 2.4)}` +
+      `M${f(ch.cx - 18)} ${f(ch.cy + 5.4)}L${f(ch.cx - 12)} ${f(ch.cy + 6.6)}M${f(ch.cx + 12)} ${f(ch.cy + 6.4)}L${f(ch.cx + 19)} ${f(ch.cy + 5.4)}`, 1.2, 'light'));
+    // the thickness of the boards along the near edge, the seams cut into it
+    let notch = '';
+    for (const x of [21, 43, 64, 83]) notch += `M${x} ${yEnd}L${x} ${yEnd + 4.6}`;
+    o += k.shape(`M2.4 ${yEnd}L97.6 ${yEnd}L97.6 ${yEnd + 4.6}L2.4 ${yEnd + 4.6}Z`, { fill: 'mid', sw: 2, h: [{ a: 90, g: 1.6, w: 0.8 }, { a: 45, g: 2.2, r: rect(60, 80, 40, 20) }], inner: k.S(notch, 1.3) });
+    // the flames: sinuous tongues with a pinched waist and a hooked tip; tall ones behind, short in front;
+    // each a dark outer flame round a light core
     const tongue = (bx: number, by: number, w: number, h: number, L: number) => {
       const T: Pt = [bx + L, by - h], m1: Pt = [bx - w * 0.36 + L * 0.35, by - h * 0.5], m2: Pt = [bx + w * 0.26 + L * 0.45, by - h * 0.52];
       return `M${f(bx - w / 2)} ${f(by)}C${f(bx - w * 0.72)} ${f(by - h * 0.18)} ${f(m1[0] - w * 0.2)} ${f(m1[1] + h * 0.16)} ${pp(m1)}` +
@@ -229,85 +258,106 @@ const DRAW: Record<IconName, (k: K) => string> = {
         `C${f(T[0] + w * 0.2)} ${f(T[1] + h * 0.18)} ${f(m2[0] - w * 0.16)} ${f(m2[1] - h * 0.12)} ${pp(m2)}` +
         `C${f(m2[0] + w * 0.26)} ${f(m2[1] + h * 0.14)} ${f(bx + w * 0.66)} ${f(by - h * 0.16)} ${f(bx + w / 2)} ${f(by)}Z`;
     };
-    for (const [bx, h, w, L] of [[40, 62, 30, -8], [20, 50, 28, -7], [62, 52, 28, -7], [12, 34, 14, -4], [30, 42, 24, -6], [51, 40, 24, -5], [73, 36, 22, -5], [16, 24, 18, -3], [42, 26, 22, -4], [62, 22, 18, -3], [82, 20, 12, -3]]) {
-      const by = 66;
-      o += k.shape(tongue(bx, by, w, h, L), {
-        fill: 'light', sw: h > 30 ? 2 : 1.8,
-        h: [{ a: 72, g: 2.4, w: 0.7, fine: true, r: `M${f(bx + w * 0.12)} 70C${f(bx + w * 0.05)} ${f(by - h * 0.5)} ${f(bx + L + w * 0.2)} ${f(by - h * 0.8)} ${f(bx + L)} ${f(by - h)}L100 0L100 70Z` }],
-        inner: k.S(tongue(bx - 0.5, by + 3, w * 0.5, h * 0.62, L * 0.8), 1),
-      });
-    }
-    // the hull: rail cap, bulwark with gun ports, wale, lower strakes; darker toward the water
-    const hull = 'M5 50.5Q50 60 89 42C94 50 96 64 92 88L9 88C5 76 3 62 5 50.5Z';
-    let strakes = '';
-    for (const d of [4, 7.5, 18.5, 22, 25.5, 29, 32.5]) strakes += qd(Q(d));
-    o += k.shape(hull, {
-      fill: 'mid',
-      h: [{ a: 3, g: 2.2, w: 0.8 }, { a: -40, g: 2.8, w: 0.8, r: qd(Q(17)) + 'L100 100L0 100Z' }, { a: 40, g: 3.2, w: 0.7, fine: true, r: qd(Q(28)) + 'L100 100L0 100Z' }],
-      hi: 'M89 43C92 50 93 58 92 66L90 66C90 58 89 50 87.5 44Z',
-      inner: k.S(strakes, 1.4) + k.shape(qd(Q(12)) + qr(Q(16.5)) + 'Z', { fill: 'mid', sw: 1.8, h: [{ a: 40, g: 1.7 }, { a: -40, g: 1.9 }], inner: k.S(qd(Q(13)), 1.3, 'light') }),
+    const flame = (bx: number, by: number, w: number, h: number, L: number, core: boolean) => k.shape(tongue(bx, by, w, h, L), {
+      fill: 'mid', sw: h > 40 ? 2.4 : 2,
+      h: [{ a: 75, g: 2.2, w: 0.9, r: `M${f(bx + w * 0.1)} ${f(by + 4)}C${f(bx + w * 0.05)} ${f(by - h * 0.5)} ${f(bx + L + w * 0.15)} ${f(by - h * 0.8)} ${f(bx + L)} ${f(by - h)}L100 0L100 ${f(by + 4)}Z` }],
+      inner: (core ? k.shape(tongue(bx - w * 0.04 + L * 0.1, by + 2, w * 0.56, h * 0.66, L * 0.75), { fill: 'light', sw: 1.4, inner: k.fine(k.S(tongue(bx + L * 0.1, by + 3, w * 0.24, h * 0.42, L * 0.5), 0.9)) }) : '') +
+        k.fine(k.S(`M${f(bx - w * 0.28)} ${f(by - h * 0.1)}Q${f(bx - w * 0.36 + L * 0.3)} ${f(by - h * 0.5)} ${f(bx + L * 0.7 - w * 0.1)} ${f(by - h * 0.78)}`, 0.9)),
     });
-    o += k.shape(qd(Q(-2, 89)) + qr(Q(1.6, 89.6)) + 'Z', { fill: 'mid', sw: 2, inner: k.S(qd(Q(-1.4, 89)), 1.2, 'light') });
-    o += k.shape('M83 47L94.5 31.5L96.5 34L86 49.5Z', { fill: 'mid', sw: 1.8, h: [{ a: 55, g: 1.5, r: 'M84 49L97 33L100 36L86 52Z' }] });
-    let ports = '';
-    for (const [t, fire] of [[0.2, 0], [0.47, 2], [0.72, 1]] as const) {
-      const [x, y, a] = on(9.6, t);
-      ports += `<g transform="translate(${f(x)} ${f(y)}) rotate(${f(a)})">` + k.shape(rect(-4.2, -3.6, 8.4, 7.2), { fill: 'ink', sw: 1.6, inner: fire === 1 ? k.F('M-2 3.6C-2 0 0 -1 0 -3C2 0 2.5 2 2 3.6Z', 'light') : '' }) + '</g>';
-    }
-    o += ports;
-    // fire bursting out of the middle gun port and licking up the side over the rail
-    const [px, py] = on(9.6, 0.47);
-    o += `<g transform="translate(${f(px - 46)} ${f(py - 67)})">` + k.shape('M42 70C38 64 44 60 42 54C41 48 35 46 37 39C43 44 48 47 47 54C51 50 50 45 54 42C56 50 56 58 51 63C53 66 52 69 51 70Z', {
-      fill: 'light', sw: 2, h: [{ a: 70, g: 2.6, r: rect(48, 30, 20, 50) }],
-      inner: k.shape('M44 70C43 65 47 62 46 57C50 60 51 66 50 70Z', { fill: 'light', sw: 1.2 }),
-    }) + '</g>';
-    // the sea, with the fire mirrored in it
-    o += k.shape(seaBand(86, 3, 10), {
-      fill: 'mid', sw: 2.2,
-      h: [{ a: 0, g: 2.2 }, { a: -20, g: 2.8, fine: true, r: rect(56, 88, 50, 12) }],
-      inner: k.S('M12 90L22 90M30 91L44 91M20 94L30 94M48 90.5L58 90.5M38 95L46 95', 1.6, 'light'),
-    });
-    for (const [x, y, r] of [[40, 3, 1.2], [68, 12, 1.3], [80, 26, 1], [84, 38, 1.2], [62, 6, 0.9]]) o += k.fine(k.F(star(x, y, 4, r * 0.45, r * 2, 0), 'ink'));
+    for (const [bx, by, w, h, L, c] of [
+      [51, 80, 36, 64, -7, 1], [32, 80, 22, 44, -8, 1], [70, 80, 24, 50, 7, 1],
+      [19, 84, 12, 20, -4, 0], [83, 84, 12, 24, 5, 0],
+      [41, 86, 20, 32, -5, 1], [62, 86, 20, 34, 5, 1], [51, 88, 14, 17, 1, 0],
+    ] as const) o += flame(bx, by, w, h, L, !!c);
+    // sparks and embers in the air, coals glowing on the deck
+    for (const [x, y, r] of [[33, 22, 1.3], [69, 33, 1.3], [92, 30, 1.1], [6, 40, 1.1], [62, 16, 1], [86, 46, 1], [24, 18, 0.9]]) o += k.fine(k.F(star(x, y, 4, r * 0.45, r * 2.2, 0), 'ink'));
+    for (const [x, y] of [[30, 29], [78, 38], [93, 40], [11, 33]]) o += k.F(circ(x, y, k.small ? 1.5 : 1.1), 'ink');
+    for (const [x, y, r] of [[25, 88.6, 1.6], [77, 89, 1.8], [87, 80, 1.3], [14, 80, 1.2]]) o += k.shape(circ(x, y, r * 1.3, r), { fill: 'light', sw: 1.2 });
     return o;
   },
 
   sinking(k) {
-    // a ship going down by the head: her stern stands up out of a whirlpool — taffrail and lantern, quarter gallery,
-    // gun ports, rudder, the stump of the mizzen; the near half of the whirlpool closes over the rest; bubbles rise
-    const cx = 50, cy = 78;
-    const spiral = (arm: number) => {
+    // a ship going down by the stern into a whirlpool: her bow stands up out of the funnel — the bowsprit with a torn jib,
+    // the beak and head rails, the cathead, gun ports, the wales; the foremast
+    // broken off with its yard hanging askew; water pours from the ports; the whirlpool
+    // turns round a dark eye, its walls stepping down, foam streaks along the arms; a cask, a broken spar and a grating
+    // go round with it; bubbles rise where the stern went down
+    const cx = 50, cy = 77, RX = 47, RY = 18;
+    const C = (s: number): [number, number, number, number] => [cx + (1 - s) * 2, cy + (1 - s) * 5, RX * s, RY * s];
+    const ring = (s: number) => circ(...C(s));
+    const arm = (a0: number, turns: number, r0: number, r1: number) => {
       const pts: Pt[] = [];
-      for (let i = 0; i <= 28; i++) { const th = rad(arm * 120 + 20 + i * 13), r = 9 + i * 1.33; pts.push([cx + r * Math.cos(th), cy + r * 0.36 * Math.sin(th)]); }
+      for (let i = 0; i <= 24; i++) {
+        const t = i / 24, th = rad(a0 + t * turns * 360), r = r0 + (r1 - r0) * t, s = r / RX, [x, y] = C(s);
+        pts.push([x + r * Math.cos(th), y + r * 0.383 * Math.sin(th)]);
+      }
       return curve(pts);
     };
-    const sp = spiral(0) + spiral(2), fo = spiral(1);
-    const water = (inner = '') => ({
+    const foam = arm(200, 0.6, 44, 20) + arm(20, 0.6, 44, 20), dark = arm(115, 0.5, 42, 20) + arm(295, 0.5, 42, 20);
+    const whirl = () => ({
       fill: 'mid' as const, sw: 0,
-      h: [{ a: 0, g: 2.2, w: 0.9 }, { a: -30, g: 2.8, r: outside(circ(cx - 8, cy - 5, 42, 14)) }],
-      inner: k.S(sp, 1.4) + k.S(fo, 2.4, 'light') + k.fine(k.S(fo, 0.8)) + inner,
+      h: [{ a: 0, g: 2.4, w: 0.9 }, { a: -28, g: 2.4, w: 0.9, r: ring(0.72) }, { a: 28, g: 2, w: 0.9, r: ring(0.56) }],
+      inner: k.S(ring(0.72) + ring(0.56), 1.2) + k.S(dark, 1.3) + k.S(foam, 2.6, 'light') + k.fine(k.S(foam, 0.7)) + k.F(ring(0.42), 'ink'),
     });
-    let o = k.shape(circ(cx, cy, 47, 17), water()) + k.S(circ(cx, cy, 47, 17), k.cw);
-    o += k.shape(circ(cx + 2, cy, 13, 4.4), { fill: 'ink', sw: 1.4 });
-    // the ship, drawn level (stern to the left), then stood on her head
-    let s = k.shape('M30 28L29 4L31.5 7L33 3L34 28Z', { fill: 'mid', sw: 1.8, h: k.cyl(29, 34) });
-    s += k.S('M31 8L12 26M32 8L52 34', 1.1);
-    const hull = 'M6 26L36 26L38 32L110 32L110 64L28 64C20 64 15 58 13 50L9 38Z';
+    let o = k.shape(ring(1), whirl());
+    // the ship, drawn level with the bow to the right, then stood up on her stern about the point P
+    const P: Pt = [26, 52], ROT = -48, SC = 1, X0 = cx + 1, Y0 = cy + 2;
+    const T = (x: number, y: number): Pt => {
+      const a = rad(ROT), dx = (x - P[0]) * SC, dy = (y - P[1]) * SC;
+      return [X0 + dx * Math.cos(a) - dy * Math.sin(a), Y0 + dx * Math.sin(a) + dy * Math.cos(a)];
+    };
+    let s = '';
+    // the bowsprit with a torn jib, its stay to the foremast
+    s += k.S('M50 30L88 25', 1.1);
+    s += k.shape('M66 33L94 22.6L95.4 26L68 37Z', { fill: 'mid', sw: 1.8, h: [{ a: -20, g: 1.4, w: 0.8, r: 'M66 37L96 25L97 29L68 40Z' }] });
+    s += k.shape('M82 26.4L90.6 23.4L76 12L80 19Z', { fill: 'light', sw: 1.4, h: [{ a: 60, g: 1.6, w: 0.7, fine: true, r: 'M80 21L91 23L82 14Z' }] });
+    // the foremast stump
+    s += k.shape('M44 38L44.4 22L46.4 24.6L47.6 20.6L49.4 24L50 38Z', { fill: 'mid', sw: 1.8, h: k.cyl(44, 50) });
+    // the hull: sheer rising to the bow, the beak, the stem curving down to the forefoot
+    const hull = 'M-6 37Q36 40 70 32L77 27L79 32C87 43 82 58 66 65L-6 65Z';
+    let ports = '';
+    for (const x of [10, 24, 38, 52]) ports += rect(x, 41.4 - x * 0.04, 5.6, 4.6);
     s += k.shape(hull, {
       fill: 'mid',
-      h: [{ a: 0, g: 2.8, w: 0.75, r: 'M0 45L120 45L120 80L0 80Z' }, { a: 50, g: 3, w: 0.85, r: 'M0 53L120 53L120 80L0 80Z' }, { a: -40, g: 3, w: 0.7, fine: true, r: 'M0 58L120 58L120 80L0 80Z' }],
-      hi: 'M7.5 27L35.5 27L36 28.6L8 28.6ZM38.6 33L110 33L110 34.4L38.8 34.4Z',
-      inner: k.S('M9 38L110 38M12 48L110 48M14 53L110 53', 1.3) + k.shape('M9 40L110 40L110 45L11 45Z', { fill: 'mid', sw: 1.4, h: [{ a: 45, g: 1.6 }, { a: -45, g: 1.8 }], inner: k.S('M9.4 40.8L110 40.8', 1, 'light') }) +
-        k.F([40, 52, 64, 76].map(x => rect(x, 33.4, 5, 4.2)).join(''), 'ink') + k.fine(k.S(grain(14, 54, 110, 63, 3, 0.6, 2), 0.8)),
+      h: [{ a: 0, g: 2.6, w: 0.75, r: 'M-10 51L120 51L120 80L-10 80Z' }, { a: 50, g: 2.8, w: 0.85, r: 'M-10 56L120 56L120 80L-10 80Z' }, { a: -40, g: 3, w: 0.7, fine: true, r: 'M-10 60L120 60L120 80L-10 80Z' }],
+      hi: 'M-6 38Q36 41 70 33L70.6 34.6Q36 42.6 -6 39.6Z',
+      inner: k.S('M-6 48Q36 49 76 41M-6 56Q36 56 80 50', 1.3) +
+        k.shape('M-6 49.6Q36 50.6 77 42.6L78.6 46.4Q36 54.4 -6 53.4Z', { fill: 'mid', sw: 1.3, h: [{ a: 45, g: 1.6 }, { a: -45, g: 1.8 }], inner: k.S('M-6 50.4Q36 51.4 77.4 43.4', 0.9, 'light') }) +
+        k.F(ports, 'ink') + k.fine(k.S(grain(-4, 57, 72, 64.6, 3, 0.6, 4), 0.8)),
     });
-    s += k.shape('M12 26L26 26L26 40Q20 46 15 42L13 34Z', { fill: 'light', sw: 1.6, h: [{ a: 90, g: 1.6, r: rect(22, 0, 10, 50) }], inner: k.F(rect(15, 29, 3.4, 5) + rect(20, 29, 3.4, 5), 'ink') + k.S('M13 37L26 37', 1.2) });
-    s += k.shape('M9 38L5.5 39L7.5 51C9.5 60 15 66 23 67L25 64C19 63 15 58 13.5 50Z', { fill: 'mid', sw: 1.6, h: [{ a: 60, g: 1.5 }], inner: k.S('M6 44L11 43M7.5 52L13 50M11 59L16 56', 1.2) });
-    s += k.S('M6 26L5 21', 1.6) + k.shape('M2.4 14L7.4 14L6.8 21L3 21Z', { fill: 'light', sw: 1.4, h: [{ a: 90, g: 1.3, r: rect(5, 0, 4, 30) }] }) + k.shape('M3.6 14L6.2 14L4.9 11Z', { fill: 'mid', sw: 1.2 });
-    o += `<g clip-path="${k.clip(rect(0, 0, 100, cy + 0.5))}"><g transform="translate(54 ${cy}) rotate(45) scale(1.2) translate(-50 -50)">${s}</g></g>`;
-    // the near half of the whirlpool and the foam where she goes in
-    const near = `M${cx - 47} ${cy}C${cx - 47} ${cy + 9.4} ${cx - 26} ${cy + 17} ${cx} ${cy + 17}C${cx + 26} ${cy + 17} ${cx + 47} ${cy + 9.4} ${cx + 47} ${cy}Z`;
-    o += k.shape(near, water(k.S(`M${cx - 30} ${cy + 1.5}Q${cx - 4} ${cy + 7} ${cx + 26} ${cy + 1}`, 2.4, 'light') + k.fine(k.S(scallops(cx - 30, cx + 26, cy + 0.6, 4, 2), 1))));
-    o += k.S(lowerArc(cx, cy, 47, 17), k.cw);
-    for (const [x, y, r] of [[82, 56, 3], [88, 44, 2], [79, 38, 1.4], [92, 64, 1.6], [12, 70, 1.8], [20, 84, 1.4]]) o += bubble(k, x, y, r);
+    // the head: the beak with its rails, the cathead
+    s += k.shape('M73 32L80.4 30.6C83.4 33.4 84 37.6 82 40.6L76 41Z', { fill: 'light', sw: 1.5, h: [{ a: 90, g: 1.5, w: 0.8, r: rect(78.6, 28, 8, 16) }] });
+    s += k.S('M70 35.4Q75 37 79 35.6M69 39Q74 41 80 39', 1.1);
+    s += k.shape('M60 31L66.6 29.6L67.2 33L60.6 34.4Z', { fill: 'mid', sw: 1.4 });
+    o += `<g clip-path="${k.clip(rect(0, 0, 100, Y0 + 0.2))}"><g transform="translate(${f(X0)} ${f(Y0)}) rotate(${ROT}) scale(${SC}) translate(${-P[0]} ${-P[1]})">${s}</g></g>`;
+    // the yard hanging askew from the broken mast
+    const [mx, my] = T(47, 26);
+    const yd: Pt = [mx - 17, my + 9], ye: Pt = [mx + 4, my - 3];
+    o += k.S(`M${pp(yd)}L${pp(ye)}`, 4.4) + k.S(`M${f(yd[0] + 1)} ${f(yd[1] - 0.6)}L${f(ye[0] - 1)} ${f(ye[1] - 0.6)}`, 1.4, 'mid') + k.S(`M${pp(ye)}L${f(mx + 1.6)} ${f(my - 6)}`, 1.1);
+    // water pouring from the gun ports, plumb
+    let falls = '';
+    for (const x of [26.8, 40.8]) {
+      const [qx, qy] = T(x, 46.4);
+      falls += `M${f(qx)} ${f(qy)}Q${f(qx + 1.4)} ${f(qy + 2)} ${f(qx + 1.4)} ${f(qy + 7)}`;
+    }
+    o += k.S(falls, 2.2) + k.S(falls, 0.8, 'light');
+    // the near half of the funnel and its lip close over the hull; foam where she goes in
+    const near = (s2: number) => lowerArc(...C(s2)) + 'Z';
+    o += k.shape(near(1), whirl());
+    o += k.S(lowerArc(cx, cy, RX, RY), k.cw) + k.S(ring(1), 1.4);
+    const [ex, ey, erx, ery] = C(0.42);
+    o += k.S(lowerArc(ex, ey, erx, ery), 2.6, 'light') + k.S(lowerArc(ex, ey, erx + 1.6, ery + 1), 1.2);
+    const collar = (x: number, y: number, w: number) => k.shape(`M${f(x - w)} ${f(y + 1.6)}C${f(x - w * 0.9)} ${f(y - 1.6)} ${f(x - w * 0.5)} ${f(y - 2)} ${f(x - w * 0.3)} ${f(y - 0.2)}C${f(x - w * 0.1)} ${f(y - 3)} ${f(x + w * 0.4)} ${f(y - 2.8)} ${f(x + w * 0.5)} ${f(y - 0.4)}` +
+      `C${f(x + w * 0.8)} ${f(y - 1.6)} ${f(x + w * 1.1)} ${f(y)} ${f(x + w)} ${f(y + 1.6)}C${f(x + w * 0.4)} ${f(y + 3.4)} ${f(x - w * 0.5)} ${f(y + 3.4)} ${f(x - w)} ${f(y + 1.6)}Z`, { fill: 'light', sw: 1.4 });
+    const [l0] = T(-6, 37), [l1] = T(-6, 65);
+    o += collar(Math.min(l0, l1) - 1, Y0 - 0.4, 5) + collar(Math.max(l0, l1) + 1, Y0 - 0.4, 5.6);
+    // flotsam going round: a cask on the left arm, a broken spar on the right, a grating in front
+    o += `<g transform="translate(13 77) rotate(-20)">` + k.shape(rrect(-5.4, -3.6, 10.8, 7.2, 2.8), { fill: 'mid', sw: 1.5, h: [{ a: 0, g: 1.4, w: 0.8, r: rect(-8, 0.6, 16, 6) }], hi: rect(-4, -2.6, 8, 1.1), inner: k.S('M-2.4 -3.6L-2.4 3.6M2.4 -3.6L2.4 3.6', 1.1) }) + k.shape(circ(5.4, 0, 1.4, 3.4), { fill: 'light', sw: 1.2 }) + '</g>';
+    o += `<g transform="translate(84 80) rotate(12)">` + k.shape('M-9 -1.8L7 -1.8L9 -3L8.2 0L9.6 2L7 1.8L-9 1.8Z', { fill: 'mid', sw: 1.4, h: [{ a: 0, g: 1.4, w: 0.7, r: rect(-12, 0, 24, 4) }] }) + '</g>';
+    o += `<g transform="translate(34 89) rotate(-6)">` + k.shape(poly(-5.4, -2.6, 5.4, -2.6, 6.4, 2.6, -6.4, 2.6), { fill: 'mid', sw: 1.3, inner: k.fine(k.S('M-2.4 -2.6L-2.6 2.6M0.6 -2.6L0.6 2.6M3.4 -2.6L3.8 2.6M-5.4 0L5.6 0', 0.9)) }) + '</g>';
+    // bubbles rising where the stern went down, spray off the hull
+    for (const [x, y, r] of [[28, 62, 2.6], [22, 52, 1.8], [30, 46, 1.3], [17, 63, 1.4]]) o += bubble(k, x, y, r);
+    for (const [x, y, r, a] of [[90, 66, 1.2, -40], [92, 72, 1, -10], [70, 69, 1, -60]]) o += drop(k, x, y, r, a);
     return o;
   },
 
@@ -750,9 +800,10 @@ function phase(k: K, kind: 'sea' | 'pirates' | 'company'): string {
 /** the measured ink extent of the icons that touch the edge of their box (contours included, small and large mode):
  *  icon() shrinks and shifts each so that it keeps a margin of 2.5 inside 0..100 */
 const EXTENT: Partial<Record<IconName, [number, number, number, number]>> = {
-  sails: [1, -1, 99, 100], crew: [2, 8, 98, 102], guns: [1, 33, 101, 99], hull: [0.5, 5, 99.5, 99], fire: [0, 0, 99, 99],
+  sails: [1, -1, 99, 100], crew: [2, 8, 98, 102], guns: [1, 33, 101, 99], hull: [0.5, 5, 99.5, 99],
   powder: [13, 1, 98.5, 98.5], souls: [20, 1, 82, 96], reaction: [0, 5, 93, 101], once: [10, 1, 94, 99], legend: [17, 1, 83, 96],
-  effects: [1, 2, 99, 91], underwater: [1, 3, 99, 99], surfaced: [0, 1, 99, 99], sinking: [1, 6, 99, 97], volley: [0, 5, 97, 100],
+  effects: [1, 2, 99, 91], underwater: [1, 3, 99, 99], surfaced: [0, 1, 99, 99], volley: [0, 5, 97, 100],
+  fire: [1, 2.3, 98.8, 97.8], sinking: [1, 7.8, 98.8, 96.8], legendJack: [1.8, 4.3, 98.8, 97.2],
   phaseSea: [7, 1, 93, 93], phasePirates: [13, -1, 98, 100], phaseCompany: [13, 0, 98, 100],
 };
 function fitted(name: IconName, body: string): string {
