@@ -32,7 +32,7 @@ const PORT = { X: .65, w: .76, sill: .45, top: 1.3 };  // the port in the side, 
 // to there (2 m), E — the eye's height, gx — its offset to the right; yaw 0: it points straight out, square to the side
 // LIFT: the gun is drawn 9 picture units higher at the touchhole (the eye a little lower against it: E − 1.97), so the
 // touchhole and the flare stand well above the glass
-const LIFT = 9, GU = .055, GUN = { S: F / (2.0 / GU), D0: 2.0 / GU, E: EYE / GU - LIFT / (F / (2.0 / GU) * .9238), gx: PORT.X / GU, gd: 0, yaw: 0 };
+const LIFT = 0, GU = .055, GUN = { S: F / (2.0 / GU), D0: 2.0 / GU, E: EYE / GU - LIFT / (F / (2.0 / GU) * .9238), gx: PORT.X / GU, gd: 0, yaw: 0 };
 // the gunner stands at 1.8 m (100 units/m), left of the gun; he is drawn in his own frame and moved by MAN
 const MAN = [22, 16], HEAD = { c: [58, 32], r: 11 };
 const TOUCH = [166, 105.4 - LIFT];                            // the touchhole on the top of the breech (from the gun's own projection)

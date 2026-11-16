@@ -19,6 +19,11 @@
 // given volume (the arm's shadow, folds at the chest and shoulder, buttons, the left soul's green on it) and its
 // right edge turned to planking by the grain instead of a dark fill; the strake seam moved off the chin onto the
 // wooden cheek, thinner.
+// Fix pass after the print review: a face half gone into the planks read as a film shot, and the neck was long and
+// wide. Now his face is whole and his own; the coat no longer fades into the wall. The bond with the ship is shown on
+// the arm only: the hand flat on the planking with the finger tips turned to wood, the planks along the forearm, and
+// weed creeping from the wall over the back of the hand and up the sleeve. The head sits lower on a shorter, narrower
+// neck (about half the head's width).
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -166,7 +171,14 @@ module.exports = { name: 'Часть корабля — часть команд�
         wrap += `<defs>${linGrad(pg, ...pt(.5, o - w / 2), ...pt(.5, o + w / 2), [[0, '#8a7454', 1], [.35, '#6a5232', 1], [1, '#3a2a16', 1]])}`
           + `${linGrad(fg2, ...a0, ...a1, [[0, '#fff', 0], [.18, '#fff', 1], [.82, '#fff', 1], [1, '#fff', 0]])}<mask id="${fm}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="220" height="300"><rect x="-10" y="-10" width="220" height="300" fill="url(#${fg2})"/></mask></defs>`
           + `<path d="M${P2(pt(t0 + .06, o + w / 2 + 1.4))}L${P2(pt(t1 - .06, o + w / 2 + 1.4))}" stroke="#000" stroke-width="1.6" opacity=".3"/><g mask="url(#${fm})">${g}</g>`; }
-      const cs = pt(.52, -3.8); wrap += coral(cs[0], cs[1], -165, 6, 4, 1.25) + cluster(rng(7), ...pt(.22, 5.4), 3, 3, 2, 1.1); }
+      const cs = pt(.52, -3.8); wrap += coral(cs[0], cs[1], -165, 6, 4, 1.25) + cluster(rng(7), ...pt(.22, 5.4), 3, 3, 2, 1.1);
+      // weed creeping from the planking down over the back of his hand and up his sleeve (the ship taking him in)
+      { const RW = rng(17);
+        for (const [o, t0, t1, ph] of [[-5.2, .98, .34, 0], [-1, 1.02, .5, 1.7], [3.6, .96, .2, 3.1], [6.4, .9, .56, 4.4]]) {
+          const pts = []; for (let k = 0; k <= 10; k++) { const t = lerp(t0, t1, k / 10); pts.push(pt(t, o + Math.sin(ph + k * .9) * 1.3)); }
+          wrap += `<path d="${H.sp(pts)}" stroke="#14301f" stroke-width="1.5" fill="none" stroke-linecap="round"/><path d="${H.sp(pts)}" stroke="#2e6a48" stroke-width=".95" fill="none" stroke-linecap="round"/>`
+            + `<path d="${H.sp(pts.map(p => [p[0] - .3, p[1] - .3]))}" stroke="#8ad0a8" stroke-width=".3" fill="none" opacity=".55"/>`;
+          for (let k = 2; k < 10; k += 3) { const p = pts[k], sd = RW() < .5 ? -1 : 1; wrap += `<path d="M${P2(p)}q${f(sd * 1.6)} ${f(-1.4)} ${f(sd * 3.2)} ${f(-.6)}" stroke="#2e6a48" stroke-width=".7" fill="none" stroke-linecap="round"/>`; } } } }
     const growth = barn(WR[0] - 3, WR[1] + 4, 1.3, -10);
     // the finger tips turn to wood: the same hand in the brown of the wooden half of his face, shown from the middle
     // joints up, the grain running along each finger to its tip
@@ -193,8 +205,8 @@ module.exports = { name: 'Часть корабля — часть команд�
 
     // ——— assemble ———
     let fg = man + sleeve + handG + wrap + growth + face + souls;
-    // his right shoulder's edge (our right) under the crust where the coat goes into the planks
-    { const R = rng(31); fg += cluster(R, 144, 98, 12, 26, 7, 2.3) + cluster(R, 150, 128, 12, 30, 6, 2.3) + coral(152, 108, -40, 6, 3) + coral(156, 136, -10, 5, 5) + weed(148, 100, 20, 3, 8); }
+    // a few barnacles and a strand of weed on his far shoulder (sea-worn, not grown in)
+    { const R = rng(31); fg += cluster(R, 146, 102, 10, 12, 3, 1.6) + weed(150, 104, 16, 2, 8); }
     // ——— light and air: the moon's light from over the rail, motes, the dark under the glass ———
     fg += glow(u, 70, 50, 70, 50, '#cfeee0', .12) + motes(18, 20, 40, 160, 90, '#dffff0', 4)
       + gloom(u, 40, 60, 210, 120, .22, '#020604') + gloom(u, 100, 130, 100, 280, .55, '#020604');

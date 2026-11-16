@@ -107,7 +107,60 @@ module.exports = { name: 'Зов глубин', kind: 'deck', status: 'accepted'
           + `<ellipse cx="${x}" cy="${f(y - 1)}" rx="${f(w * .8)}" ry="${f(w * .1)}" transform="rotate(${a} ${x} ${y})" fill="none" stroke="#5cc0a0" stroke-width=".6" opacity=".25"/>`; }
       bg += `<defs><filter id="${fb}" x="-30%" y="-80%" width="160%" height="260%"><feGaussianBlur stdDeviation="2.4"/></filter></defs><g filter="url(#${fb})">${sh}</g>`; }
     // ——— the enemy: listing towards us, bow down a little, holed at the waterline ———
-    let mid = K.ship(u, L, { ...EN, sails: 'reefed', detail: 'near', lights: true, wake: false, seed: 6 });
+    // Review fix (print-kit fix): she must look wounded already at print size, without fire — the mizzen topmast is
+    // shot away at the cap and leans aft against the moonlit sky, held by its backstays, its yard fallen across it,
+    // the rags of its sail streaming; the topgallant stay to the mainmast snapped and hangs slack; ragged shot holes
+    // through the main, fore and mizzen topsails (the sky shows through); round shot holes splintered in her side.
+    // The kit's ship has no damage, so the lost parts are cut out of it with a mask and the wreck drawn over it.
+    const rag = (cx, cy, rx, ry, n, seed, jag) => { const R = rng(seed), P = [];
+      for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, k = 1 - jag * R(); P.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); }
+      return P; };
+    const pd = P => 'M' + P.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z';
+    const TOPH = [88.4, 35.4];   // the fallen topmast's head
+    let mid;
+    const HOLES = [rag(114.2, 59.4, 3.6, 2.5, 16, 61, .45), rag(155.6, 67.6, 2.3, 1.9, 13, 62, .45), rag(101.4, 58.4, 1.7, 1.9, 11, 63, .4)];
+    { const mk = nid('dm', u);
+      // the mizzen topmast and its yard (above the cap, jagged at the break) and the snapped topgallant stay
+      const top = [[89.6, 30], [106.6, 30], [106.6, 45.8], [99.4, 46.6], [98.5, 47.2], [97.9, 46.5], [97.2, 47.3], [96.6, 46.6], [95.7, 46.9], [89.6, 46.4]];
+      const sx = 124.3 - 99, sy = 49 - 34.2, sl = Math.hypot(sx, sy), nx = -sy / sl * .7, ny = sx / sl * .7;
+      const stay = [[99 + nx, 34.2 + ny], [124.3 + nx, 49 + ny], [124.3 - nx, 49 - ny], [99 - nx, 34.2 - ny]];
+      mid = `<defs><mask id="${mk}" maskUnits="userSpaceOnUse" x="-20" y="-20" width="240" height="320"><rect x="-20" y="-20" width="240" height="320" fill="#fff"/>`
+        + [top, stay, ...HOLES].map(P => `<path d="${pd(P)}" fill="#000"/>`).join('') + `</mask></defs>`
+        + `<g mask="url(#${mk})">${K.ship(u, L, { ...EN, sails: 'reefed', detail: 'near', lights: true, wake: false, seed: 6 })}</g>`; }
+    // the torn holes' edges: frayed threads of pale canvas round each, a flap hanging from the upper lip
+    HOLES.forEach((P, k) => { const R = rng(70 + k), n = P.length, cx = P.reduce((a, p) => a + p[0], 0) / n, cy = P.reduce((a, p) => a + p[1], 0) / n;
+      mid += `<path d="${pd(P)}" fill="none" stroke="#c4d4bf" stroke-width=".35" stroke-linejoin="round" opacity=".85"/>`;
+      for (let i = 0; i < n; i++) { if (R() < .35) continue; const p = P[i], dx = cx - p[0], dy = cy - p[1], l = Math.hypot(dx, dy), q = .5 + R() * .9;
+        mid += `<path d="M${f(p[0])} ${f(p[1])}l${f(dx / l * q + (R() - .5) * .4)} ${f(dy / l * q + .3)}" stroke="#d4e2cc" stroke-width="${f(.16 + R() * .14)}" stroke-linecap="round" opacity=".8"/>`; }
+      const t = P[Math.round(n * .7) % n], t2 = P[Math.round(n * .82) % n], w = k ? 1.4 : 2.4;
+      mid += `<path d="M${f(t[0])} ${f(t[1])}L${f(t2[0])} ${f(t2[1])}Q${f(t2[0] + .6)} ${f(t2[1] + w * .7)} ${f((t[0] + t2[0]) / 2 + .9)} ${f(t2[1] + w * 1.3)}Q${f(t[0] + .2)} ${f(t[1] + w * .6)} ${f(t[0])} ${f(t[1])}Z" fill="#9fae98" stroke="#4e5a4c" stroke-width=".15"/>`
+        + `<path d="M${f(t2[0])} ${f(t2[1])}Q${f(t2[0] + .6)} ${f(t2[1] + w * .7)} ${f((t[0] + t2[0]) / 2 + .9)} ${f(t2[1] + w * 1.3)}" stroke="#d4e2cc" stroke-width=".2" fill="none" opacity=".8"/>`; });
+    // the stump: the lower masthead splintered above the cap, the fresh break pale
+    mid += `<path d="M96.6 47.6L96.5 46.4L97 45.3L97.3 46.2L97.7 44.9L98 46.1L98.4 45.6L98.3 47.6Z" fill="#3e4334"/>`
+      + `<path d="M96.5 46.4L97 45.3L97.3 46.2L97.7 44.9L98 46.1L98.4 45.6" stroke="#d8c8a0" stroke-width=".22" fill="none" stroke-linejoin="round"/>`;
+    // the fallen topmast: hinged on the stump by its heel, leaning aft against the sky, held by its two backstays
+    { const [bx, by] = [97.2, 46.6], [hx, hy] = TOPH, l = Math.hypot(hx - bx, hy - by), ux = (hx - bx) / l, uy = (hy - by) / l, w0 = .55, w1 = .32;
+      const sp = [[bx - uy * w0, by + ux * w0], [hx - uy * w1, hy + ux * w1], [hx + uy * w1, hy - ux * w1], [bx + uy * w0, by - ux * w0]];
+      mid += `<path d="M${f(hx)} ${f(hy)}L84.6 92.4M${f(hx)} ${f(hy)}L88.2 92.8" stroke="#1a201c" stroke-width=".22" opacity=".85"/>`;   // backstays, taut to her quarter
+      mid += `<path d="${pd(sp)}" fill="#3e4334" stroke="#14180f" stroke-width=".15"/>`
+        + `<path d="M${f(sp[0][0])} ${f(sp[0][1])}L${f(sp[1][0])} ${f(sp[1][1])}" stroke="#a8b49a" stroke-width=".22" opacity=".8"/>`
+        + `<circle cx="${f(hx)}" cy="${f(hy)}" r=".55" fill="#6a5a3a"/>`
+        // the splintered heel, pale
+        + `<path d="M${f(bx - uy * w0)} ${f(by + ux * w0)}l.5 .9l.3 -.6l.4 .7l.3 -.8" stroke="#d8c8a0" stroke-width=".2" fill="none"/>`;
+      // its yard, torn from the parrel: across the spar, the lower end on the crosstrees; rags of the furled sail
+      const ya = [90.4, 39.4], yb = [98.6, 47.2], yl = Math.hypot(yb[0] - ya[0], yb[1] - ya[1]), yx = (yb[0] - ya[0]) / yl, yy = (yb[1] - ya[1]) / yl;
+      const R = rng(83); let rags = '';
+      for (let i = 0; i < 6; i++) { const t = .08 + i * .15 + R() * .05, px = ya[0] + yx * yl * t, py = ya[1] + yy * yl * t, len = 1.6 + R() * 3.2, wd = .5 + R() * .5;
+        rags += `<path d="M${f(px - wd / 2)} ${f(py + .2)}q${f(len * .25)} ${f(len * .5)} ${f(len * .45 + wd / 2)} ${f(len)}l${f(-.3)} ${f(-.6)}q${f(-len * .2)} ${f(-len * .4)} ${f(-len * .45 + wd / 2 + .3)} ${f(-len + .6)}Z" fill="${i % 2 ? '#a8b6a0' : '#8a9886'}" stroke="#4e5a4c" stroke-width=".12"/>`; }
+      mid += rags + `<path d="M${f(ya[0])} ${f(ya[1])}L${f(yb[0])} ${f(yb[1])}" stroke="#1c241e" stroke-width=".75" stroke-linecap="round"/>`
+        + `<path d="M${f(ya[0])} ${f(ya[1] - .25)}L${f(yb[0])} ${f(yb[1] - .25)}" stroke="#6e7a68" stroke-width=".2" opacity=".8"/>`; }
+    // the snapped topgallant stay hanging slack from the mainmast, its end frayed
+    mid += `<path d="M124.3 49C119 52 115.5 55 114.6 61.5" stroke="#1a201c" stroke-width=".22" fill="none"/><path d="M114.6 61.5l-.3 .6M114.6 61.5l.25 .7" stroke="#1a201c" stroke-width=".14"/>`;
+    // shot holes in her side: black, a ring of pale splinters bent inward
+    { const R = rng(91); for (const [x, y, r] of [[106.2, 95.4, 1.15], [117.6, 96.4, 1], [153.2, 97.6, 1.25], [160.4, 97.2, 1], [88.6, 92.6, .9]]) {
+        mid += `<ellipse cx="${x}" cy="${y}" rx="${f(r * 1.25)}" ry="${f(r * 1.05)}" fill="#3a2a18" opacity=".9"/><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${f(r * .82)}" fill="#050302"/>`;
+        for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2 + R(), q = r * (1.05 + R() * .35);
+          mid += `<path d="M${f(x + Math.cos(a) * q)} ${f(y + Math.sin(a) * q * .85)}L${f(x + Math.cos(a) * r * .55)} ${f(y + Math.sin(a) * r * .45)}" stroke="#d8c09a" stroke-width="${f(.16 + R() * .12)}" stroke-linecap="round" opacity=".85"/>`; } } }
     // the breach: a ragged hole; the hull planks broken off at different lengths (a stepped, uneven edge), their
     // torn ends bent INTO the dark at different angles — dark brown, only the fresh break at each tip pale; the dark
     // sea running in over the lower lip
