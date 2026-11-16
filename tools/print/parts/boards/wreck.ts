@@ -123,22 +123,26 @@ export const SEA: Record<ShipKey, Sea> = {
   // (her water warm red-brown, the colour of her flag, darker with the depth)
   // the Revenge burnt and went down by the head: charred black from the waist aft (the red paint left in dull patches at
   // the bow), the stern castle fallen in with the sternpost standing up out of it, three burnt stumps of different heights
-  // with slanting breaks, the mainmast fallen across the sand, long burn holes along her side; a bank of sand over her side
+  // with slanting breaks, the mainmast's head with its yard fallen on the sand by the bow (a prop, not drawn off the
+  // hull), long burn holes along her side; the bow and her head out of the sand, low banks along her side; one of each
+  // thing on the floor (no two the same drawing), a piece of her red side among them
   revenge: {
-    light: 'revenge', water: ['#a4583a', '#6a3022', '#461a12'], glow: '#ffcc96', rays: 0.42, haze: ['#501e14', 0.28], back: ['#c46a48', 0.4],
+    light: 'revenge', water: ['#a4583a', '#6a3022', '#461a12'], glow: '#ffcc96', rays: 0.42, haze: ['#501e14', 0.18], back: ['#c46a48', 0.58],
     sand: ['#dab08a', '#ac7c5c', '#66402e'], fish: ['#2a120c', 0.58], coral: ['#a8645a', '#b07a5e', '#8a5048'], weed: ['#5e5a2e', '#6e6a36', '#464222'],
     rag: '#3a1612', hz: 150,
     ship: {
-      ...SHIP0, x: 176, y: 180, scale: 2.0, roll: 5, tilt: 7, brk: [0.27, 0.17, 0.13], bow: 13, stern: -2, sprit: 3, aft: 16, fall: { mast: 0, side: -1, ty: 199, front: true },
+      ...SHIP0, x: 178, y: 180, scale: 1.85, roll: 5, tilt: 5, brk: [0.27, 0.17, 0.13], bow: 7, stern: 1.5, sprit: 3, aft: 16,
       holes: [{ X: -10, t: 0.5, r: 2.6, kind: 'burn' }, { X: 4, t: 0.62, r: 2.0, kind: 'burn' }, { X: 13, t: 0.4, r: 1.6, kind: 'burn' }],
-      burnt: 0.85, charFrom: -14, fade: 0.6, growth: 0.7, rags: 0, slant: true, rot: 7, drifts: [[108, 9, 5], [140, 7, 3], [186, 12, 5], [236, 8, 3.5]]
+      burnt: 0.8, charFrom: -6, fade: 0.45, growth: 0.7, rags: 0, slant: true, rot: 7, drifts: [[112, 8, 4], [150, 7, 2.5], [190, 12, 4], [236, 8, 3]]
     },
     props: [
       // the far things: smaller, paler
       { kind: 'spar', x: 222, y: 193, s: 1.0, rot: -1, sink: 0.32, opt: { len: 38, th: 4.2, charred: true, rig: true }, name: 'bowsprit (snapped, charred)' },
-      { kind: 'keg', x: 186, y: 196.5, s: 0.8, rot: 3, sink: 0.3, opt: { kind: 'powder' }, name: 'powder keg' },
+      { kind: 'shotHeap', x: 186, y: 196.5, s: 0.9, sink: 0.3, opt: { n: 4 }, name: 'round shot' },
       { kind: 'firePot', x: 132, y: 195.5, s: 1.15, rot: -4, sink: 0.35, opt: { state: 'broken' }, name: 'broken fire pot' },
-      { kind: 'beam', x: 268, y: 197, s: 1, rot: 2, sink: 0.35, opt: { len: 30 }, drift: -0.25, name: 'charred timber' },
+      { kind: 'sidePiece', x: 268, y: 197, s: 0.95, rot: 3, sink: 0.32, opt: { paint: '#7e2a1e', band: '#b08a44' }, drift: -0.25, name: 'piece of her side (red paint, a gun port)' },
+      // the mainmast fell across the sand: its head with the yard, the sail burnt to a rag
+      { kind: 'mastYard', x: 72, y: 195, s: 0.95, rot: -3, sink: 0.36, opt: { sail: '#2a1410' }, name: 'mainmast head with its yard (fallen)' },
       // the near things
       { kind: 'sabre', x: 30, y: 206, s: 1.15, rot: 116, sink: 0.34, stuck: true, name: 'sabre (stuck in the sand)' },
       { kind: 'chain', x: 66, y: 207, s: 1.45, sink: 0.4, opt: { pts: [[-13, 1.6], [-7, 0], [0, 0.8], [7, -0.4], [13, 1.4]] }, name: 'chain', drift: 0.25, driftH: 0.6 },
@@ -148,32 +152,34 @@ export const SEA: Record<ShipKey, Sea> = {
       { kind: 'keg', x: 166, y: 206.5, s: 1.3, rot: -2, sink: 0.22, opt: { kind: 'broken' }, name: 'powder keg (stove in)' },
       { kind: 'staves', x: 205, y: 207, s: 1.3, rot: 2, sink: 0.35, name: 'burst powder keg' },
       { kind: 'sabre', x: 236, y: 207.5, s: 1.0, rot: 9, sink: 0.24, name: 'sabre' },
-      { kind: 'skull', x: 274, y: 207, s: 1.25, rot: 6, sink: 0.3, name: 'skull' }
+      { kind: 'pistol', x: 272, y: 207.5, s: 1.3, rot: 6, sink: 0.3, name: 'pistol' }
     ], seed: 23
   },
   // the Endeavour blew up and broke her back: the after part torn off and settled stern down a span away, the decks
   // open at the break; the mainmast still stands whole with its yards and the rags of its sails, the foremast fell
-  // across the bow into the sand, the mizzen snapped short; her cargo — the Company's crates, the gold — spilled
+  // by the bow (its topmast on the sand there), the mizzen snapped short; her cargo — the Company's crates, the gold —
+  // spilled; one of each thing (no two the same drawing)
   endeavour: {
     light: 'endeavour', water: ['#86d0d2', '#3c94a4', '#1f6474'], glow: '#fffbe8', rays: 0.5, haze: ['#4a9cac', 0.15], back: ['#b4e6e6', 0.5],
     sand: ['#f8ecca', '#e3cea4', '#98846a'], fish: ['#f4c64c', 0.9], coral: ['#c8907a', '#c8a47a', '#a8808e'], weed: ['#5a8a4a', '#6a9a56', '#466e3c'],
     rag: '#a29a82', hz: 150,
     ship: {
-      ...SHIP0, x: 194, y: 182, scale: 1.25, roll: -12, tilt: 6, brk: [0.3, 0.6, 0.22], bow: 14, stern: 3, sprit: 6, fall: { mast: 0, side: -1, ty: 180 },
+      ...SHIP0, x: 194, y: 182, scale: 1.25, roll: -12, tilt: 6, brk: [0.3, 0.6, 0.22], bow: 14, stern: 3, sprit: 6,
       holes: [{ X: -24, t: 0.62, r: 1.5, kind: 'shot' }, { X: -12, t: 0.35, r: 2.6, kind: 'breach' }],
       fade: 1, growth: 1.3, rags: 1.2, yards: [1], slack: 1.6, torn: 2, rot: 8, grime: 0.14,
       split: { X: 18, dx: 13, drop: 2.5, rot: 13 }, drifts: [[176, 9, 4]]
     },
     props: [
       // the far things
-      { kind: 'coCrate', x: 32, y: 186, s: 0.72, rot: -7, sink: 0.24, opt: { state: 'whole', n: 2 }, name: 'Company crate', drift: -0.25 },
-      { kind: 'gun', x: 108, y: 187.5, s: 0.95, rot: -5, sink: 0.42, opt: { len: 52 }, name: 'cannon (half buried)' },
+      { kind: 'keg', x: 34, y: 186.5, s: 0.7, rot: -8, sink: 0.3, opt: { kind: 'whole' }, name: 'cask', drift: -0.25 },
+      // the foremast fell across the bow: its topmast lies on the sand by the stem, a few ends of its rigging still on it
+      { kind: 'spar', x: 100, y: 188.5, s: 1.0, rot: -3, sink: 0.3, opt: { len: 50, th: 3.6, rig: true }, name: 'fore topmast (fallen by the bow)' },
       { kind: 'carriage', x: 140, y: 189, s: 0.85, rot: 3, sink: 0.3, name: 'gun carriage with its truck' },
       // the middle
       { kind: 'coinSpill', x: 120, y: 199, s: 1.0, sink: 0.2, opt: { n: 6, w: 14 }, name: 'coins' },
       { kind: 'epaulette', x: 178, y: 200, s: 1.8, rot: 4, sink: 0.1, opt: { growth: 'none' }, name: 'epaulette' },
-      { kind: 'button', x: 194, y: 203.5, s: 2.4, sink: 0.25, opt: { growth: 'none' }, name: 'uniform button' },
-      { kind: 'gun', x: 236, y: 197, s: 0.8, rot: 4, sink: 0.55, opt: { len: 40 }, drift: 0.25, name: 'cannon (buried to the muzzle)' },
+      { kind: 'button', x: 149, y: 200, s: 2.4, sink: 0.25, opt: { growth: 'none' }, name: 'uniform button' },
+      { kind: 'shotHeap', x: 238, y: 197.5, s: 1.0, sink: 0.3, opt: { n: 4 }, name: 'round shot' },
       // the near things
       { kind: 'anchor', x: 30, y: 206, s: 0.95, rot: -2, sink: 0.15, rests: true, name: 'anchor (on its ring, stock and fluke)' },
       { kind: 'coCrate', x: 72, y: 207, s: 1.1, rot: 6, sink: 0.22, opt: { state: 'burst', n: 7 }, name: 'Company crate (burst)' },
@@ -847,6 +853,8 @@ ${hullG}${fallG}
         const l = (1.2 + RD() * 3) * s, th = (0.35 + RD() * 0.3) * s, x0 = xs + sd * 2.4 * s, bend = (RD() - 0.5) * 1.6 * s;
         const pts3: P[] = [[x0, y - th / 2], [x0 - sd * l, y - th / 2 + bend], [x0 - sd * (l + 0.5 * s), y + bend], [x0 - sd * l, y + th / 2 + bend], [x0, y + th / 2]];
         const q = pts3.map(p => (sd < 0 ? rA([p[0], p[1]]) : (() => { const a = rot0(p), dx = a[0] - piv[0], dy = a[1] - piv[1]; return [piv[0] + dx * Math.cos(sa) - dy * Math.sin(sa) + SP.dx, piv[1] + dx * Math.sin(sa) + dy * Math.cos(sa) + SP.drop] as P; })()));
+        // a plank end under the sand is not seen (drawn over the sand it would hang in the water over it)
+        if (q.some(p => p[1] > crest(p[0]) - 0.4)) continue;
         sp2 += `<path d="M${poly(q).replace(/ /g, 'L')}Z" fill="${hz(n % 2 ? '#4a3c2c' : '#6a5a44')}" stroke="${hz('#120c08')}" stroke-width=".15"/>`;
       }
     }

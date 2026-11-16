@@ -113,15 +113,17 @@ const LOOKS: Record<ShipKey, Look> = {
   revenge: {
     chart: 'revenge', mmPerDeg: 36, tone: TONE.red,
     board: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 84 }, ship: [132, 70, 58, 32], rose: [113, 104, 8], labels: { 'Islas Lucayas': { x: 176, y: 106 } }, note: [106, 90] },
-    strip: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 96 }, ship: [140, 72, 70, 40], rose: [118, 150, 11], labels: { 'Islas Lucayas': { x: 186, y: 128 } }, note: [104, 118] },
+    strip: { anchor: { lon: -77.35, lat: 25.04, x: 172, y: 96 }, ship: [140, 72, 70, 40], rose: [118, 150, 11], labels: { 'Islas Lucayas': { x: 186, y: 128 } }, note: [100, 117.5] },
     paper: '#f2e2c0', paperLine: '#5a2416', ink: '#2e1a10', soft: '#4f3326', cell: '#f8ecd2', cellDeep: '#e6cca0',
     brass: ['#f3d68c', '#c4954a', '#5e4214'], note: '#f5e8cc', noteLine: '#c4a07a', margin: '#9a1f14', pin: '#1a1a1a',
-    notes: (at, p) => { const t = at(-77.34, 25.06); return { cross: { x: t.x + 1, y: t.y + 1 }, course: [{ x: p.ship[0] + 30, y: p.ship[1] + 4 }, { x: (p.ship[0] + t.x) / 2 + 10, y: t.y + 14 }, { x: t.x - 6, y: t.y + 5 }], note: p.note ? [{ x: p.note[0], y: p.note[1], text: CHART_NOTES.revenge[0], rot: -4, size: 4 }] : [] }; }
+    // the course from her bow (the ship as placed: centre, waterline, length) out to the east of the cays and down to the
+    // cross on New Providence, coming in from the north-west under the town's name
+    notes: (at, p) => { const t = at(-77.34, 25.06), bx = p.ship[0] + p.ship[2] / 2 + 2; return { cross: { x: t.x + 1, y: t.y + 1 }, course: [{ x: bx, y: p.ship[1] + 2.5 }, { x: bx + 12, y: p.ship[1] + 7 }, { x: t.x - 4.5, y: t.y - 2 }], note: p.note ? [{ x: p.note[0], y: p.note[1], text: CHART_NOTES.revenge[0], rot: -4, size: 4 }] : [] }; }
   },
   endeavour: {
     chart: 'endeavour', mmPerDeg: 40, tone: TONE.navy,
     board: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 96 }, ship: [140, 66, 64, 36], rose: [198, 46, 9], labels: { 'Iamaica': { x: 170, y: 82 } } },
-    strip: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 120 }, ship: [148, 80, 76, 44], rose: [120, 154, 12] },
+    strip: { anchor: { lon: -76.84, lat: 17.94, x: 176, y: 120 }, ship: [148, 80, 58, 34], rose: [120, 154, 12], labels: { 'Iamaica': { x: 148, y: 121.5 } } },
     paper: '#f8f1de', paperLine: '#1f2a3a', ink: '#1a2232', soft: '#33405a', cell: '#fbf6e8', cellDeep: '#e6dcc0',
     brass: ['#f6dc94', '#c99a46', '#5e4214'], note: '#fbf6e6', noteLine: '#a8b8cc', margin: '#a03a2a', pin: '#a8812e'
   },
@@ -668,7 +670,9 @@ export async function boardV2(ctx: Ctx, ship: Ship, counters: Counters): Promise
   for (const nt of notes.note ?? []) marks.push({ x: nt.x - 1, y: nt.y - (nt.size ?? 4.2), w: nt.text.length * (nt.size ?? 4.2) * 0.42 + 2, h: (nt.size ?? 4.2) * 1.5 });
   const at0 = plan.window ? placeShip(kind, place.ship, plan.window, base, marks) : null, sr = at0 ? shipRect(kind, at0) : null;
   const report: ChartReport = { labels: [], marks: [] };
-  const opts: ChartOpts = { ...base, avoid: sr ? [grow(sr, SHIP_GAP)] : [], labelsAt: place.labels, ...notes, report };
+  // the notes again with the ship where it was placed (a course starts at her bow)
+  const notes2 = at0 && sr && L.notes ? L.notes(at, { ...place, ship: [at0[0], at0[1], sr.w / 1.08, at0[3]] }) : notes;
+  const opts: ChartOpts = { ...base, avoid: sr ? [grow(sr, SHIP_GAP)] : [], labelsAt: place.labels, ...notes2, report };
   let svgChart = chartSvg(opts);
   if (at0 && sr) {
     svgChart = svgChart.replace(/<\/svg>$/, shipOnChart(kind, ...at0, L) + '</svg>');
