@@ -95,13 +95,14 @@ function partStrip(g: Geo, rw: RowGeo): string {
   return `<defs><clipPath id="${id}"><rect x="${r(S.x)}" y="${r(S.y)}" width="${r(S.w)}" height="${r(S.h)}" rx="1"/></clipPath></defs><g clip-path="url(#${id})">${out.join('')}</g>`;
 }
 
-/** past the «Залп дан» cell the row of open ports goes on to the slip's end: two guns run out, lids hauled up */
+/** past the «Залп дан» cell the row of open ports goes on to the band's end on the ship's side (none if fewer than two fit) */
 function portsOn(g: Geo, rw: RowGeo): string {
   const v = g.slots.filter(s => s.kind === 'volley' || s.kind === 'volley2'), last = v.length ? v[v.length - 1] : rw.cells[rw.cells.length - 1];
   const x0 = last.x + last.w + 3, x1 = rw.band.x + rw.band.w, y = rw.cells[0].y, out: string[] = [];
-  if (x1 - x0 < 14) return '';
-  const n = Math.floor((x1 - x0) / 14), step = (x1 - x0) / n;
-  out.push(`<rect x="${r(x0 - 1.4)}" y="${r(y + 0.2)}" width="${r(x1 - x0 + 2.8)}" height="${r(13.45)}" rx="1" fill="${C.ochre}"/>`);
+  // two ports at least, straight on the ship's side (no backing of their own): a lone port boxed in ochre past the
+  // Volley cell read as one more Guns cell
+  const n = Math.floor((x1 - x0) / 14), step = n ? (x1 - x0) / n : 0;
+  if (n < 2) return '';
   for (let i = 0; i < n; i++) {
     const cx = x0 + step * (i + 0.5), pw = 9, ph = 7.6, py = y + 5;
     out.push(`<rect x="${r(cx - pw / 2 - 0.6)}" y="${r(py - 0.5)}" width="${r(pw + 1.2)}" height="${r(ph + 1)}" rx=".5" fill="${C.ochreDark}"/>`);

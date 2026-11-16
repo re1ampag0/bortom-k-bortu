@@ -1,7 +1,7 @@
 // «Летучий голландец» — the material of its board: the sea floor. Turquoise-green sea-worn wood overgrown with barnacles
 // and weed, corals; the close-up of the Dutchman's own side (A) with the rows lying on her parts: the Sails on the fore
-// course, the Souls as glass flasks, the Crew on the rail, the Guns in the open ports of the upper tier (the kit's ports
-// are laid at the cells' pitch for this picture only), the Hull on the planking. A wisp of a soul runs from the Souls
+// course, the Souls as glass flasks, the Crew on the cap rail, the Guns and the Volley cells in painted open ports (the
+// kit's ports and bare ribs are off for this picture: at the cells' pitch they read as a fence), the Hull on the planking. A wisp of a soul runs from the Souls
 // to the Crew and the Hull (the frame prints the words). The back: her wreck on the sea floor in the same style.
 // B — the captain's table drowned on the sea floor: a waterlogged sea chart, tarnished brass rulers under the Guns and the
 // Hull, knotted lines under the Sails and the Crew, the Souls as flasks on a sea-worn shelf, the engraving in a barnacled
@@ -107,37 +107,59 @@ async function sideArt(g: Geo): Promise<string> {
   const wl = 177, rail = crew.cy + 3.5, sMM = (wl - rail) / railH;
   const b = Math.ceil(Math.max(0, (P.w / k - 200) / 2, (P.h / k - 280) / 2)) + 2, toU = (mmX: number, mmY: number) => [(mmX - P.x) / k - b, (mmY - P.y) / k - b];
   const [sx, sy] = toU(P.x + P.w / 2 - focus * sMM, wl), [, hy] = toU(0, wl);
-  const LIGHT = { time: 'fog', haze: 0.55, key: { type: 'moon', az: 210, el: 34, color: '#d6f2e4', power: 0.75 }, fill: { color: '#4f8676', power: 0.55 } };
+  const LIGHT = { time: 'fog', haze: 0.35, key: { type: 'moon', az: 210, el: 34, color: '#d6f2e4', power: 0.75 }, fill: { color: '#4f8676', power: 0.55 } };
   const L = K.makeLight(LIGHT, { horizon: hy - 30 });
-  // the ports of both tiers at the pitch of the cells, one port right under every Guns cell (this picture only)
-  const spec = K.SHIP_SPECS[kind] as unknown as { ports: { x0: number; x1: number; n: number; off?: number }[] }, saved = spec.ports;
-  const pitch = 14.5 / sMM, X0 = focus + (guns.cells[0].cx - (P.x + P.w / 2)) / sMM, lo = Math.min(...saved.map(p => p.x0)), hi = Math.max(...saved.map(p => p.x1));
-  const x0 = X0 - Math.floor((X0 - lo) / pitch) * pitch, n = Math.floor((hi - x0) / pitch) + 1;
-  spec.ports = saved.map(p => ({ ...p, x0, x1: x0 + (n - 1) * pitch, n, off: 0 }));
+  // this picture only: no kit ports and no bare ribs — the ribs at the cells' pitch over the whole side read as a fence;
+  // the ports are painted round the Guns and the Volley cells (ports()), the side is planking, wales and growth
+  const spec = K.SHIP_SPECS[kind] as unknown as { ports: { n: number }[]; ribs?: number[] }, saved = spec.ports, ribs = spec.ribs;
+  spec.ports = saved.map(p => ({ ...p, n: 0 })); spec.ribs = undefined;
   let shipSvg: string;
   try { shipSvg = K.ship('bo2' + kind, L, { kind, x: sx, y: sy, scale: sMM / k, sails: 'full', heel: 0, seed: 11, flip: false, detail: 'near' }); }
-  finally { spec.ports = saved; }
+  finally { spec.ports = saved; spec.ribs = ribs; }
   const W = 200 + 2 * b, H = 280 + 2 * b;
   // the haze behind: a green moonlit fog, a glow behind the fore course, fog banks low over the sea
-  const fog = (K.fog as (u: string, L: unknown, o: Record<string, number>) => string)('bo2d', L, { y: hy - 40, h: 60, density: 0.5, seed: 4 });
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-b} ${-b} ${W} ${H}"><defs><linearGradient id="bo2dsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3b685c"/><stop offset=".55" stop-color="#78a091"/><stop offset="1" stop-color="#a6c4b6"/></linearGradient>` +
-    `<radialGradient id="bo2dglow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e6f7ea" stop-opacity=".75"/><stop offset=".5" stop-color="#cfe9da" stop-opacity=".3"/><stop offset="1" stop-color="#cfe9da" stop-opacity="0"/></radialGradient>` +
+  const fog = (K.fog as (u: string, L: unknown, o: Record<string, number>) => string)('bo2d', L, { y: hy - 40, h: 60, density: 0.3, seed: 4 });
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-b} ${-b} ${W} ${H}"><defs><linearGradient id="bo2dsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16302a"/><stop offset=".55" stop-color="#2b4d44"/><stop offset="1" stop-color="#4d7468"/></linearGradient>` +
+    `<radialGradient id="bo2dglow" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#e6f7ea" stop-opacity=".45"/><stop offset=".5" stop-color="#cfe9da" stop-opacity=".16"/><stop offset="1" stop-color="#cfe9da" stop-opacity="0"/></radialGradient>` +
     `<linearGradient id="bo2dsea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f6f66"/><stop offset="1" stop-color="#112d28"/></linearGradient></defs>` +
     `<rect x="${-b}" y="${-b}" width="${W}" height="${H}" fill="url(#bo2dsky)"/><ellipse cx="${r(sx + 60)}" cy="${r(hy - 120)}" rx="120" ry="90" fill="url(#bo2dglow)"/><rect x="${-b}" y="${r(hy)}" width="${W}" height="${r(H - hy - b)}" fill="url(#bo2dsea)"/>${fog}${shipSvg}</svg>`;
   const url = await g.art(`board-close-${kind}-a`, svg, b), id = `${g.uid}pc`;
   return `<defs><clipPath id="${id}"><rect x="${r(P.x)}" y="${r(P.y)}" width="${r(P.w)}" height="${r(P.h)}" rx="2.2"/></clipPath></defs><g clip-path="url(#${id})"><image href="${url}" x="${r(P.x)}" y="${r(P.y)}" width="${r(W * k)}" height="${r(H * k)}" preserveAspectRatio="none"/></g>`;
 }
 
+/** the Dutchman's side close up, over the picture (mm): the cap rail at the foot of the Crew cells (it also closes the
+ *  gap between «Под водой» and «Всплыл»), the planking below it with its seams and butts, a wale under the Guns, weed
+ *  hanging off the rail */
+function hullSide(g: Geo): string {
+  const P = g.zones.picture, crew = g.rows.find(x => x.key === 'crew')!, guns = g.rows.find(x => x.key === 'guns')!, hull = g.rows.find(x => x.key === 'hull')!, R = rng(53);
+  const rail = crew.cy + 3.5, top = rail + 2.2, bottom = P.y + P.h, out: string[] = [];
+  // the planking: strakes of sea-worn wood, a shade apart, dark seams, butt joints with treenails, slime at the seams
+  for (let y = top, i = 0; y < bottom; y += 4.4, i++) {
+    out.push(`<rect x="${r(P.x)}" y="${r(y)}" width="${r(P.w)}" height="4.4" fill="${i % 2 ? '#0c1f1b' : '#3d5e55'}" fill-opacity="${r(0.12 + R() * 0.1)}"/>`);
+    out.push(`<path d="M${r(P.x)} ${r(y)}H${r(P.x + P.w)}" stroke="${C.woodSeam}" stroke-width=".35" stroke-opacity=".75"/><path d="M${r(P.x)} ${r(y + 0.4)}H${r(P.x + P.w)}" stroke="#a9c7b8" stroke-width=".18" stroke-opacity=".3"/>`);
+    for (let x = P.x + R() * 40; x < P.x + P.w; x += 38 + R() * 30) out.push(`<path d="M${r(x)} ${r(y)}v4.4" stroke="${C.woodSeam}" stroke-width=".3" stroke-opacity=".7"/><circle cx="${r(x + 1.2)}" cy="${r(y + 2.2)}" r=".35" fill="${C.nails}"/>`);
+  }
+  // the wale under the Guns: a heavy timber, lit on top
+  const wy = guns.cells[0].y + guns.cells[0].h + (hull.top - guns.cells[0].y - guns.cells[0].h) / 2 - 1.4;
+  out.push(`<rect x="${r(P.x)}" y="${r(wy)}" width="${r(P.w)}" height="2.8" fill="#1f3a33"/><path d="M${r(P.x)} ${r(wy + 0.35)}H${r(P.x + P.w)}" stroke="#a9c7b8" stroke-width=".35" stroke-opacity=".65"/><path d="M${r(P.x)} ${r(wy + 2.8)}H${r(P.x + P.w)}" stroke="${C.woodSeam}" stroke-width=".5"/>`);
+  // the cap rail: pale weathered timber, a dark shadow under it, weed hanging off it
+  out.push(`<rect x="${r(P.x)}" y="${r(rail - 2.6)}" width="${r(P.w)}" height="4.8" fill="#8fa596"/><path d="M${r(P.x)} ${r(rail - 2.2)}H${r(P.x + P.w)}" stroke="#d6e6dc" stroke-width=".45"/><path d="M${r(P.x)} ${r(rail + 2.2)}H${r(P.x + P.w)}" stroke="${C.woodSeam}" stroke-width=".7"/>`);
+  for (let x = P.x + R() * 9; x < P.x + P.w; x += 9 + R() * 14) out.push(`<path d="M${r(x)} ${r(rail - 2.6)}v4.8" stroke="#5f7a6c" stroke-width=".25"/>`);
+  for (let i = 0; i < 16; i++) out.push(strand(R, P.x + 4 + R() * (P.w - 8), rail + 2.2, 3 + R() * 6, 1, C.weed[i % 4], 0.4 + R() * 0.3));
+  return out.join('');
+}
+
 /** the open port round every Guns cell: a dark opening, a heavy rotten frame on the sides and below (thin on top —
  *  the number stands there), the ring bolts of the gun tackle */
 function ports(g: Geo): string {
-  const rw = g.rows.find(x => x.key === 'guns')!, R = rng(31);
-  return rw.cells.map(c => {
+  const rw = g.rows.find(x => x.key === 'guns')!, R = rng(31), cells: Rect[] = [...rw.cells, ...g.slots.filter(s => s.kind === 'volley' || s.kind === 'volley2')];
+  return cells.map(c => {
+    const cy = c.y + c.h / 2;
     const m = 2.3, x = Math.max(10.2, c.x - m), y = c.y - 0.55, w = c.x + c.w + m - x, h = c.h + 0.55 + 0.7;
     const frame = `<path d="M${r(x)} ${r(y)}H${r(x + w)}V${r(y + h - 1)}q0 1 -1 1H${r(x + 1)}q-1 0 -1 -1Z" fill="${C.portWood}" stroke="${C.iron}" stroke-width=".3"/>` +
       `<path d="M${r(x + 0.4)} ${r(y + 0.6)}V${r(y + h - 0.6)}M${r(x + w - 0.4)} ${r(y + 0.6)}V${r(y + h - 0.6)}" stroke="${C.portEdge}" stroke-width=".3" stroke-linecap="round"/>` +
       `<rect x="${r(c.x - 0.6)}" y="${r(c.y - 0.3)}" width="${r(c.w + 1.2)}" height="${r(c.h + 0.75)}" rx="2.2" fill="${C.port}"/>`;
-    const rings = [(x + c.x - 0.6) / 2, (x + w + c.x + c.w + 0.6) / 2].map(cx => `<circle cx="${r(cx)}" cy="${r(c.cy + 2.2)}" r=".55" fill="none" stroke="${C.iron}" stroke-width=".4"/><circle cx="${r(cx)}" cy="${r(c.cy + 1.4)}" r=".3" fill="${C.iron}"/>`).join('');
+    const rings = [(x + c.x - 0.6) / 2, (x + w + c.x + c.w + 0.6) / 2].map(cx => `<circle cx="${r(cx)}" cy="${r(cy + 2.2)}" r=".55" fill="none" stroke="${C.iron}" stroke-width=".4"/><circle cx="${r(cx)}" cy="${r(cy + 1.4)}" r=".3" fill="${C.iron}"/>`).join('');
     return frame + rings + barnacles(R, x + w - 0.9, c.y + 2.2, 2, 0.6, 0.45) + barnacles(R, x + 0.9, c.y + c.h - 2.5, 2, 0.6, 0.45);
   }).join('');
 }
@@ -202,7 +224,7 @@ async function faceA(g: Geo): Promise<Layers> {
   // no dimming of the side: the frame lays tight plates under its words; the wisp starts where the Souls' label line ends
   const souls = g.rows.find(rw => rw.key === 'souls');
   const under = sheet(g, { band: C.band, line: C.hair, ground: C.wood, w: 1.4 }) + planks(F, { ...CFG.wood, h: 10.5, seed: 41 }) +
-    await sideArt(g) + moulding(g.zones.picture) + growth(g) + ports(g) + (souls ? wisp(g, souls.lineEnd) : '');
+    await sideArt(g) + hullSide(g) + moulding(g.zones.picture) + growth(g) + ports(g) + (souls ? wisp(g, souls.lineEnd) : '');
   const s = g.scope;
   const css = `${s} .bo2-box{box-shadow:.6mm .8mm 0 rgba(6,22,19,.55);border-color:#93b5a6}`;
   return { under, over: flasks(g), css };

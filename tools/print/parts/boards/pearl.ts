@@ -1,6 +1,6 @@
 // «Чёрная жемчужина» — the material of its board: tarred dark wood, rope, a worn sea chart, Jack's compass.
 // A («у борта»): a close-up of the Pearl's own side by moonlight, baked from the kit ship; the rows lie on her parts —
-// Sails on the main course, Crew on the rail, Guns over open ports (a port under every Guns cell and under «Залп дан»),
+// Sails on the main course, Crew on the rail, Guns in painted open ports wider than the cells (every Guns cell and «Залп дан»),
 // Hull on the planking. The ship stays open round the rows: the frame lays only tight plates under the words and the
 // numbers, the cells are set into her side. Right column: a worn chart on
 // tarred planks and the compass that does not point north. The back: the Pearl on the sea floor by night.
@@ -42,22 +42,22 @@ interface PortRow { h: number; n: number; x0: number; x1: number; w: number; off
 async function sideArt(g: Geo): Promise<string> {
   const P = g.zones.picture, K = g.kit, k = 0.7, b = Math.ceil(Math.max(0, (P.w / k - 200) / 2, (P.h / k - 280) / 2)) + 2;
   const ux = (x: number) => (x - P.x) / k - b, uy = (y: number) => (y - P.y) / k - b;
-  const guns = g.rows.find(rw => rw.key === 'guns')!, vol = g.slots.find(s => s.kind === 'volley')!;
+  const guns = g.rows.find(rw => rw.key === 'guns')!;
   // mm per ship unit: the port row (h 9.4 of the Pearl) on the Guns cells; the rail lands at the foot of the Crew cells
   const sMM = 6.5, H = 9.4, WL = guns.cy + H * sMM, mainAt = 158, focus = 10 - (mainAt - (P.x + P.w / 2)) / sMM;
   const X = (mm: number) => focus + (mm - (P.x + P.w / 2)) / sMM;
-  const pitchA = (guns.cells[1].cx - guns.cells[0].cx) / sMM, wPort = 13.9 / sMM;
-  // the second row: the port under «Залп дан», then on along the side at a wider pitch (the free middle column shows two)
-  const vx = vol.x + vol.w / 2, pitchB = 36.5;
-  const rowA: PortRow = { h: H, n: guns.cells.length, x0: X(guns.cells[0].cx), x1: X(guns.cells[0].cx) + pitchA * (guns.cells.length - 1), w: wPort, off: 0, hk: 0.96 };
-  const rowB: PortRow = { h: H, n: 4, x0: X(vx), x1: X(vx + 3 * pitchB), w: wPort, off: 0, hk: 0.96 };
-  const L = K.makeLight({ time: 'night', haze: 0.3, key: { type: 'moon', az: 118, el: 30, color: '#c6d8f6', power: 0.95 }, fill: { color: '#3d5680', power: 0.5 }, rim: { az: 40, color: '#bfe0ff', power: 0.55 } }, { horizon: uy(WL) - 30 });
-  const spec = (K.SHIP_SPECS as unknown as Record<string, { ports: PortRow[] }>).pearl, saved = spec.ports;
+  // the ports are painted over the picture (pearlPorts): wider than the cells, they would overlap at the cells' pitch
+  // in the kit; the kit draws no port of the row (n: 0), only the small ones of the quarterdeck
+  const none: PortRow = { h: H, n: 0, x0: 0, x1: 1, w: 2.6, off: 0 };
+  // a brighter moon and a lifted night: the course reads as pale canvas behind the Sails row, the planking under the Hull
+  const L = K.makeLight({ time: 'night', haze: 0.25, key: { type: 'moon', az: 118, el: 30, color: '#d4e2fa', power: 1.2 }, fill: { color: '#5a7298', power: 0.7 }, rim: { az: 40, color: '#cfe6ff', power: 0.6 } }, { horizon: uy(WL) - 30 });
+  const spec = (K.SHIP_SPECS as unknown as Record<string, { ports: PortRow[]; sail: string }>).pearl, saved = spec.ports, sail = spec.sail;
   let body: string;
   try {
-    spec.ports = [rowA, saved[1], rowB];
+    // this picture only: the moonlit course a lighter weathered black than her coal sails, so the canvas reads
+    spec.ports = [none, saved[1], none]; spec.sail = 'ship-sail-black';
     body = K.ship('bo2pa', L, { kind: 'pearl', x: ux(P.x + P.w / 2 - focus * sMM), y: uy(WL), scale: sMM / k, sails: 'full', heel: 0, seed: 11, detail: 'near' });
-  } finally { spec.ports = saved; }
+  } finally { spec.ports = saved; spec.sail = sail; }
   const W = 200 + 2 * b, Hh = 280 + 2 * b, R = rng(41);
   let stars = '';
   for (let i = 0; i < 70; i++) { const sx = -b + R() * W, sy = -b + R() * (uy(WL) - 60 + b), sr = 0.12 + R() * R() * 0.45; stars += `<circle cx="${r(sx)}" cy="${r(sy)}" r="${r(sr)}" fill="#e8f0ff" fill-opacity="${r(0.35 + R() * 0.55)}"/>`; }
@@ -65,7 +65,7 @@ async function sideArt(g: Geo): Promise<string> {
   const mx = ux(186), my = uy(44);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-b} ${-b} ${W} ${Hh}"><defs>` +
     `<linearGradient id="pksky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1322"/><stop offset=".45" stop-color="#18294a"/><stop offset="1" stop-color="#3a5878"/></linearGradient>` +
-    `<filter id="pklift" x="0" y="0" width="1" height="1" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR type="gamma" exponent=".58"/><feFuncG type="gamma" exponent=".58"/><feFuncB type="gamma" exponent=".6"/></feComponentTransfer></filter>` +
+    `<filter id="pklift" x="0" y="0" width="1" height="1" filterUnits="objectBoundingBox" color-interpolation-filters="sRGB"><feComponentTransfer><feFuncR type="gamma" exponent=".44"/><feFuncG type="gamma" exponent=".44"/><feFuncB type="gamma" exponent=".47"/></feComponentTransfer></filter>` +
     `<radialGradient id="pkmoon" cx="${r(mx)}" cy="${r(my)}" r="120" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#dce8ff" stop-opacity=".75"/><stop offset=".12" stop-color="#9fb8dc" stop-opacity=".45"/><stop offset=".5" stop-color="#4c6890" stop-opacity=".18"/><stop offset="1" stop-color="#4c6890" stop-opacity="0"/></radialGradient></defs>` +
     `<g filter="url(#pklift)"><rect x="${-b}" y="${-b}" width="${W}" height="${Hh}" fill="url(#pksky)"/>${stars}<rect x="${-b}" y="${-b}" width="${W}" height="${Hh}" fill="url(#pkmoon)"/>` +
     `<circle cx="${r(mx)}" cy="${r(my)}" r="9" fill="#f2f5ff"/><circle cx="${r(mx + 2.5)}" cy="${r(my - 1.5)}" r="2.2" fill="#c9d3e6" fill-opacity=".6"/><circle cx="${r(mx - 3)}" cy="${r(my + 2.6)}" r="1.5" fill="#c9d3e6" fill-opacity=".5"/>` +
@@ -73,9 +73,64 @@ async function sideArt(g: Geo): Promise<string> {
   const url = await g.art('board-pearl-side', svg, b), id = `${g.uid}pc`, vg = `${g.uid}pv`;
   // a soft vignette over the JPEG (an SVG layer, no CSS): the eye stays on the rows and the open ports
   return `<defs><clipPath id="${id}"><rect x="${r(P.x)}" y="${r(P.y)}" width="${r(P.w)}" height="${r(P.h)}" rx="2.2"/></clipPath>` +
-    `<radialGradient id="${vg}" cx=".55" cy=".55" r=".75"><stop offset=".55" stop-color="#05070c" stop-opacity="0"/><stop offset="1" stop-color="#05070c" stop-opacity=".55"/></radialGradient></defs>` +
+    `<radialGradient id="${vg}" cx=".55" cy=".55" r=".75"><stop offset=".55" stop-color="#05070c" stop-opacity="0"/><stop offset="1" stop-color="#05070c" stop-opacity=".4"/></radialGradient></defs>` +
     `<g clip-path="url(#${id})"><image href="${url}" x="${r(P.x)}" y="${r(P.y)}" width="${r(W * k)}" height="${r(Hh * k)}" preserveAspectRatio="none"/>` +
     `<rect x="${r(P.x)}" y="${r(P.y)}" width="${r(P.w)}" height="${r(P.h)}" fill="url(#${vg})"/></g>`;
+}
+
+/** the open ports (mm): hole and frame round a 13 mm cell; the lid hauled up over it */
+const PORT = { w: 19.6, h: 19.2, hole: 16.4, holeH: 16.2 };
+const TIMBER = { face: '#3d3833', lit: '#9eabc0', dark: '#0a0908', lid: '#2a2522', iron: '#14161a' };
+/** every Guns cell and «Залп дан» sits in an open port of the Pearl, clearly larger than the cell: a dark ring round the
+ *  cell, the tarred frame round that, the lid hauled up above (neighbouring cells share one opening — the cells' pitch
+ *  is less than a port) */
+function pearlPorts(g: Geo): string {
+  const guns = g.rows.find(rw => rw.key === 'guns')!, vol = g.slots.filter(s => s.kind === 'volley'), R = rng(5);
+  // past «Залп дан» the row goes on along the side at a wider pitch, the guns run out (no cell in them)
+  const P = g.zones.picture, extra: Rect[] = [], v = vol[vol.length - 1], pitchB = 36.5;
+  for (let x = v.x + v.w / 2 + pitchB; x + PORT.w / 2 < P.x + P.w - 1; x += pitchB) extra.push({ x: x - v.w / 2, y: v.y, w: v.w, h: v.h });
+  const cs: Rect[] = [...guns.cells, ...vol, ...extra], cy = guns.cy, frames: string[] = [], holes: string[] = [], lids: string[] = [], lit: string[] = [];
+  for (const c of cs) {
+    const cx = c.x + c.w / 2, fx = cx - PORT.w / 2, fy = cy - PORT.h / 2, hx = cx - PORT.hole / 2, hy = cy - PORT.holeH / 2;
+    frames.push(`<rect x="${r(fx + 0.5)}" y="${r(fy + 0.7)}" width="${PORT.w}" height="${PORT.h}" rx=".9" fill="#000" fill-opacity=".5"/><rect x="${r(fx)}" y="${r(fy)}" width="${PORT.w}" height="${PORT.h}" rx=".9" fill="${TIMBER.face}" stroke="${TIMBER.dark}" stroke-width=".35"/>`);
+    lit.push(`M${r(fx + 0.6)} ${r(fy + 0.45)}H${r(fx + PORT.w - 0.6)}M${r(fx + 0.45)} ${r(fy + 0.8)}V${r(fy + PORT.h - 0.8)}`);
+    holes.push(`<rect x="${r(hx)}" y="${r(hy)}" width="${PORT.hole}" height="${PORT.holeH}" rx=".7" fill="#040506"/>`);
+    // a gun run out in the ports with no cell: the muzzle's swell, the bore, a moonlit rim
+    if (extra.includes(c)) holes.push(`<circle cx="${r(cx)}" cy="${r(cy + 1)}" r="4.6" fill="#1b1d21" stroke="#000" stroke-width=".4"/><circle cx="${r(cx)}" cy="${r(cy + 1)}" r="2.1" fill="#020203"/><path d="M${r(cx - 3.6)} ${r(cy - 1.2)}a4.2 4.2 0 0 1 3.4 -2.6" fill="none" stroke="${TIMBER.lit}" stroke-width=".45" stroke-linecap="round" stroke-opacity=".8"/>`);
+    // the lid: its inner face up, a little askew, its lit edge, the lanyard to the bulwark
+    const lw = Math.min(PORT.hole, 13.8), up = 6.2 + R() * 1.4, lean = (R() - 0.5) * 1.6, x0 = cx - lw / 2, x1 = cx + lw / 2, y0 = fy + 0.2;
+    lids.push(`<path d="M${r(x0)} ${r(y0)}L${r(x0 + lean + 0.5)} ${r(y0 - up)}H${r(x1 + lean - 0.5)}L${r(x1)} ${r(y0)}Z" fill="${TIMBER.lid}" stroke="${TIMBER.dark}" stroke-width=".35"/>` +
+      `<path d="M${r(x0 + lean + 0.7)} ${r(y0 - up + 0.35)}H${r(x1 + lean - 0.7)}" stroke="${TIMBER.lit}" stroke-width=".35" stroke-opacity=".75"/>` +
+      `<path d="M${r(x0 + lean + 2)} ${r(y0 - up)}l-.6 -3M${r(x1 + lean - 2)} ${r(y0 - up)}l.6 -3" stroke="${ROPE.dark}" stroke-width=".3"/>` +
+      [x0 + 2.4, x1 - 2.4].map(hx2 => `<rect x="${r(hx2 - 0.5)}" y="${r(y0 - 1.6)}" width="1" height="2.2" fill="${TIMBER.iron}"/>`).join(''));
+  }
+  return frames.join('') + `<path d="${lit.join('')}" stroke="${TIMBER.lit}" stroke-width=".3" stroke-opacity=".55" fill="none"/>` + holes.join('') + lids.join('');
+}
+/** the ship between the Fires and the Guns (mm, over the picture): the cap rail along the foot of the Crew cells, the main
+ *  channel under it with its deadeyes, the shrouds going up to the mast, the chain plates down the side */
+function pearlRigging(g: Geo): string {
+  const P = g.zones.picture, crew = g.rows.find(rw => rw.key === 'crew')!, rail = crew.cells[0].y + crew.cells[0].h, out: string[] = [];
+  const x0 = crew.cells[crew.cells.length - 1].x + 2, x1 = P.x + P.w;
+  // the cap rail and the sheer strake under it
+  out.push(`<rect x="${r(x0)}" y="${r(rail - 1.4)}" width="${r(x1 - x0)}" height="2.6" fill="${TIMBER.face}"/><path d="M${r(x0)} ${r(rail - 1.2)}H${r(x1)}" stroke="${TIMBER.lit}" stroke-width=".45" stroke-opacity=".8"/><path d="M${r(x0)} ${r(rail + 1.3)}H${r(x1)}" stroke="${TIMBER.dark}" stroke-width=".6"/>`);
+  out.push(`<path d="M${r(x0)} ${r(rail + 4.6)}H${r(x1)}M${r(x0)} ${r(rail + 9)}H${r(x1)}" stroke="${TIMBER.lit}" stroke-width=".25" stroke-opacity=".35"/>`);
+  // stanchions of the open rail above the cap (the Pearl's waist): short posts and a hand rail
+  for (let x = x0 + 3; x < x1; x += 7.5) out.push(`<rect x="${r(x - 0.45)}" y="${r(rail - 6.8)}" width=".9" height="5.6" fill="${TIMBER.face}"/><path d="M${r(x - 0.3)} ${r(rail - 6.6)}v5.2" stroke="${TIMBER.lit}" stroke-width=".2" stroke-opacity=".6"/>`);
+  out.push(`<rect x="${r(x0)}" y="${r(rail - 7.6)}" width="${r(x1 - x0)}" height="1.3" fill="${TIMBER.face}"/><path d="M${r(x0)} ${r(rail - 7.4)}H${r(x1)}" stroke="${TIMBER.lit}" stroke-width=".3" stroke-opacity=".7"/>`);
+  // the main channel: a ledge out from the side under the rail, deadeyes on it, shrouds up, chain plates down
+  const c0 = Math.max(x0 + 8, g.zones.mid.x + 6), c1 = x1 - 4, cy = rail + 3.4, n = Math.max(3, Math.floor((c1 - c0) / 7.2)), mastX = g.zones.mid.x + 40;
+  out.push(`<rect x="${r(c0 - 2)}" y="${r(cy)}" width="${r(c1 - c0 + 4)}" height="2" fill="#000" fill-opacity=".45" transform="translate(.4 .9)"/><rect x="${r(c0 - 2)}" y="${r(cy)}" width="${r(c1 - c0 + 4)}" height="2" fill="${TIMBER.face}" stroke="${TIMBER.dark}" stroke-width=".3"/><path d="M${r(c0 - 1.6)} ${r(cy + 0.3)}H${r(c1 + 1.6)}" stroke="${TIMBER.lit}" stroke-width=".35" stroke-opacity=".8"/>`);
+  for (let i = 0; i < n; i++) {
+    const x = c0 + (c1 - c0) * (i + 0.5) / n, dy = cy - 1.7, dl = cy - 6.2;
+    // the shroud: from the upper deadeye up toward the masthead (out of the picture under the Fires box)
+    out.push(`<path d="M${r(x)} ${r(dl - 1.3)}L${r(x + (mastX - x) * 0.16)} ${r(g.zones.mid.y)}" stroke="#08090b" stroke-width=".75"/><path d="M${r(x - 0.2)} ${r(dl - 1.3)}L${r(x - 0.2 + (mastX - x) * 0.16)} ${r(g.zones.mid.y)}" stroke="${TIMBER.lit}" stroke-width=".18" stroke-opacity=".5"/>`);
+    // the lanyard between the two deadeyes, the deadeyes
+    out.push(`<path d="M${r(x - 0.8)} ${r(dl)}V${r(dy)}M${r(x)} ${r(dl)}V${r(dy)}M${r(x + 0.8)} ${r(dl)}V${r(dy)}" stroke="${ROPE.color}" stroke-width=".25" stroke-opacity=".8"/>`);
+    for (const yy of [dl, dy]) out.push(`<circle cx="${r(x)}" cy="${r(yy)}" r="1.25" fill="#1e1a17" stroke="${TIMBER.dark}" stroke-width=".25"/><circle cx="${r(x - 0.3)}" cy="${r(yy - 0.3)}" r=".75" fill="none" stroke="${TIMBER.lit}" stroke-width=".2" stroke-opacity=".6"/>`);
+    // the chain plate: an iron strap from the channel down the side, bolted
+    out.push(`<path d="M${r(x)} ${r(cy + 2)}L${r(x - 0.4)} ${r(cy + 11.5)}" stroke="${TIMBER.iron}" stroke-width=".7"/><path d="M${r(x + 0.25)} ${r(cy + 2.2)}L${r(x - 0.15)} ${r(cy + 11.3)}" stroke="${TIMBER.lit}" stroke-width=".16" stroke-opacity=".5"/><circle cx="${r(x - 0.4)}" cy="${r(cy + 11.5)}" r=".55" fill="${TIMBER.iron}"/>`);
+  }
+  return out.join('');
 }
 
 // ---- the right column: a worn chart and Jack's compass ----
@@ -165,7 +220,7 @@ async function faceA(g: Geo): Promise<Layers> {
   parts.push(tack(chartBox.x + 3, chartBox.y + chartBox.h - 3.2, `${g.uid}t1`) + tack(chartBox.x + chartBox.w - 13, chartBox.y + chartBox.h - 2.6, `${g.uid}t2`));
   parts.push(jackCompass(c.x + 27, c.y + c.h - 18.5, 11.5, g.uid));
   // the picture (the frame's plates go over it, under the words only)
-  parts.push(await sideArt(g));
+  parts.push(await sideArt(g), pearlRigging(g), pearlPorts(g));
   // a tarred rope round the picture's top and right edge, whipped at the corner and the ends
   const ty = P.y - 0.75, rx = P.x + P.w + 1.05;
   parts.push(cord(`M${r(P.x + 1)} ${r(ty)}H${r(rx)}`, 1.15) + cord(`M${r(rx)} ${r(ty)}V${r(P.y + P.h - 0.4)}`, 1.15));

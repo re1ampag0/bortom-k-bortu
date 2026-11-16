@@ -1,7 +1,7 @@
 // «Месть королевы Анны» — the material of its board: dark red and black, charred wood, wrought brass, firelight.
 // A («у борта»): the Revenge's own side in a close-up at dusk, lit by fire from the right. The scale is set by the gun
-// ports: the kit ports stand exactly under the Guns cell «0» and under «Залп дан» (one pitch of the ports = the distance
-// between them), the port row lies on the Guns row, the cap rail just under the Crew cells (the crew at the bulwark),
+// ports: the scale is one kit pitch from the Guns cell «0» to «Залп дан»; for this picture the kit ports are laid one under
+// every Guns cell and one under «Залп дан», none further along the side; the port row lies on the Guns row, the cap rail just under the Crew cells (the crew at the bulwark),
 // the main course behind the Sails row, the tarred planking under the Hull row; the Fires box sits on the quarterdeck,
 // and the glow of fire comes from it. Every Guns cell is set in a dark port. Round it — charred planks with embers in
 // the cracks, wrought brass corners; in the free foot of the right column Blackbeard's flag is nailed to the wood.
@@ -109,7 +109,16 @@ async function sideArt(g: Geo): Promise<string> {
   const W = 200 + 2 * b, H = 280 + 2 * b, fire = g.boxes[0], [fx, fy] = U(fire.x + fire.w / 2, fire.y + fire.h * 0.75);
   const smoke = fn(g, 'smoke')('bo2rs', L, { x: fx - 40, y: fy + 30, w: 90, h: 150, wind: -0.7, seed: 8, glow: { color: '#ff8a3a', power: 0.55 }, opacity: 0.8 })
     + fn(g, 'smoke')('bo2rs2', L, { x: fx + 30, y: fy + 40, w: 70, h: 120, wind: -0.5, seed: 3, glow: { color: '#ff7a2a', power: 0.5 }, opacity: 0.7 });
-  const ship = K.ship('bo2r' + kind, L, { kind, x: sx, y: sy, scale: s / k, sails: 'full', heel: 0, seed: 11, detail: 'near', lights: true });
+  // the ports of this picture only: one open port right under every Guns cell (0…start) and one under «Залп дан»;
+  // none further along the side (the quarterdeck row off too) — an empty port there would pass for one more cell.
+  // The port under «Залп дан» is the first of a row of two, its second lies past the picture's right edge (clipped)
+  type Row = { h: number; n: number; x0: number; x1: number; w: number; off?: number };
+  const spec = K.SHIP_SPECS[kind] as unknown as { ports: Row[] }, saved = spec.ports, pw = 14 / s;
+  const cx = (mm: number) => X0 + (mm - c0.cx) / s, cl = guns.cells[guns.cells.length - 1];
+  spec.ports = [{ ...saved[0], n: guns.cells.length, x0: X0, x1: cx(cl.cx), w: pw, off: 0 }, { ...saved[0], n: 2, x0: cx(vol.x + vol.w / 2), x1: cx(P.x + P.w + 20), w: pw, off: 0 }, { ...saved[1], n: 0 }];
+  let ship: string;
+  try { ship = K.ship('bo2r' + kind, L, { kind, x: sx, y: sy, scale: s / k, sails: 'full', heel: 0, seed: 11, detail: 'near', lights: true }); }
+  finally { spec.ports = saved; }
   const mf = g.zones.midFree, [lx, ly] = mf ? U(mf.x + mf.w - 12, mf.y + 36) : [0, 0];
   const lantern = mf ? fn(g, 'lantern')('bo2rl', L, { x: lx, y: ly, s: 0.95, lit: true, hang: 26, seed: 5 }) + fn(g, 'localGlow')('bo2rlg', L, { x: lx, y: ly - 12, color: '#ffb24a', power: 0.6, radius: 45 } as unknown as Record<string, unknown>) : '';
   const glow = fn(g, 'localGlow')('bo2rg', L, { x: fx, y: fy + 10, color: '#ff8a3a', power: 0.55, radius: 150 } as unknown as Record<string, unknown>);
@@ -137,6 +146,10 @@ function embers(g: Geo): string {
   }
   return out;
 }
+
+/** a hole in the main course right of «нет Перестроения» lets the sky through as a pale disk that reads like an icon:
+ *  the lit canvas round it is painted over it (page mm and colour of this layout) */
+const holeShade = () => `<defs><radialGradient id="bo2rhole"><stop offset=".55" stop-color="#ae8446"/><stop offset="1" stop-color="#ae8446" stop-opacity="0"/></radialGradient></defs><circle cx="36.9" cy="56.8" r="3.4" fill="url(#bo2rhole)"/>`;
 
 /** the dark ports the Guns cells are set in (the frame lays its plates under the words; the side stays open round them) */
 function rowsLayer(g: Geo): string {
@@ -340,7 +353,7 @@ export const material: ShipMaterial = {
     const F = { x: 11.2, y: 11.2, w: g.page.w - 22.4, h: 197 - 11.2 }, col = g.zones.col, u = g.uid;
     const glowB = `<defs><radialGradient id="${u}gb" cx=".5" cy="1" r=".75"><stop offset="0" stop-color="${C.glow}" stop-opacity=".4"/><stop offset="1" stop-color="${C.glow}" stop-opacity="0"/></radialGradient></defs><rect x="${F.x}" y="120" width="${F.w}" height="77" fill="url(#${u}gb)"/>`;
     const under = sheet(g, { band: C.band, line: C.hair, ground: C.ground, w: 1.4 }) + charred(F, g.ship.hull * 7 + 3, `${u}cw`) + glowB +
-      flag(col.x + col.w / 2, col.y + col.h - 22, 62, `${u}fl`) + await sideArt(g) + rowsLayer(g);
+      flag(col.x + col.w / 2, col.y + col.h - 22, 62, `${u}fl`) + await sideArt(g) + holeShade() + rowsLayer(g);
     const W = g.page.w, H = g.page.h, cg = `${u}cg`;
     const over = `<defs>${brassGrad(cg)}</defs>` + corner(8.6, 8.6, 1, 1, cg) + corner(W - 8.6, 8.6, -1, 1, cg) + corner(8.6, H - 8.6, 1, -1, cg) + corner(W - 8.6, H - 8.6, -1, -1, cg);
     const s = g.scope;

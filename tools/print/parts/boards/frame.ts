@@ -152,8 +152,8 @@ export function layout(ship: Ship, concept: Concept, pal: Pal, uid: string): Omi
   for (const d of defs) {
     const x0 = tz.x, cells: CellGeo[] = d.cells.map((n, i) => { const x = x0 + i * BOARD.pitch, yy = y + ROW.cellTop; return { n, x, y: yy, w: BOARD.cell, h: BOARD.cell, cx: x + BOARD.cell / 2, cy: yy + BOARD.cell / 2, start: n === d.start }; });
     let x1 = cells[cells.length - 1].x + BOARD.cell;
-    // the two Volley cells of the Dutchman stand apart: «Залп · 1 Порох» and «по Сердцу» over them must not touch
-    if (d.key === 'guns') for (let i = 0; i < volleyCount(ship); i++) { const sx = x1 + (i ? 7 : 5); slots.push({ kind: i ? 'volley2' : 'volley', x: sx, y: y + ROW.cellTop, w: BOARD.cell, h: BOARD.cell }); x1 = sx + BOARD.cell; }
+    // the two Volley cells of the Dutchman stand apart: «Залп дан · 1 Порох» and «по Сердцу» over them must not touch
+    if (d.key === 'guns') for (let i = 0; i < volleyCount(ship); i++) { const sx = x1 + (i ? 10 : 5); slots.push({ kind: i ? 'volley2' : 'volley', x: sx, y: y + ROW.cellTop, w: BOARD.cell, h: BOARD.cell }); x1 = sx + BOARD.cell; }
     const under = ROW.under;
     // the band holds the label line, the notes and the start label too: up to the middle column (the Hull: its own row)
     const bandR = d.key === 'hull' ? x1 : MIDX - 2.5;
@@ -266,8 +266,15 @@ function rowParts(row: RowGeo, pal: Pal): RowOut {
   const noteO: TO = { color: pal.soft }, noteX = nameEnd + 2.5, noteW = widthOf(T.note, 9, noteO), startLeft = anchor === 'end' ? sx - sw : sx;
   // the Souls: how they are spent, on the label line after «старт»
   if (souls && T.spend) put(line, sx + sw + 4, row.labelY, T.spend, 8, { w: 700, color: pal.soft });
+  // a note that does not fit between the name and «старт…» goes on the lower caption line (after the threshold under the
+  // first cell), never to the right of the last cell: there it would read as the caption of the cell next to it
+  const c0 = row.cells[0], underY = c0.y + BOARD.cell + 3.1, zeroText = row.key === 'hull' ? T.flip : souls ? undefined : T.zero;
   if (T.note && noteX + noteW < startLeft - 2.5) put(line, noteX, row.labelY, T.note, 9, noteO);
-  else if (T.note) { const nx = row.x1 + 3; if (nx + noteW < MIDX - 1) put(chips, nx, row.cy + pt(9) * 0.33, T.note, 9, noteO); }
+  else if (T.note) {
+    const zx = c0.x + 0.3 + (zeroText ? widthOf(zeroText, 8, { w: 800 }) + 3 : 0), right = row.key === 'hull' ? Z.tracks.x + Z.tracks.w : MIDX - 2;
+    if (zx + noteW < right) put(chips, zx, underY, T.note, 9, noteO);
+    else console.warn(`warning: board row ${row.key}: the note «${T.note}» does not fit`);
+  }
   for (const c of row.cells) {
     const sink = row.key === 'hull' && c.n === 0, floor = !souls && c === row.cells[0];
     const bg = sink ? SINK.fill : souls && c.n > row.start ? lighten(pal.ship, 0.9 - 0.06 * (c.n - row.start - 1)) : pal.cell;
@@ -277,7 +284,6 @@ function rowParts(row: RowGeo, pal: Pal): RowOut {
     if (sink && T.zero) out.push(text(c.cx, c.cy + 1.2, T.zero, 8, { w: 800, color: SINK.text, anchor: 'middle' }));
   }
   // the threshold under the lowest cell (Crew: «не ниже 1» under its first cell); the Hull: what to do at 0
-  const c0 = row.cells[0], underY = c0.y + BOARD.cell + 3.1;
   if (!souls && row.key !== 'hull' && T.zero) put(chips, c0.x + 0.3, underY, T.zero, 8, { w: 800, color: pal.deep });
   if (row.key === 'hull' && T.flip) put(chips, c0.x + 0.3, underY, T.flip, 8, { w: 800, color: SINK.text });
   if (souls) {
@@ -289,7 +295,7 @@ function rowParts(row: RowGeo, pal: Pal): RowOut {
   return { svg: out.join(''), plates: [...lp, ...nums, ...chips.map(b => grow(b, 1, 0.45))], lineEnd: Math.max(...line.map(b => b.x + b.w)) };
 }
 
-/** «Залп · 1 Порох» with the Powder coin of the cards ({coin}) between the number and the word */
+/** «Залп дан · 1 Порох» with the Powder coin of the cards ({coin}) between the number and the word */
 const COIN_D = 3.1;
 function volleyCaption(cx: number, y: number, s: string, coin: string, color: string): { svg: string; box: Rect } {
   const o: TO = { w: 800, color }, size = 8, [a, b = ''] = s.split('{coin}').map(x => x.trim());
@@ -441,6 +447,8 @@ export function rulesLine(prefix: string): string {
   return l.slice(2);
 }
 const W = { m: 12, text: 104, side: 72 };
+/** the reference marks of rules.md («(Q6)») are for the rule book only: the board keeps the words */
+const noRef = (s: string) => s.replace(/\s*\((?:Q\d+(?:,\s*)?)+\)/g, '');
 /** «Сердце Дейви Джонса»: the data's own sentence about the sunk Endeavour */
 const jonesLine = (ship: Ship) => ship.abilities.map(a => a.text.match(/Если «Индевор» утонул[^<]*?до старта\./)?.[0]).find(Boolean);
 export function wreckLayout(ship: Ship, pal: Pal, uid: string): Omit<WreckGeo, 'kit' | 'art'> {
@@ -461,8 +469,8 @@ export async function wreckPage(ctx: Ctx, ship: Ship, mat: ShipMaterial): Promis
   const jones = jonesLine(ship);
   const side = [`<div class="bo2-al" style="top:${r(w.slots[0].y - z.side.y)}mm">${esc(TXT.wreck.ally[0])}</div>`, `<div class="bo2-al" style="top:${r(w.slots[1].y - z.side.y)}mm">${esc(TXT.wreck.ally[1])}</div>`].join('');
   const html = `<div class="bo2-abs bo2-wt" style="left:${r(z.title.x + 21)}mm;top:${r(z.title.y + 1)}mm"><div class="bo2-wn" style="color:${pal.deep}">${esc(TXT.wreck.title)}</div><div class="bo2-cap">${esc(ship.name)} · ${esc(ship.captain)}</div></div>
-<div class="bo2-abs bo2-wtext bo2-txt" style="${at(z.text)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.section)}</div>${sec.p.map(p => `<p>${md(p)}</p>`).join('')}<ul>${sec.li.map(l => `<li>${md(l)}</li>`).join('')}</ul><p class="bo2-wq">${md(rulesLine(TXT.wreck.captainLine)).replace(/ \((Q\d+)/g, '\u00a0($1')}</p></div>
-<div class="bo2-abs bo2-wside bo2-txt" style="${at(z.side)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.free)}</div>${side}<div class="bo2-wl" style="top:${r(w.slots[1].y + 21 - z.side.y)}mm"><p>${esc(TXT.wreck.clear[ship.code] ?? TXT.wreck.clear._)}</p>${jones ? `<p><b>${esc(TXT.wreck.jones)}</b> ${esc(jones)}</p>` : ''}</div></div>`;
+<div class="bo2-abs bo2-wtext bo2-txt" style="${at(z.text)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.section)}</div>${sec.p.map(p => `<p>${md(noRef(p))}</p>`).join('')}<ul>${sec.li.map(l => `<li>${md(noRef(l))}</li>`).join('')}</ul><p class="bo2-wq">${md(noRef(rulesLine(TXT.wreck.captainLine)))}</p></div>
+<div class="bo2-abs bo2-wside bo2-txt" style="${at(z.side)}"><div class="bo2-h" style="color:${pal.deep}">${esc(TXT.wreck.free)}</div>${side}<div class="bo2-wl" style="top:${r(w.slots[1].y + 21 - z.side.y)}mm"><p>${esc(TXT.wreck.clear[ship.code] ?? TXT.wreck.clear._)}</p>${jones ? `<p><b>${esc(TXT.wreck.jones)}</b> ${esc(noRef(jones))}</p>` : ''}</div></div>`;
   return { html: `<div class="bo2 bo2-${w.key}"><svg class="bo2-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html}</div>`, css: L.css ?? '' };
 }
 
