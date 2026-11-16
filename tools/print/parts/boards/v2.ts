@@ -23,7 +23,7 @@ import { emblemSvg, letterBox, ribbonGeo, sideOf, sideRibbonSvg } from './emblem
 export type Counters = 'board' | 'strip';
 const require = createRequire(import.meta.url);
 const K = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
-  ship(u: string, L: unknown, o: Record<string, unknown>): string; makeLight(l: unknown, cam: { horizon: number }): unknown;
+  ship(u: string, L: unknown, o: Record<string, unknown>): string; makeLight(l: unknown, cam: { horizon: number }): unknown; shipSilhouette(kind: string, o: Record<string, unknown>): string;
   shipBox(kind: string, o: { x: number; y: number; scale: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
 };
 
@@ -135,12 +135,12 @@ const LOOKS: Record<ShipKey, Look> = {
 // ---- measured words ----
 const W = (s: string, size: number, o: TO = {}) => widthOf(s, size, o);
 const LABEL: TO = { font: 'Alegreya SC', w: 800, ls: '.03em' }, NOTE_O: TO = { font: 'Alegreya', italic: true, w: 500 }, NUM: TO = { w: 800 }, CAP_O: TO = { font: 'Alegreya', italic: true, w: 500 };
-const PTR: TO = { w: 800 };
+const PTR: TO = { font: 'Alegreya SC', w: 800, ls: '.03em' };
 const SINK_O: TO = { font: 'Alegreya', italic: true, w: 500, ls: '.02em' }; // italic 500: the heaviest embedded italic (800 would be synthesised → Type 3)
 
 // ---- the layout ----
 interface Cell { n: number; x: number; y: number; start: boolean }
-interface Row { key: TrackKey; x: number; y: number; w: number; cells: Cell[]; start: number; volley: { x: number; y: number }[] }
+interface Row { key: TrackKey; x: number; y: number; w: number; h: number; cells: Cell[]; start: number; volley: { x: number; y: number }[] }
 interface Plan {
   rows: Row[]; header: Rect; effects: Rect; plans: Rect | null; fires: Rect; dutch: Rect | null; cards: Rect | null; reactions: Rect | null; log: Rect;
   /** the free part of the middle where the chart shows and the ship sails (null: no room) */
@@ -163,18 +163,25 @@ const NAME_O: TO = { font: 'Alegreya', w: 800, ls: '.01em' }, CAPT_O: TO = { fon
 function headerW(ship: Ship): number {
   return HEAD.col + Math.max(W(ship.name, 24, NAME_O), W(ship.captain, 10, CAPT_O), W(ship.motto, 8.5, MOTTO_O)) + 4.5;
 }
-const ptrW = (s: string) => 13.2 + W(s, 8.5, PTR) + PAD;
+/** a pointer slip: the arrow's axis, the medallion's centre, the words' start (from the slip's left edge), the words' size */
+const PTRG = { arrow: 3.7, medal: 10, text: 14.6, size: 8.5 };
+const ptrW = (s: string) => PTRG.text + W(s, PTRG.size, PTR) + PAD + 0.4;
 /** the Fires plate: the title's baseline, the slots' top, the height */
 const FIRE = { title: 5.2, slot: 6.8, h: 6.8 + BOARD.fireSlot + 1.3 };
 /** the Dutchman's dive plate (one nest for the two-sided token «Под водой» / «Всплыл»), in the right column under the nest */
-const DIVE_H = 60;
+const DIVE_H = 58;
+/** the Dutchman's Souls (drawn as flasks on a shelf, soulsRowSvg), from the top of their case: the numbers' baseline, the
+ *  cork's top, the cell's top (the flask's shoulders above it), the flask's foot on the shelf, the caption's baseline, the
+ *  height; the pitch of the flasks, the glass beside a cell */
+const SOUL = { num: 11.6, cork: 12.7, cell: 21.6, foot: 36, cap: 40.6, h: 43.2, pitch: 16.6, side: 1.2 };
 function layoutV2(ship: Ship, counters: Counters): Plan {
   const dutchShip = ship.souls != null, pitch = dutchShip ? 13.6 : 14, defs = trackDefs(ship);
   const short = defs.filter(d => d.key !== 'hull' && d.key !== 'souls'), hull = defs.find(d => d.key === 'hull')!, souls = defs.find(d => d.key === 'souls');
   const mk = (d: { key: TrackKey; cells: number[]; start: number }, y: number, x0 = X0): Row => {
-    const cells = d.cells.map((n, i) => ({ n, x: x0 + PAD + i * pitch, y: y + ROW.cell, start: n === d.start }));
+    const sl = d.key === 'souls', side = sl ? SOUL.side : 0;
+    const cells = d.cells.map((n, i) => ({ n, x: x0 + PAD + side + i * (sl ? SOUL.pitch : pitch), y: y + (sl ? SOUL.cell : ROW.cell), start: n === d.start }));
     const volley: { x: number; y: number }[] = [];
-    let x1 = cells[cells.length - 1].x + C;
+    let x1 = cells[cells.length - 1].x + C + side;
     if (d.key === 'guns') for (let i = 0; i < (dutchShip ? 2 : 1); i++) {
       const vx = x1 + (i ? 9 : 6); volley.push({ x: vx, y: y + ROW.cell });
       // the caption over a Volley cell may stand wider than the cell: the slip takes it in
@@ -183,13 +190,14 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
     const T = TXT.tracks[d.key], label = PAD + 9.6 + W(T.name, LABEL_PT, LABEL) + (T.note ? 2.4 + W(T.note, 9, NOTE_O) : 0);
     let cap = 0;
     if (d.key === 'souls') cap = PAD + (T.kraken ? W(fill(T.kraken, { n: 3 }), 8, NUM) : 0) + 4 + (T.max ? W(fill(T.max, { n: d.cells[d.cells.length - 1] }), 8, CAP_O) : 0) + PAD;
-    return { key: d.key, x: x0, y, w: Math.max(x1 - x0 + PAD, label + PAD, cap), cells, start: d.start, volley };
+    return { key: d.key, x: x0, y, w: Math.max(x1 - x0 + PAD, label + PAD, cap), h: sl ? SOUL.h : ROW.h, cells, start: d.start, volley };
   };
   const rows: Row[] = [];
   short.forEach((d, i) => rows.push(mk(d, TOP + i * (ROW.h + ROW_GAP))));
   const hullRow = mk(hull, BOTTOM - ROW.h); rows.push(hullRow);
   // the Dutchman's Souls: at the very bottom, right of the Hull (drawn as flasks — not to be taken for the other tracks)
-  if (souls) rows.push(mk(souls, BOTTOM - ROW.h, hullRow.x + hullRow.w + 2 * GAP));
+  if (souls) rows.push(mk(souls, BOTTOM - SOUL.h, hullRow.x + hullRow.w + 2 * GAP));
+  const soulsRow = rows.find(rw => rw.key === 'souls');
   const fires = { x: X0, y: 0, w: 3 * BOARD.fireSlot + 2 * 3 + 2 * PAD, h: FIRE.h };
   const shortEnd = TOP + short.length * (ROW.h + ROW_GAP), firesLeft = shortEnd + fires.h <= hullRow.y - GAP;
   if (firesLeft) fires.y = shortEnd;
@@ -208,11 +216,15 @@ function layoutV2(ship: Ship, counters: Counters): Plan {
   const log: Rect = dutchShip ? { ...LOG_DUTCH, y: Math.max(TOP, y), h: lt.h } : { ...LOG, h: lt.h };
   if (dutchShip) y = log.y + log.h + GAP;
   const dutch: Rect | null = dutchShip ? { x: LOG.x, y: NEST.y + NEST.h + GAP, w: LOG.w, h: DIVE_H } : null;
-  const cards = counters === 'board' ? { x: MID_R - (2 * PAD + 6 * 14 + C), y: midBottom - 26.5, w: 2 * PAD + 6 * 14 + C, h: 26.5 } : null;
+  // the Souls' case stands taller than the Hull: the rulers (counters on the board) keep above it
+  const cardsBottom = soulsRow ? Math.min(midBottom, soulsRow.y - GAP) : midBottom;
+  const cards = counters === 'board' ? { x: MID_R - (2 * PAD + 6 * 14 + C), y: cardsBottom - 26.5, w: 2 * PAD + 6 * 14 + C, h: 26.5 } : null;
   const reW = 2 * PAD + 7.4 + Math.max(...TXT.reactions.title.split(' ').map(t => W(t, 11, LABEL))) + 3 + 3 * 14 + C;
   const reactions = counters === 'board' ? { x: MID_R - reW, y: cards!.y - GAP - 20.5, w: reW, h: 20.5 } : null;
   const winBottom = reactions ? reactions.y - GAP : midBottom;
-  const window = winBottom - y >= 30 ? { x: mx, y, w: mw, h: winBottom - y } : null;
+  // the ship's window ends left of the Souls' case where the case rises into it
+  const winR = soulsRow && soulsRow.y < winBottom ? Math.min(mx + mw, soulsRow.x - GAP) : mx + mw;
+  const window = winBottom - y >= 30 ? { x: mx, y, w: winR - mx, h: winBottom - y } : null;
   return { rows, header, effects, plans, fires, dutch, cards, reactions, window, log };
 }
 
@@ -268,7 +280,8 @@ function star(cx: number, cy: number, R: number, color: string): string {
 /** a row: the slip, the icon and the name (and its note), the numbers over the cells (the start one after a star), the
  *  cells, the caption line */
 function rowSvg(rw: Row, id: string, L: Look, pal: Pal, ship: Ship): string {
-  const T = TXT.tracks[rw.key], pid = `row-${rw.key}`, out: string[] = [], souls = rw.key === 'souls';
+  if (rw.key === 'souls') return soulsRowSvg(rw, id, L, pal);
+  const T = TXT.tracks[rw.key], pid = `row-${rw.key}`, out: string[] = [];
   out.push(slip(pid, { x: rw.x, y: rw.y, w: rw.w, h: ROW.h }, id, L));
   out.push(ico(ICON_TRACK[rw.key], rw.x + PAD + 3.4, rw.y + 4.4, 6.4, L.tone, `${pid}-icon`));
   const nx = rw.x + PAD + 9.6;
@@ -279,7 +292,7 @@ function rowSvg(rw: Row, id: string, L: Look, pal: Pal, ship: Ship): string {
     out.push(text(cx, rw.y + ROW.num, String(cl.n), 11, { ...NUM, color: cl.start ? pal.deep : L.ink, anchor: 'middle', deco: under69(cl.n), in: pid }));
     if (cl.start) out.push(star(cx - W(String(cl.n), 11, NUM) / 2 - 2.1, rw.y + ROW.num - 1.35, 1.35, pal.deep));
     const sink = rw.key === 'hull' && cl.n === 0;
-    out.push(sink ? sinkSvg(cid, cl.x, cl.y, id, L) : cellSvg(cid, cl.x, cl.y, id, L, { start: cl.start, startColor: pal.deep, tint: souls && cl.n > rw.start ? mix(L.cell, pal.ship, 0.08 + 0.05 * (cl.n - rw.start)) : undefined }));
+    out.push(sink ? sinkSvg(cid, cl.x, cl.y, id, L) : cellSvg(cid, cl.x, cl.y, id, L, { start: cl.start, startColor: pal.deep }));
   }
   // the Volley cells: «Залп дан» over the first (its cost, «1 Порох», in words under it), «по Сердцу» over the second; the
   // engraved volley (smoke and flash from the bore) faint inside
@@ -289,21 +302,82 @@ function rowSvg(rw: Row, id: string, L: Look, pal: Pal, ship: Ship): string {
     if (i === 0) out.push(text(cx, rw.y + ROW.cap, volleyCost(ship), 8, { ...CAP_O, color: L.soft, anchor: 'middle', in: pid }));
     out.push(cellSvg(`${pid}-v${i}`, v.x, v.y, id, L) + `<g opacity=".42">${icon('volley', cx, v.y + C / 2, 9.4, L.tone)}</g>`);
   });
-  // the caption line: the threshold under the lowest cell; the Souls: «Кракен» under 3, «максимум» under the last
-  const capY = rw.y + ROW.cap, first = rw.cells[0], last = rw.cells[rw.cells.length - 1], zero = rw.key === 'hull' ? T.flip : souls ? undefined : T.zero;
+  // the caption line: the threshold under the lowest cell
+  const capY = rw.y + ROW.cap, first = rw.cells[0], zero = rw.key === 'hull' ? T.flip : T.zero;
   if (rw.key === 'hull') {
     // «тонет» in a red italic under the sinking stern, then what to do
     const sw = W(T.zero ?? '', 8.3, SINK_O);
     out.push(text(first.x + 0.3, capY, T.zero ?? '', 8.3, { ...SINK_O, color: '#8a2414', in: pid }));
     out.push(text(first.x + 0.3 + sw + 1.6, capY, `— ${T.flip ?? ''}`, 8, { w: 800, color: '#7e2614', in: pid }));
   } else if (zero) out.push(text(first.x + 0.3, capY, zero, 8, { w: 800, color: pal.deep, in: pid }));
-  if (souls) {
-    const k = rw.cells.find(c => c.n === 3);
-    if (k && T.kraken) out.push(text(k.x + C / 2, capY, fill(T.kraken, { n: 3 }), 8, { w: 800, color: pal.deep, anchor: 'middle', in: pid }));
-    if (T.max) out.push(text(last.x + C, capY, fill(T.max, { n: last.n }), 8, { ...CAP_O, color: L.soft, anchor: 'end', in: pid }));
-  }
   // the key of the star, once: on the Hull's caption line, right
   if (rw.key === 'hull') { const s = rw.cells.find(c => c.start)!, wk = W(TXT.start, 8, CAP_O); out.push(star(s.x + C - wk - 2.2, capY - 1.1, 1.25, pal.deep) + text(s.x + C, capY, TXT.start, 8, { ...CAP_O, color: L.soft, anchor: 'end', in: pid })); }
+  return out.join('');
+}
+
+/** the Souls' inks on the dark glass: the name, the numbers, the start, the captions */
+const SOUL_INK = { title: '#e2f5ee', num: '#f2ead0', start: '#8af0d8', cap: '#d6ece4', soft: '#a8d2c6', glass: '#9fd8c8', glow: '#6ff2d6' };
+/** the Dutchman's Souls (boards v5, item 7) — not a slip like the other tracks but a cabinet of dark glass in a brass case,
+ *  a brass shelf at its foot; every cell stands in a stoppered square flask (a case bottle): the cork and the neck above
+ *  the cell, the glass round it, the souls' turquoise glow and their motes rising with the count to the maximum. The cell
+ *  itself stays a 13 mm brass-rimmed well with a clean light floor (the 11 mm marker lies in it), its number over the cork. */
+function soulsRowSvg(rw: Row, id: string, L: Look, pal: Pal): string {
+  const T = TXT.tracks.souls, pid = 'row-souls', out: string[] = [], { x, y, w, h } = rw, [bl, , bd] = L.brass;
+  const last = rw.cells[rw.cells.length - 1], max = last.n, bw = C + 2 * SOUL.side, u = `${id}so`;
+  // the case: a shadow, the brass, the dark glass panel with an engraved rule; two faint reflections across the glass
+  const px = x + 1.1, py = y + 1.1, pw = w - 2.2, ph = h - 2.2;
+  out.push(`<defs><linearGradient id="${u}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#24443e"/><stop offset=".55" stop-color="#16302b"/><stop offset="1" stop-color="#0c1c19"/></linearGradient>` +
+    `<clipPath id="${u}c"><rect x="${r(px)}" y="${r(py)}" width="${r(pw)}" height="${r(ph)}" rx="1"/></clipPath>` +
+    `<linearGradient id="${u}cork" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a6236"/><stop offset=".45" stop-color="#c49a62"/><stop offset="1" stop-color="#5e3f1e"/></linearGradient>` +
+    rw.cells.map(cl => { const k = cl.n / max, core = mix('#2b4b46', SOUL_INK.glow, 0.12 + 0.78 * k), edge = mix('#132a26', '#1f7464', 0.15 + 0.85 * k);
+      return `<radialGradient id="${u}f${cl.n}" cx=".5" cy=".42" r=".62"><stop offset="0" stop-color="${core}"/><stop offset=".6" stop-color="${mix(core, edge, 0.55)}"/><stop offset="1" stop-color="${edge}"/></radialGradient>` +
+        `<radialGradient id="${u}h${cl.n}"><stop offset="0" stop-color="${SOUL_INK.glow}" stop-opacity="${r(0.5 * k * k)}"/><stop offset=".5" stop-color="${SOUL_INK.glow}" stop-opacity="${r(0.18 * k * k)}"/><stop offset="1" stop-color="${SOUL_INK.glow}" stop-opacity="0"/></radialGradient>`; }).join('') + `</defs>`);
+  out.push(`<rect x="${r(x + 0.5)}" y="${r(y + 0.7)}" width="${r(w)}" height="${r(h)}" rx="1.8" fill="#1a0e04" fill-opacity=".35"/>`);
+  out.push(`<rect data-plate="${pid}" x="${r(x)}" y="${r(y)}" width="${r(w)}" height="${r(h)}" rx="1.8" fill="url(#${id}brh)" stroke="${bd}" stroke-width=".3"/>`);
+  out.push(`<rect x="${r(px)}" y="${r(py)}" width="${r(pw)}" height="${r(ph)}" rx="1" fill="url(#${u}g)" stroke="${bd}" stroke-width=".25"/>`);
+  out.push(`<g clip-path="url(#${u}c)">` +
+    `<path d="M${r(px + pw * 0.18)} ${r(py)}h7.5L${r(px + pw * 0.18 - 14)} ${r(py + ph)}h-7.5Z" fill="#cff5ea" fill-opacity=".05"/>` +
+    `<path d="M${r(px + pw * 0.66)} ${r(py)}h3.2L${r(px + pw * 0.66 - 15.5)} ${r(py + ph)}h-3.2Z" fill="#cff5ea" fill-opacity=".045"/>` +
+    // the glow of each flask on the glass behind it, stronger as the souls gather
+    rw.cells.map(cl => cl.n ? `<circle cx="${r(cl.x + C / 2)}" cy="${r(y + SOUL.cell + 2.5)}" r="${r(8.5 + 3 * cl.n / max)}" fill="url(#${u}h${cl.n})"/>` : '').join('') + `</g>`);
+  out.push(`<rect x="${r(px + 0.8)}" y="${r(py + 0.8)}" width="${r(pw - 1.6)}" height="${r(ph - 1.6)}" rx=".6" fill="none" stroke="${bl}" stroke-opacity=".4" stroke-width=".15"/>`);
+  // the shelf the flasks stand on: a brass ledge with a lit top edge
+  const sy = y + SOUL.foot;
+  out.push(`<rect x="${r(px)}" y="${r(sy)}" width="${r(pw)}" height="1.3" fill="url(#${id}br)"/><path d="M${r(px)} ${r(sy + 0.12)}H${r(px + pw)}" stroke="#fff3c8" stroke-opacity=".6" stroke-width=".18"/><path d="M${r(px)} ${r(sy + 1.35)}H${r(px + pw)}" stroke="#050b0a" stroke-opacity=".6" stroke-width=".25"/>`);
+  // the name in a brass medallion's company, as on the other tracks
+  const mx = x + PAD + 2.9, my = y + 4.6;
+  out.push(`<circle cx="${r(mx + 0.3)}" cy="${r(my + 0.4)}" r="3" fill="#000" fill-opacity=".35"/><circle data-plate="${pid}-icon" cx="${r(mx)}" cy="${r(my)}" r="3" fill="url(#${id}brh)" stroke="${bd}" stroke-width=".22"/><circle cx="${r(mx)}" cy="${r(my)}" r="2.62" fill="none" stroke="${bd}" stroke-width=".3" stroke-dasharray=".01 .55" stroke-linecap="round"/><circle cx="${r(mx)}" cy="${r(my)}" r="2.3" fill="#e6f4ee" stroke="${bd}" stroke-width=".18"/>${icon('souls', mx, my, 3.8, TONE.verdigris)}`);
+  out.push(text(x + PAD + 7.6, y + ROW.label, T.name, LABEL_PT, { ...LABEL, color: SOUL_INK.title, in: pid }));
+  // the flasks
+  const motes = [[0, 19.3], [-2.9, 20.4], [2.9, 20.3], [-5.3, 20.9], [5.3, 20.8]];
+  for (const cl of rw.cells) {
+    const cx = cl.x + C / 2, k = cl.n / max, gx0 = cx - bw / 2, gx1 = cx + bw / 2, Y = (v: number) => r(y + v);
+    const glass = `M${r(cx - 1.75)} ${Y(15.8)}V${Y(17.4)}C${r(cx - 1.75)} ${Y(18.9)} ${r(gx0)} ${Y(18.5)} ${r(gx0)} ${Y(20.3)}V${Y(SOUL.foot - 1.4)}Q${r(gx0)} ${Y(SOUL.foot)} ${r(gx0 + 1.4)} ${Y(SOUL.foot)}H${r(gx1 - 1.4)}Q${r(gx1)} ${Y(SOUL.foot)} ${r(gx1)} ${Y(SOUL.foot - 1.4)}V${Y(20.3)}C${r(gx1)} ${Y(18.5)} ${r(cx + 1.75)} ${Y(18.9)} ${r(cx + 1.75)} ${Y(17.4)}V${Y(15.8)}Z`;
+    out.push(`<ellipse cx="${r(cx + 0.4)}" cy="${Y(SOUL.foot + 0.15)}" rx="${r(bw / 2 + 0.3)}" ry=".45" fill="#050b0a" fill-opacity=".55"/>`);
+    out.push(`<path d="${glass}" fill="url(#${u}f${cl.n})" stroke="${SOUL_INK.glass}" stroke-opacity=".8" stroke-width=".22"/>`);
+    // the lip of the neck, the cork with its twine
+    out.push(`<rect x="${r(cx - 2.35)}" y="${Y(15.05)}" width="4.7" height=".95" rx=".4" fill="${mix('#2b4b46', SOUL_INK.glow, 0.15 + 0.55 * k)}" stroke="${SOUL_INK.glass}" stroke-opacity=".85" stroke-width=".2"/>`);
+    out.push(`<path d="M${r(cx - 1.75)} ${Y(SOUL.cork + 0.35)}Q${r(cx)} ${Y(SOUL.cork - 0.25)} ${r(cx + 1.75)} ${Y(SOUL.cork + 0.35)}L${r(cx + 1.45)} ${Y(15.3)}H${r(cx - 1.45)}Z" fill="url(#${u}cork)" stroke="#3a2410" stroke-width=".16"/>`);
+    out.push(`<path d="M${r(cx - 1.2)} ${Y(13.7)}h.5M${r(cx + 0.2)} ${Y(14.3)}h.6M${r(cx - 0.4)} ${Y(13.3)}h.3" stroke="#4a2e14" stroke-width=".18" stroke-linecap="round"/><path d="M${r(cx - 2.2)} ${Y(15.55)}Q${r(cx)} ${Y(16.05)} ${r(cx + 2.2)} ${Y(15.55)}M${r(cx + 2.1)} ${Y(15.6)}q.5 .5 .25 1.4M${r(cx + 2.1)} ${Y(15.6)}q.85 .3 .95 1.1" fill="none" stroke="#d9c79a" stroke-width=".22" stroke-linecap="round"/>`);
+    // the souls rising in the shoulders: as many motes as the count, each a bright core in a soft halo
+    motes.slice(0, cl.n).forEach(([dx, yy], j) => { const mx2 = cx + dx, my2 = y + yy, sd = j % 2 ? -1 : 1;
+      out.push(`<circle cx="${r(mx2)}" cy="${r(my2)}" r=".8" fill="${SOUL_INK.glow}" fill-opacity=".4"/>` +
+        `<path d="M${r(mx2 - 0.36)} ${r(my2)}A.36 .36 0 0 0 ${r(mx2 + 0.36)} ${r(my2)}C${r(mx2 + 0.36)} ${r(my2 - 0.45)} ${r(mx2 + sd * 0.5)} ${r(my2 - 0.7)} ${r(mx2 + sd * 0.15)} ${r(my2 - 1.25)}C${r(mx2 - sd * 0.3)} ${r(my2 - 0.75)} ${r(mx2 - 0.36)} ${r(my2 - 0.4)} ${r(mx2 - 0.36)} ${r(my2)}Z" fill="#eafff9"/>`); });
+    // the glass's thickness: an inner contour, the thick foot, a shade down the right side
+    out.push(`<path d="M${r(gx0 + 0.5)} ${Y(20.6)}V${Y(SOUL.foot - 1.5)}Q${r(gx0 + 0.5)} ${Y(SOUL.foot - 0.6)} ${r(gx0 + 1.5)} ${Y(SOUL.foot - 0.6)}H${r(gx1 - 1.5)}Q${r(gx1 - 0.5)} ${Y(SOUL.foot - 0.6)} ${r(gx1 - 0.5)} ${Y(SOUL.foot - 1.5)}V${Y(20.6)}" fill="none" stroke="${SOUL_INK.glass}" stroke-opacity=".35" stroke-width=".14"/>` +
+      `<path d="M${r(gx1 - 0.55)} ${Y(21.2)}V${Y(SOUL.foot - 1.6)}" stroke="#04100e" stroke-opacity=".45" stroke-width=".3" stroke-linecap="round"/>` +
+      `<path d="M${r(cx - 4)} ${Y(SOUL.foot - 0.3)}Q${r(cx)} ${Y(SOUL.foot - 1)} ${r(cx + 4)} ${Y(SOUL.foot - 0.3)}" fill="none" stroke="#f0fffa" stroke-opacity=".3" stroke-width=".18"/>`);
+    // the light on the glass: the left side and the left shoulder
+    out.push(`<path d="M${r(gx0 + 0.6)} ${Y(21)}V${Y(SOUL.foot - 1.2)}M${r(cx - 1.25)} ${Y(16.2)}V${Y(17.3)}C${r(cx - 1.3)} ${Y(18.4)} ${r(gx0 + 1.2)} ${Y(18.5)} ${r(gx0 + 0.65)} ${Y(19.9)}" fill="none" stroke="#f0fffa" stroke-opacity=".5" stroke-width=".28" stroke-linecap="round"/>`);
+    // the cell in the glass, its number over the cork (the start one after a star)
+    out.push(cellSvg(`${pid}-c${cl.n}`, cl.x, cl.y, id, L, { start: cl.start, startColor: pal.deep }));
+    out.push(text(cx, y + SOUL.num, String(cl.n), 11, { ...NUM, color: cl.start ? SOUL_INK.start : SOUL_INK.num, anchor: 'middle', in: pid }));
+    if (cl.start) out.push(star(cx - W(String(cl.n), 11, NUM) / 2 - 2.1, y + SOUL.num - 1.35, 1.35, SOUL_INK.start));
+  }
+  // under the shelf: «Кракен: 3 Души» under 3, «максимум 5» under the last
+  const capY = y + SOUL.cap, k3 = rw.cells.find(c => c.n === 3);
+  if (k3 && T.kraken) out.push(text(k3.x + C / 2, capY, fill(T.kraken, { n: 3 }), 8, { w: 800, color: SOUL_INK.cap, anchor: 'middle', in: pid }));
+  if (T.max) out.push(text(last.x + C + SOUL.side, capY, fill(T.max, { n: max }), 8, { ...CAP_O, color: SOUL_INK.soft, anchor: 'end', in: pid }));
   return out.join('');
 }
 
@@ -348,13 +422,33 @@ function headerSvg(b: Rect, ship: Ship, pal: Pal, L: Look, id: string): string {
   return out.join('');
 }
 
-/** a pointer to the sheet's edge, written in ink: the arrow, the icon, the words (in two lines when the slip is short) */
+/** a frame with hollow corners d mm inside the box, the corners' radius k */
+const hollow = (b: Rect, d: number, k: number) => { const { x, y, w, h } = b;
+  return `M${r(x + d + k)} ${r(y + d)}H${r(x + w - d - k)}A${k} ${k} 0 0 0 ${r(x + w - d)} ${r(y + d + k)}V${r(y + h - d - k)}A${k} ${k} 0 0 0 ${r(x + w - d - k)} ${r(y + h - d)}H${r(x + d + k)}A${k} ${k} 0 0 0 ${r(x + d)} ${r(y + h - d - k)}V${r(y + d + k)}A${k} ${k} 0 0 0 ${r(x + d + k)} ${r(y + d)}Z`; };
+/** a pointer to the sheet's top edge (boards v5, item 2): parchment in a double engraved frame with hollow corners; an
+ *  engraved arrow up — a barbed head, the shaft, a fletched tail, as the course lines of the chart; the icon in a small
+ *  brass medallion; the words in small capitals (in two lines when the slip is short) */
 function pointerSvg(pid: string, b: Rect, words: string, ic: IconName, id: string, L: Look, pal: Pal): string {
-  const out = [slip(pid, b, id, L, false)], ax = b.x + 3.4, ay = b.y + b.h / 2, tx = b.x + 13.2;
-  out.push(`<path d="M${r(ax)} ${r(b.y + b.h - 2.2)}V${r(b.y + 2)}M${r(ax - 1.3)} ${r(b.y + 3.8)}L${r(ax)} ${r(b.y + 2)}L${r(ax + 1.3)} ${r(b.y + 3.8)}" stroke="${pal.deep}" stroke-width=".55" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
-  out.push(ico(ic, b.x + 8.6, ay, 5.4, L.tone, `${pid}-icon`));
-  if (tx + W(words, 8.5, PTR) <= b.x + b.w - PAD) out.push(text(tx, ay + 1.25, words, 8.5, { ...PTR, color: pal.deep, in: pid }));
-  else { const cut = words.lastIndexOf(' ', Math.ceil(words.length / 2) + 4), [l1, l2] = [words.slice(0, cut), words.slice(cut + 1)]; out.push(text(tx, ay - 0.6, l1, 8.5, { ...PTR, color: pal.deep, in: pid }) + text(tx, ay + 3.05, l2, 8.5, { ...PTR, color: pal.deep, in: pid })); }
+  const out = [slip(pid, b, id, L, false)], ink = pal.deep, line = L.paperLine, cy = b.y + b.h / 2, tx = b.x + PTRG.text;
+  out.push(`<path d="${hollow(b, 0.9, 1.3)}" fill="none" stroke="${line}" stroke-width=".3" stroke-opacity=".85"/><path d="${hollow(b, 1.45, 0.85)}" fill="none" stroke="${line}" stroke-width=".13" stroke-opacity=".7"/>`);
+  for (const [qx, qy] of [[b.x + 0.9, b.y + 0.9], [b.x + b.w - 0.9, b.y + 0.9], [b.x + 0.9, b.y + b.h - 0.9], [b.x + b.w - 0.9, b.y + b.h - 0.9]]) out.push(`<circle cx="${r(qx)}" cy="${r(qy)}" r=".32" fill="${ink}"/>`);
+  // the arrow: the head with its barbs swept back, the shaft, two vanes of the tail hatched like feathers
+  const ax = b.x + PTRG.arrow, t = b.y + 2, bot = b.y + b.h - 2;
+  out.push(`<path d="M${r(ax)} ${r(bot - 1)}V${r(t + 1.8)}" stroke="${ink}" stroke-width=".4" stroke-linecap="round"/>`);
+  out.push(`<path d="M${r(ax)} ${r(t)}L${r(ax + 1.3)} ${r(t + 2.35)}Q${r(ax + 0.6)} ${r(t + 1.75)} ${r(ax + 0.28)} ${r(t + 1.95)}H${r(ax - 0.28)}Q${r(ax - 0.6)} ${r(t + 1.75)} ${r(ax - 1.3)} ${r(t + 2.35)}Z" fill="${ink}"/><path d="M${r(ax)} ${r(t + 0.6)}V${r(t + 1.7)}" stroke="${L.paper}" stroke-width=".14" stroke-opacity=".8"/>`);
+  for (const sd of [-1, 1]) {
+    const vx = ax + sd * 1.15;
+    out.push(`<path d="M${r(ax)} ${r(bot - 2.3)}L${r(vx)} ${r(bot - 1.5)}V${r(bot)}L${r(ax)} ${r(bot - 0.8)}Z" fill="${mix(L.paper, ink, 0.18)}" stroke="${ink}" stroke-width=".18" stroke-linejoin="round"/>`);
+    out.push(`<path d="M${r(ax)} ${r(bot - 1.65)}L${r(vx)} ${r(bot - 0.85)}" stroke="${ink}" stroke-width=".12"/>`);
+  }
+  out.push(`<circle cx="${r(ax)}" cy="${r(bot - 3.2)}" r=".28" fill="${ink}"/>`);
+  // the medallion: a brass ring, a light well, the engraved icon
+  const mx = b.x + PTRG.medal;
+  out.push(`<circle cx="${r(mx + 0.25)}" cy="${r(cy + 0.35)}" r="3.5" fill="#1a0e04" fill-opacity=".28"/><circle data-plate="${pid}-icon" cx="${r(mx)}" cy="${r(cy)}" r="3.5" fill="url(#${id}brh)" stroke="${L.brass[2]}" stroke-width=".22"/>` +
+    `<circle cx="${r(mx)}" cy="${r(cy)}" r="3.05" fill="none" stroke="${L.brass[2]}" stroke-width=".32" stroke-dasharray=".01 .6" stroke-linecap="round"/><circle cx="${r(mx)}" cy="${r(cy)}" r="2.65" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".18"/>${icon(ic, mx, cy, 4.1, L.tone)}`);
+  const o: TO2 = { ...PTR, color: ink, in: pid };
+  if (tx + W(words, PTRG.size, PTR) <= b.x + b.w - PAD) out.push(text(tx, cy + pt(PTRG.size) * 0.3, words, PTRG.size, o));
+  else { const cut = words.lastIndexOf(' ', Math.ceil(words.length / 2) + 4), [l1, l2] = [words.slice(0, cut), words.slice(cut + 1)]; out.push(text(tx, cy - 0.75, l1, PTRG.size, o) + text(tx, cy + 2.95, l2, PTRG.size, o)); }
   return out.join('');
 }
 /** the Fires: three 23 mm places, brass-rimmed, a faint fire on deck inside */
@@ -369,22 +463,78 @@ function firesSvg(b: Rect, id: string, L: Look, pal: Pal): string {
   }
   return out.join('');
 }
-/** the Dutchman's dive plate: one nest for the two-sided token (face «Под водой», back «Всплыл»: diving — laid face up;
- *  surfacing — turned over; at the end of the turn — taken off), and under it what each side means */
+/** the Dutchman's dive plate (boards v5, item 8): one nest for the two-sided token (face «Под водой», back «Всплыл»: diving —
+ *  laid face up; surfacing — turned over; at the end of the turn — taken off). The nest: a brass frame with rivets and
+ *  photo-corners round water — the surface and its light at the top, light shafts, engraved depth, the Dutchman's
+ *  shadow deep down, bubbles rising from it, the token's outline. Under it the two sides side by side, each with its icon
+ *  in a brass medallion, and between them a small drawing «turn it over» (a token with a lifted corner, an arrow over it). */
 function dutchSvg(b: Rect, id: string, L: Look, pal: Pal): string {
-  const out = [slip('dutch', b, id, L)], u = BOARD.underwaterSlot, nx = b.x + (b.w - u.w) / 2, ny = b.y + 3;
-  out.push(`<rect data-plate="dutch-nest" x="${r(nx)}" y="${r(ny)}" width="${u.w}" height="${u.h}" rx="2" fill="${mix(L.cell, '#2f8a96', 0.14)}" stroke="${L.brass[2]}" stroke-width=".35"/>`);
-  out.push(`<g opacity=".3">${icon('underwater', nx + u.w / 2, ny + u.h / 2, 18, L.tone)}</g>`);
-  let y = ny + u.h + 2;
+  const out = [slip('dutch', b, id, L)], u = BOARD.underwaterSlot, rim = 1.7, [bl, , bd] = L.brass, g = `${id}dv`;
+  const fw = u.w + 2 * rim, fh = u.h + 2 * rim, fx = b.x + (b.w - fw) / 2, fy = b.y + 2.4, nx = fx + rim, ny = fy + rim;
+  const ink = '#1d4e4a', foam = '#f2fffb';
+  out.push(`<defs><linearGradient id="${g}w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3f3ee"/><stop offset=".16" stop-color="#bfe0d9"/><stop offset=".6" stop-color="#8fc3bb"/><stop offset="1" stop-color="#5f9c95"/></linearGradient>` +
+    `<clipPath id="${g}c"><rect x="${r(nx)}" y="${r(ny)}" width="${u.w}" height="${u.h}" rx="1"/></clipPath></defs>`);
+  // the frame: a shadow, the brass, a lit inner edge
+  out.push(`<rect x="${r(fx + 0.45)}" y="${r(fy + 0.6)}" width="${r(fw)}" height="${r(fh)}" rx="2" fill="#1a0e04" fill-opacity=".3"/><rect x="${r(fx)}" y="${r(fy)}" width="${r(fw)}" height="${r(fh)}" rx="2" fill="url(#${id}brh)" stroke="${bd}" stroke-width=".3"/>`);
+  out.push(`<rect x="${r(fx + 0.5)}" y="${r(fy + 0.5)}" width="${r(fw - 1)}" height="${r(fh - 1)}" rx="1.6" fill="none" stroke="${bl}" stroke-opacity=".8" stroke-width=".2"/>`);
+  // the water
+  const sea: string[] = [`<rect data-plate="dutch-nest" x="${r(nx)}" y="${r(ny)}" width="${u.w}" height="${u.h}" rx="1" fill="url(#${g}w)"/>`];
+  // light shafts from the surface, widening down
+  for (const [a, wd, op] of [[0.16, 3, 0.3], [0.34, 5, 0.22], [0.58, 2.4, 0.3], [0.8, 4, 0.2]] as const) {
+    const x0 = nx + u.w * a; sea.push(`<path d="M${r(x0)} ${r(ny + 3)}h${wd}l${r(-wd * 0.9 - 3)} ${r(u.h - 3)}h${r(-wd * 1.8)}Z" fill="${foam}" fill-opacity="${op}"/>`);
+  }
+  // the engraved depth: horizontal hatching, closer towards the bottom
+  let hatch = '';
+  for (let yy = ny + 12, i = 0; yy < ny + u.h; yy += 1.25 - i * 0.04, i++) hatch += `M${r(nx + 1 + (i % 2) * 1.6)} ${r(yy)}H${r(nx + u.w - 1)}`;
+  sea.push(`<path d="${hatch}" stroke="${ink}" stroke-opacity=".22" stroke-width=".13" stroke-dasharray="5 .9 9 1.2"/>`);
+  // the Dutchman's shadow deep down
+  const sb = K.shipBox('dutch', { x: 0, y: 0, scale: 1 }), ss = 30 / sb.w, sx = nx + u.w * 0.62, sy = ny + u.h + 3.2;
+  sea.push(`<g opacity=".2" transform="translate(${r(sx)} ${r(sy)}) scale(${r(ss)})">${K.shipSilhouette('dutch', { x: 0, y: 0, scale: 1, color: ink, u: 'dvsil' })}</g>`);
+  // the surface: a band of light, two engraved swell lines
+  let sw1 = `M${r(nx)} ${r(ny + 2.6)}`, sw2 = `M${r(nx)} ${r(ny + 3.5)}`;
+  for (let xx = nx; xx < nx + u.w; xx += 4) { sw1 += `q1 -.7 2 0t2 0`; sw2 += `q1 -.45 2 0t2 0`; }
+  sea.push(`<rect x="${r(nx)}" y="${r(ny)}" width="${u.w}" height="2.6" fill="${foam}" fill-opacity=".55"/><path d="${sw1}" fill="none" stroke="${ink}" stroke-width=".3" stroke-opacity=".7"/><path d="${sw2}" fill="none" stroke="${ink}" stroke-width=".16" stroke-opacity=".45"/>`);
+  // bubbles rising from the ship in wandering columns, smaller near the surface
+  let q = 7; const rnd = () => (q = (q * 16807) % 2147483647) / 2147483647;
+  for (const [bx0, n] of [[nx + u.w * 0.5, 7], [nx + u.w * 0.7, 6], [nx + u.w * 0.84, 5], [nx + u.w * 0.2, 4]] as const) {
+    for (let i = 0; i < n; i++) {
+      const t = (i + rnd() * 0.6) / n, by = ny + u.h - 3 - t * (u.h - 7.5), bx = bx0 + Math.sin(t * 7 + bx0) * 1.4 + (rnd() - 0.5), br = 0.35 + (1 - t) * 0.75 * (0.6 + rnd() * 0.6);
+      sea.push(`<circle cx="${r(bx)}" cy="${r(by)}" r="${r(br)}" fill="${foam}" fill-opacity=".55" stroke="${ink}" stroke-opacity=".75" stroke-width=".14"/><circle cx="${r(bx - br * 0.35)}" cy="${r(by - br * 0.35)}" r="${r(Math.max(0.1, br * 0.28))}" fill="#fff"/>`);
+    }
+  }
+  // the token's outline
+  sea.push(`<rect x="${r(nx + 1)}" y="${r(ny + 1)}" width="${u.w - 2}" height="${u.h - 2}" rx=".8" fill="none" stroke="${ink}" stroke-opacity=".55" stroke-width=".22" stroke-dasharray="1.6 1.1"/>`);
+  out.push(`<g clip-path="url(#${g}c)">${sea.join('')}</g>`);
+  out.push(`<rect x="${r(nx)}" y="${r(ny)}" width="${u.w}" height="${u.h}" rx="1" fill="none" stroke="${bd}" stroke-width=".3"/>`);
+  // photo-corners holding the token, a rivet on the brass at each corner
+  for (const [sx2, sy2] of [[0, 0], [1, 0], [0, 1], [1, 1]] as const) {
+    const X = nx + sx2 * u.w, Y = ny + sy2 * u.h, dx = sx2 ? -1 : 1, dy = sy2 ? -1 : 1, a = 3.6;
+    out.push(`<path d="M${r(X)} ${r(Y)}h${r(dx * a)}L${r(X)} ${r(Y + dy * a)}Z" fill="url(#${id}br)" stroke="${bd}" stroke-width=".22"/>`);
+    out.push(`<circle cx="${r(X - dx * rim * 0.5)}" cy="${r(Y - dy * rim * 0.5)}" r=".45" fill="${bl}" stroke="${bd}" stroke-width=".15"/>`);
+  }
+  // the two sides: the icon in a brass medallion, the title, the words; between them «turn it over»
+  const FLIP = 11, cw = (b.w - 2 * PAD - FLIP) / 2, y0 = fy + fh + 1.8;
   [TXT.underwater, TXT.surfaced].forEach((t, i) => {
-    const pid = `dutch-${i}`;
-    out.push(ico(i ? 'surfaced' : 'underwater', b.x + PAD + 2.4, y + 2.6, 4.4, L.tone, `${pid}-icon`) + text(b.x + PAD + 6.2, y + 4.2, t.title, 10, { ...LABEL, color: pal.deep, in: 'dutch' }));
-    const words = nb(t.note).split(' '), lines: string[] = [''], wmax = b.w - 2 * PAD - 3;
-    for (const wd of words) { const tryL = (lines[lines.length - 1] + ' ' + wd).trim(); if (W(tryL, 8, CAP_O) > wmax && lines[lines.length - 1]) lines.push(wd); else lines[lines.length - 1] = tryL; }
-    lines.forEach((l, j) => out.push(text(b.x + PAD + 1, y + 8.4 + j * 4, l, 8, { ...CAP_O, color: L.ink, in: 'dutch' })));
-    y += 8.4 + (lines.length - 1) * 4 + 2.2;
+    const cx0 = i ? b.x + b.w - PAD - cw : b.x + PAD, mcx = cx0 + 2.7, mcy = y0 + 2.75;
+    out.push(`<circle cx="${r(mcx + 0.25)}" cy="${r(mcy + 0.35)}" r="2.7" fill="#1a0e04" fill-opacity=".3"/><circle data-plate="dutch-${i}-icon" cx="${r(mcx)}" cy="${r(mcy)}" r="2.7" fill="url(#${id}brh)" stroke="${bd}" stroke-width=".2"/><circle cx="${r(mcx)}" cy="${r(mcy)}" r="2.15" fill="${i ? L.cell : '#dcefe9'}" stroke="${bd}" stroke-width=".15"/>${icon(i ? 'surfaced' : 'underwater', mcx, mcy, 3.5, L.tone)}`);
+    out.push(text(cx0 + 6.6, y0 + 4.1, t.title, 10, { ...LABEL, color: pal.deep, in: 'dutch' }));
+    const lines: string[] = [''];
+    for (const wd of nb(t.note).replace(/ — /g, '\u00a0—\u00a0').split(' ')) { const tryL = (lines[lines.length - 1] + ' ' + wd).trim(); if (W(tryL, 8, CAP_O) > cw - 0.4 && lines[lines.length - 1]) lines.push(wd); else lines[lines.length - 1] = tryL; }
+    lines.forEach((l, j) => out.push(text(cx0 + 0.2, y0 + 8.7 + j * 3.95, l, 8, { ...CAP_O, color: L.ink, in: 'dutch' })));
   });
+  out.push(flipSvg(b.x + b.w / 2, y0 + 8.4, pal.deep, L));
   return out.join('');
+}
+/** «turn it over», drawn: a small token, its corner lifted to show the other side, a curved arrow over it */
+function flipSvg(cx: number, cy: number, ink: string, L: Look): string {
+  const x0 = cx - 3.6, x1 = cx + 3.6, y0 = cy - 0.6, y1 = cy + 3, f = 2.3;
+  return plateRect('dutch-flip', { x: cx - 4.6, y: cy - 5.4, w: 9.2, h: 8.8 }) +
+    `<path d="M${r(x0 + 0.3)} ${r(y0 + 0.35)}H${r(x1 - f + 0.3)}L${r(x1 + 0.3)} ${r(y0 + f + 0.35)}V${r(y1 + 0.35)}H${r(x0 + 0.3)}Z" fill="#1a0e04" fill-opacity=".25"/>` +
+    `<path d="M${r(x0)} ${r(y0)}H${r(x1 - f)}L${r(x1)} ${r(y0 + f)}V${r(y1)}H${r(x0)}Z" fill="#5f9c95" stroke="${ink}" stroke-width=".22"/>` +
+    `<path d="M${r(x0 + 0.8)} ${r(y0 + 1.6)}q.6 -.4 1.2 0t1.2 0t1.2 0" fill="none" stroke="#e3f3ee" stroke-width=".2"/>` +
+    `<path d="M${r(x1 - f)} ${r(y0)}L${r(x1 - f - 0.5)} ${r(y0 + f + 0.5)}L${r(x1)} ${r(y0 + f)}Z" fill="${L.paper}" stroke="${ink}" stroke-width=".2" stroke-linejoin="round"/>` +
+    `<path d="M${r(cx - 3.9)} ${r(cy - 1.6)}C${r(cx - 3.4)} ${r(cy - 5.6)} ${r(cx + 3.4)} ${r(cy - 5.6)} ${r(cx + 3.9)} ${r(cy - 2)}" fill="none" stroke="${ink}" stroke-width=".32" stroke-linecap="round"/>` +
+    `<path d="M${r(cx + 2.7)} ${r(cy - 3)}L${r(cx + 3.95)} ${r(cy - 1.5)}L${r(cx + 4.6)} ${r(cy - 3.3)}" fill="none" stroke="${ink}" stroke-width=".32" stroke-linecap="round" stroke-linejoin="round"/>`;
 }
 /** counters on a brass ruler: windows cut through the brass, the number engraved over each; the title on top or left */
 function rulerSvg(pid: string, b: Rect, title: string, ic: IconName, nums: number[], labelLeft: boolean, id: string, L: Look): string {
@@ -482,7 +632,7 @@ export async function boardV2(ctx: Ctx, ship: Ship, counters: Counters): Promise
   layoutV2(ship, counters); faceSvg(ctx, ship, counters, layoutV2(ship, counters), id, L, pal);
   await measureMissing(ctx);
   const plan = layoutV2(ship, counters), place = counters === 'board' ? L.board : L.strip, kind = key;
-  const calm: Rect[] = [plan.header, NEST, plan.effects, plan.log, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: ROW.h })),
+  const calm: Rect[] = [plan.header, NEST, plan.effects, plan.log, plan.fires, ...plan.rows.map(rw => ({ x: rw.x, y: rw.y, w: rw.w, h: rw.h })),
     ...[plan.plans, plan.cards, plan.reactions, plan.dutch].filter((b): b is Rect => !!b)];
   const view = { w: PAGE.w, h: PAGE.h, mmPerDeg: L.mmPerDeg, center: [0, 0] as [number, number], anchor: place.anchor };
   const base: ChartOpts = { style: L.chart, ...view, inset: 3.2, seed: 5 + ship.code.charCodeAt(0) % 17, calm, roses: [{ x: place.rose[0], y: place.rose[1], r: place.rose[2] }], folds: { x: [PAGE.w / 2 + 12], y: [PAGE.h / 2 + 6] } };
