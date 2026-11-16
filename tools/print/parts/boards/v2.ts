@@ -525,3 +525,6 @@ export function counterStripsPage(head: string, foot: string): PageSpec {
   });
   return { html: `<style>${V2_CSS}</style>${head}<svg class="v2-svg" style="width:210mm;height:297mm" viewBox="0 0 ${Wp} ${Hp}">${out.join('\n')}</svg>${foot}` };
 }
+
+// used by the back «Затонул» v3 (wreck.ts)
+export { LOOKS, cellSvg, defsOf, ico, text, type Look };
