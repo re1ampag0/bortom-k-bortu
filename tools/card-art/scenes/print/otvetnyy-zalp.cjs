@@ -1,16 +1,19 @@
 // «Ответный залп» (Месть королевы Анны, РЕАКЦИЯ: после Залпа по «Мести» нанесите стрелявшему урон по Корпусу, равный
 // Пушкам «Мести»; это не Залп), refined from the first-round scene (portrait-revenge.cjs SCENES['Ответный залп']): the
 // same idea — the Revenge's guns answer the enemy, who is already taking the hits (splinters, columns of water at her
-// waterline). After the brief the camera steps off her deck: the Revenge, still smoking from the hit she has just
-// taken (a black plume and fire out of the smashed rail amidships), answers with her whole side at once — a flash at
+// waterline). After the brief the camera steps off her deck: the Revenge, her rail smashed amidships by the hit she
+// has just taken, answers with her whole side at once — a flash at
 // every port, the white smoke rolling out towards the enemy; the enemy beyond on the right still stands in the smoke
-// of her own salvo. The find: two smokes — black from the hit, white from the answer.
+// of her own salvo.
 // Fixed against the first round: three sprite guns on a flat brown wall, a tinted sprite enemy — now the kit's
 // Revenge and Endeavour; the flashes were three cones — now one burst at each port (each its own shape), the light of
 // them on her side and on the water; the enemy's hits — splinters, a flash, splashes round her. The Revenge is rolled
-// towards us by the swell (her deck shows: the hit on it burns) and rides its slope, heel and roll together (as in
+// towards us by the swell (her deck shows) and rides its slope, heel and roll together (as in
 // «Буря»).
-// Light: the low sun behind us on the right (key, warm, side-front); the flashes along her side, the fire of the hit.
+// Fixed after the print review: the hit amidships burned (open fire and a black plume by the mainmast) — this card puts
+// no Fire, so the fire and the black smoke are gone: the rail is only smashed (splinters flying), and the only flame in
+// the picture is the guns' flashes, the only smoke their white powder smoke.
+// Light: the low sun behind us on the right (key, warm, side-front); the flashes along her side.
 'use strict';
 const K = require('../kit/index.cjs');
 const { helpers: Hx } = require('./tyazhyolyy-bort.cjs');
@@ -21,12 +24,12 @@ const REV = { kind: 'revenge', x: 70, y: 111, scale: 1.15, flip: true, heel: -3,
 const EN = { kind: 'endeavour', x: 173, y: 101, scale: .5, sails: 'full', detail: 'mid', seed: 4 };
 const HIT = { X: 8, H: 13.5 };   // the smashed rail amidships, burning (local X, H on the Revenge's near side)
 const light = { time: 'dusk', haze: .35, key: { type: 'sun', az: 132, el: 14, color: '#ffb070', power: .9 }, fill: { color: '#6e4a70', power: .42 },
-  locals: [{ x: 86, y: 102, color: '#ffb050', power: .8, radius: 50 }, { x: 60, y: 95, color: '#ff8a30', power: .7, radius: 30 }] };
-const skel = { horizon: HZ, eye: 3, light: 'the low sun behind us on the right; the flashes along her side; the fire of the hit', items: [
+  locals: [{ x: 86, y: 102, color: '#ffb050', power: .8, radius: 50 }] };
+const skel = { horizon: HZ, eye: 3, light: 'the low sun behind us on the right; the flashes along her side', items: [
   ['revenge', -13, 111, 172, 110, 'water: the near swell, her waterline y 111 tilted 3° (bow up, right), rolled towards us'],
   ['flashes', 32, 104, 80, 10, 'four of her gun ports, each in its own phase'],
   ['white smoke', 36, 106, 100, 18, 'clumps out of her ports, rolling right towards the enemy'],
-  ['black smoke + fire', 46, 99, 40, 80, 'the smashed rail amidships, a column rising'],
+  ['smashed rail', 50, 99, 16, 10, 'amidships, splinters flying (no fire)'],
   ['enemy (Endeavour)', 150, 101, 52, 46, 'water on the horizon, right, beyond the Revenge\'s bowsprit'],
   ['enemy hits', 150, 104, 50, 20, 'her side and the water round her']] };
 
@@ -34,8 +37,6 @@ module.exports = { name: 'Ответный залп', kind: 'deck', status: 'acc
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, { sky: ['#1a0c1e', '#46182c', '#a2402a', '#f0904e'], sea: ['#b05e40', '#44182a', '#120810'], cloudLit: '#f09a60', cloudShade: '#3e1c2e' });
-    const Ld = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#2a1e22' }) });   // the soot of the hit
-    const Lk = Object.assign({}, L, { keyColor: '#3a2a2a', pal: Object.assign({}, L.pal, { smoke: '#120a0c' }) });   // its dense black core
     const R = rng(29), dir = -1;
     const tan = -dir * Math.tan(REV.heel * Math.PI / 180), wlY = x => REV.y + (x - REV.x) * tan;
     // ——— the dusk ahead: red sky, lit clouds, the sea
@@ -63,13 +64,11 @@ module.exports = { name: 'Ответный залп', kind: 'deck', status: 'acc
     fg += Hx.tiltShip(u, L, REV);
     fg += `<g transform="rotate(${f(ang)} ${REV.x} ${REV.y})">${K.foam(u, { x: REV.x + 4, y: REV.y + .8, w: 110, h: 2, seed: 23, L })}</g>`;
 
-    // ——— the hit she has just taken: the rail smashed amidships, burning, a black plume drifting right
-    { const [x, y] = P(HIT.X, HIT.H);
-      fg += Hx.dent(u, L, { x, y: y + 2, r: 2.2, ang, seed: 3 }) + `<path d="M${f(x - 4)} ${f(y - .6)}l1.6 2.4l1.2 -1.8l1.4 2.6l1.6 -2.2l1.2 2l1.4 -2.4l-.4 3.6h-7.6z" fill="#0c0604"/>`
-;
-      fg += K.smoke(u, Ld, { x: x + 1, y: y - 6, w: 36, h: 82, wind: .35, seed: 5, opacity: .94, glow: { color: '#ff8a30', power: .9 } })
-        + K.smoke(u, Lk, { x: x + 1.5, y: y - 8, w: 26, h: 74, wind: .3, seed: 9, opacity: .9 })
-        + K.fire(u, { x: x - .5, y: y + 1.8, w: 17, h: 24, seed: 4, wind: .4, fuel: true }); }
+    // ——— the hit she has just taken: the rail smashed amidships, splinters still in the air — no fire, no black smoke
+    { const [x, y] = P(HIT.X, HIT.H), RS = rng(17);
+      fg += Hx.dent(u, L, { x, y: y + 2, r: 2.2, ang, seed: 3 }) + `<path d="M${f(x - 4)} ${f(y - .6)}l1.6 2.4l1.2 -1.8l1.4 2.6l1.6 -2.2l1.2 2l1.4 -2.4l-.4 3.6h-7.6z" fill="#0c0604"/>`;
+      for (let i = 0; i < 12; i++) { const a = -Math.PI * (.15 + RS() * .7), d = 2 + RS() * 7, l = .7 + RS() * 1.5, rot = RS() * 3, cx = x + Math.cos(a) * d, cy = y - 1 + Math.sin(a) * d * .8;
+        fg += `<path d="M${f(cx)} ${f(cy)}l${f(Math.cos(rot) * l)} ${f(Math.sin(rot) * l)}" stroke="${RS() > .5 ? '#f0c88a' : '#8a5a2a'}" stroke-width=".45" stroke-linecap="round"/>`; } }
 
     // ——— the answer: her guns go off one after another — one now, the others a moment ago, their flame sinking in
     // the clumps of smoke that roll out of the ports and away to the right towards the enemy
