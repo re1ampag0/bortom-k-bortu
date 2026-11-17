@@ -432,36 +432,51 @@ function markersHtml(pics: Record<string, string> | null): { svg: string; html: 
 const DIVE_BLEED = 1.5;
 /** the art of a side: scene units (4 per mm, the kit's scale: 200 × 100 a side) */
 const DU = 4;
-/** the two sides as JPEGs: the face under water (the Dutchman deep in the green dark, light shafts from the surface,
- *  bubbles rising), the back surfacing (the Dutchman bursting up through the fog-green sea, bow high, water pouring
- *  off her rails and out of her ports, spray at the stem) */
-async function diveArt(ctx: Ctx): Promise<{ face: string; back: string }> {
-  const b = DIVE_BLEED * DU, W0 = 200, H0 = 100, dpi = ctx.opts.draft ? 300 : 600;
+/** where the words of a side stand (diveHtml), in the art's units of that side (x from its fold or outer cut, y from the
+ *  top cut): the title right of the icon and the lines under it. The art keeps this field calm and dark — no bubbles,
+ *  no motes, no shafts; only the dark water — so every word stands on it */
+const DIVE_WORDS = { titleX1: 36 * DU, titleY1: 9 * DU, textX1: 31 * DU };
+/** the two sides as SVG (exported for the scratch renders): the face under water (the Dutchman deep in the green dark,
+ *  light shafts from the surface, bubbles rising beside her), the back surfacing (the Dutchman bursting up through the
+ *  fog-green sea, bow high, water pouring off her rails and out of her ports, spray at the stem). Both halves are dark
+ *  at every edge: the bleed past the cut is the same dark as the water at the cut, no light band runs out of the token;
+ *  the words of each side (left) stand on a calm dark field */
+export function diveSvgs(): { face: string; back: string; wmm: number; hmm: number } {
+  const b = DIVE_BLEED * DU, W0 = 200, H0 = 100, { titleX1, titleY1, textX1 } = DIVE_WORDS;
   let q = 11; const rnd = () => (q = (q * 16807) % 2147483647) / 2147483647;
-  // the face: the sea from the surface down, the ship, a veil of water over her, shafts of light, bubbles
-  const Lf = KIT.makeLight(KIT.LIGHTS.dutchman, { horizon: 10 }), fx = 146, fwl = H0 + 8;
+  /** a bubble may stand here: right of the words (and of the title above them), inside the frame */
+  const free = (x: number, y: number, rr: number) => x - rr > (y - rr < titleY1 ? titleX1 : textX1) + 4 && x + rr < W0 - 9 && y - rr > 9 && y + rr < H0 - 9;
+  // the calm dark field under the words and the dark edge all round: solid from past the bleed to EDGE.solid inside the
+  // cut (under the brass frame, 1.7 mm in), then a soft fade inwards — a cut off by a millimetre still shows the same dark
+  const EDGE = { solid: 0.4, soft: 5 }, o0 = -b - 4;
+  const ring = (i: number) => `M${o0} ${o0}H${W0 - o0}V${H0 - o0}H${o0}Z M${i} ${i}V${H0 - i}H${W0 - i}V${i}Z`;
+  const calm =(id: string, c: string, a: number) => `<defs><linearGradient id="${id}c" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${textX1 + 30}" y2="0"><stop offset="0" stop-color="${c}" stop-opacity="${a}"/><stop offset="${R((textX1 - 8) / (textX1 + 30))}" stop-color="${c}" stop-opacity="${R(a * 0.92)}"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient>`
+    + `<filter id="${id}e" filterUnits="userSpaceOnUse" x="${-b - 30}" y="${-b - 30}" width="${W0 + 2 * b + 60}" height="${H0 + 2 * b + 60}"><feGaussianBlur stdDeviation="2.2"/></filter></defs>`
+    + `<rect x="${-b - 10}" y="${-b}" width="${textX1 + 40 + b}" height="${H0 + 2 * b}" fill="url(#${id}c)"/>`
+    + `<path d="${ring(EDGE.soft)}" fill="${c}" fill-rule="evenodd" opacity=".85" filter="url(#${id}e)"/><path d="${ring(EDGE.solid)}" fill="${c}" fill-rule="evenodd"/>`;
+  // the face: the green dark under water, light from the surface above her (upper right), the ship, a veil of water over
+  // her, shafts of light and motes on her side only, bubbles rising beside her (never over the words)
+  const Lf = KIT.makeLight(KIT.LIGHTS.dutchman, { horizon: 10 }), fx = 150, fwl = H0 + 8;
   let shafts = '', bubbles = '', motes = '';
-  for (const [x0, w, op] of [[40, 10, 0.16], [78, 16, 0.12], [118, 8, 0.18], [150, 14, 0.12], [185, 9, 0.14]]) shafts += `<path d="M${x0} 9h${w}l${-w * 0.5 - 26} ${H0 + 10}h${-w * 1.6}Z" fill="#c8fff0" opacity="${op}"/>`;
-  for (const [bx0, n, sp] of [[fx - 18, 9, 1], [fx + 6, 8, 1.1], [fx + 30, 6, 0.9], [96, 5, 0.8]]) for (let i = 0; i < n; i++) {
+  for (const [x0, w, op] of [[150, 12, 0.16], [178, 16, 0.12], [205, 10, 0.16], [128, 8, 0.1]]) shafts += `<path d="M${x0} ${-b}h${w}l${-w * 0.5 - 20} ${H0 + 2 * b}h${-w * 1.6}Z" fill="#c8fff0" opacity="${op}"/>`;
+  for (const [bx0, n, sp] of [[fx - 16, 9, 1], [fx + 8, 8, 1.1], [fx + 32, 6, 0.9]]) for (let i = 0; i < n; i++) {
     const t = (i + rnd() * 0.7) / n, y = fwl - 30 - t * (fwl - 48), x = bx0 + Math.sin(t * 6 + bx0) * 4 * sp + (rnd() - 0.5) * 3, br = 0.9 + (1 - t) * 2.4 * (0.5 + rnd() * 0.7);
+    if (!free(x, y, br + 0.5)) continue;
     bubbles += `<circle cx="${R(x)}" cy="${R(y)}" r="${R(br)}" fill="#dffff6" fill-opacity=".22" stroke="#e8fffa" stroke-opacity=".8" stroke-width=".45"/><circle cx="${R(x - br * 0.35)}" cy="${R(y - br * 0.38)}" r="${R(br * 0.3)}" fill="#ffffff" fill-opacity=".9"/>`;
   }
-  for (let i = 0; i < 70; i++) motes += `<circle cx="${R(-b + rnd() * (W0 + 2 * b))}" cy="${R(14 + rnd() * (H0 - 8))}" r="${R(0.25 + rnd() * 0.5)}" fill="#bff5e6" opacity="${R(0.2 + rnd() * 0.4)}"/>`;
-  let surf = `M${-b} 9`, surf2 = `M${-b} 11.5`;
-  for (let x = -b; x < W0 + b; x += 12) { surf += 'q3 -2.4 6 0t6 0'; surf2 += 'q3 -1.4 6 0t6 0'; }
+  for (let i = 0; i < 60; i++) { const x = textX1 + 6 + rnd() * (W0 - textX1 - 6), y = 10 + rnd() * (H0 - 20); if (free(x, y, 1)) motes += `<circle cx="${R(x)}" cy="${R(y)}" r="${R(0.25 + rnd() * 0.5)}" fill="#bff5e6" opacity="${R(0.2 + rnd() * 0.4)}"/>`; }
   const face = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-b} ${-b} ${W0 + b} ${H0 + 2 * b}">`
-    + `<defs><linearGradient id="dvf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5aa59a"/><stop offset=".14" stop-color="#2f7470"/><stop offset=".55" stop-color="#16403f"/><stop offset="1" stop-color="#081d20"/></linearGradient>`
-    + `<linearGradient id="dvv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f8a84" stop-opacity=".42"/><stop offset=".45" stop-color="#1d5653" stop-opacity=".34"/><stop offset="1" stop-color="#061a1c" stop-opacity=".6"/></linearGradient>`
+    + `<defs><linearGradient id="dvf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#245e5a"/><stop offset=".3" stop-color="#1b4c4a"/><stop offset=".65" stop-color="#123635"/><stop offset="1" stop-color="#081d20"/></linearGradient>`
+    + `<radialGradient id="dvl" gradientUnits="userSpaceOnUse" cx="168" cy="-6" r="120"><stop offset="0" stop-color="#7fd0bf" stop-opacity=".55"/><stop offset=".45" stop-color="#4f9e90" stop-opacity=".22"/><stop offset="1" stop-color="#4f9e90" stop-opacity="0"/></radialGradient>`
+    + `<linearGradient id="dvv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f8a84" stop-opacity=".38"/><stop offset=".45" stop-color="#1d5653" stop-opacity=".34"/><stop offset="1" stop-color="#061a1c" stop-opacity=".6"/></linearGradient>`
     + `<filter id="dvb" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.4"/></filter><filter id="dvs" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation=".35"/></filter></defs>`
-    + `<rect x="${-b}" y="${-b}" width="${W0 + 2 * b}" height="${H0 + 2 * b}" fill="url(#dvf)"/>`
+    + `<rect x="${-b}" y="${-b}" width="${W0 + 2 * b}" height="${H0 + 2 * b}" fill="url(#dvf)"/><rect x="${-b}" y="${-b}" width="${W0 + 2 * b}" height="${H0 + 2 * b}" fill="url(#dvl)"/>`
     + `<g filter="url(#dvs)">${KIT.ship('dvf', Lf, { kind: 'dutch', x: fx, y: fwl, scale: 0.82, flip: true, heel: 4, sails: 'reefed', detail: 'mid' })}</g>`
     + `<rect x="${-b}" y="${-b}" width="${W0 + 2 * b}" height="${H0 + 2 * b}" fill="url(#dvv)"/>`
-    + `<g filter="url(#dvb)">${shafts}</g>${motes}${bubbles}`
-    + `<rect x="${-b}" y="${-b}" width="${W0 + 2 * b}" height="${9 + b}" fill="#bfe8dc" opacity=".55"/>`
-    + `<path d="${surf}" fill="none" stroke="#effffa" stroke-width="1.2" opacity=".85"/><path d="${surf2}" fill="none" stroke="#d6fff4" stroke-width=".6" opacity=".5"/></svg>`;
+    + `<g filter="url(#dvb)">${shafts}</g>${calm('dvq', '#061a1c', 0.62)}${motes}${bubbles}</svg>`;
   // the back: the fog-green sky and sea, the ship rising bow first, water pouring off her, foam and spray at the waterline
-  const hz = 58, bwl = 76, bx = 160, Lb = KIT.makeLight(KIT.LIGHTS.dutchman, { horizon: hz });
-  const o = { kind: 'dutch', x: bx, y: bwl, scale: 0.68, flip: true, heel: -9, sails: 'reefed', detail: 'mid', wake: true };
+  const hz = 58, bwl = 76, bx = 151, Lb = KIT.makeLight(KIT.LIGHTS.dutchman, { horizon: hz });
+  const o = { kind: 'dutch', x: bx, y: bwl, scale: 0.5, flip: true, heel: -9, sails: 'reefed', detail: 'mid', wake: true };
   const g = KIT.shipGeom('dutch', o), hb = g.hb;
   let pour = '';
   for (let i = 0; i < 15; i++) {
@@ -471,14 +486,18 @@ async function diveArt(ctx: Ctx): Promise<{ face: string; back: string }> {
       + `<path d="M${R(x + wob * 0.55)} ${R(y + len * (cut + 0.08))}q${R(wob * 0.3)} ${R(len * (0.9 - cut) * 0.5)} ${R(wob * 0.6)} ${R(len * (0.92 - cut))}" fill="none" stroke="#e6fff7" stroke-width="${R(wd * 0.8)}" stroke-linecap="round" opacity="${R(op)}" stroke-dasharray="${R(1 + rnd() * 2)} ${R(0.6 + rnd())}"/>`;
     for (let k = 0; k < 2; k++) pour += `<circle cx="${R(x + wob + (rnd() - 0.5) * 3)}" cy="${R(y + rnd() * len)}" r="${R(0.25 + rnd() * 0.45)}" fill="#e6fff7" opacity=".6"/>`;
   }
-  pour += KIT.foam('dvb', { x: g.nearRail(0)[0], y: bwl + 0.6, w: hb * 2 * 0.68 + 8, h: 2.2, seed: 6, L: Lb });
+  pour += KIT.foam('dvb', { x: g.nearRail(0)[0], y: bwl + 0.6, w: hb * 2 * o.scale + 8, h: 2.2, seed: 6, L: Lb });
   const splashes = [[g.nearRail(-hb * 0.95)[0], 12, 18, 1], [g.nearRail(hb * 0.7)[0], 10, 12, 2], [g.nearRail(0)[0], 14, 9, 4]]
     .map(([x, w, h, sd]) => KIT.splash('dvb' + sd, { x, y: bwl + 1, w, h, seed: sd, L: Lb, wind: 1 })).join('');
+  // the back's words stand at its left (from the fold): the calm field there, mirrored into the back's own units
   const back = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 ${-b} ${W0 + b} ${H0 + 2 * b}"><g transform="translate(${-b} 0)">`
     + KIT.sky('dvb', Lb, { horizon: hz, top: -b, w: W0 + 2 * b + 2 * b, stars: false }) + KIT.water('dvb', Lb, { horizon: hz, bottom: H0 + b, w: W0 + 3 * b, seed: 5, glitter: false })
-    + `</g>${KIT.ship('dvb', Lb, o)}${pour}${splashes}</svg>`;
-  const wmm = (W0 + b) / DU, hmm = (H0 + 2 * b) / DU;
-  return { face: (await rasterJpeg(ctx.browser, 'dive-face', face, wmm, hmm, dpi, 0.92)).url, back: (await rasterJpeg(ctx.browser, 'dive-back', back, wmm, hmm, dpi, 0.92)).url };
+    + `</g>${KIT.ship('dvb', Lb, o)}${pour}${splashes}${calm('dvk', '#071512', 0.5)}</svg>`;
+  return { face, back, wmm: (W0 + b) / DU, hmm: (H0 + 2 * b) / DU };
+}
+async function diveArt(ctx: Ctx): Promise<{ face: string; back: string }> {
+  const d = diveSvgs(), dpi = ctx.opts.draft ? 300 : 600;
+  return { face: (await rasterJpeg(ctx.browser, 'dive-face', d.face, d.wmm, d.hmm, dpi, 0.92)).url, back: (await rasterJpeg(ctx.browser, 'dive-back', d.back, d.wmm, d.hmm, dpi, 0.92)).url };
 }
 /** the pair on the sheet at (x, y): the two pictures, a brass frame round each side, the words; the cut round the pair
  *  (grey, ticks past it) and the fold between them (dashed, in the margins only) */
