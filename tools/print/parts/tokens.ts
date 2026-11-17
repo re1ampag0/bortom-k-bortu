@@ -542,7 +542,7 @@ function shipTokensHtml(id: string, pics: Record<string, string> | null): { svg:
     svg.push(`<rect x="${x}" y="${y + band}" width="${t}" height="${r(t - band)}" fill="${deep}"/>`);
     if (pics) {
       // the gold edge: a brass bar between the picture and the band (dark rules on both sides of it) and a fine gold
-      // rule round the band 1.6 mm inside the cut, its left end under the medallion
+      // rule round the band 1.6 mm inside the cut, the medallion inside it
       const [bl, bm, bd] = LOOK.brass, gx0 = x + 1.6, gx1 = x + t - 1.6, gy0 = y + band + 1.1, gy1 = y + t - 1.6;
       svg.push(`<rect x="${x}" y="${r(y + band - 0.5)}" width="${t}" height="1" fill="${bd}"/><rect x="${x}" y="${r(y + band - 0.33)}" width="${t}" height=".66" fill="url(#${id}br)"/>`
         + `<rect x="${r(gx0)}" y="${r(gy0)}" width="${r(gx1 - gx0)}" height="${r(gy1 - gy0)}" rx=".8" fill="none" stroke="${bd}" stroke-width=".5"/>`
@@ -551,9 +551,9 @@ function shipTokensHtml(id: string, pics: Record<string, string> | null): { svg:
     } else svg.push(`<rect x="${x}" y="${r(y + band - 0.3)}" width="${t}" height=".7" fill="url(#${id}br)"/>`);
     svg.push(`<rect data-plate="${pid}-band" x="${r(x + 0.5)}" y="${r(y + band + 0.4)}" width="${r(t - 1)}" height="${r(t - band - 0.9)}" fill="none"/>`);
     // new: the letter in the band, left of the name, off the sails; old: the letter over the sky, the name centred in the band
-    const m = pics ? { cx: x + 4.4, cy: y + 25.75, R: 3.15 } : { cx: x + 5.6, cy: y + 5.6, R: 3.5 };
+    const m = pics ? { cx: x + 4.75, cy: y + 25.45, R: 2.6 } : { cx: x + 5.6, cy: y + 5.6, R: 3.5 };
     svg.push(brassRing(`${pid}-medal`, m.cx, m.cy, m.R, 0.6, id, deep));
-    html.push(capWord(`${pid}-medal`, m.cx, m.cy, s.code, m.R * 0.76, { color: CREAM, maxW: m.R * 1.02, inset: 0.9, name: `${s.code} (жетон)` }));
+    html.push(capWord(`${pid}-medal`, m.cx, m.cy, s.code, m.R * 0.74, { color: CREAM, maxW: m.R * 0.95, inset: 0.6, name: `${s.code} (жетон)` }));
     const nx = pics ? x + 18.4 : x + t / 2, room = pics ? 17.4 : 25, nO: TO = { font: 'Alegreya SC', w: 700, ls: '.06em' };
     let size = 9.6; while (size > 7 && W(s.nick, size, nO) > room) size = Math.round((size - 0.2) * 10) / 10;
     html.push(wordAt(`${pid}-band`, nx, y + 25.75, s.nick, { font: 'Alegreya SC', w: 700, size, lh: pt(size) * 1.2, ls: '.06em', color: CREAM, anchor: 'middle' }));
