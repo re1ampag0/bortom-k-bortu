@@ -2,7 +2,7 @@
 //   npm run print [-- --only 05,07] [--glass type|ship] [--index on|off] [--backs 1|2|3] [--draft] [--no-art]
 //                 [--draft-art] [--back-shift-x mm] [--back-shift-y mm] [--no-samples] [--check] [--check-pdf] [--board a|b]
 //                 [--counters board|strip] [--tokens old|new] [--test-set]
-//   --test-set: only the parts of the one-sided test set (test-set.ts) and out/print/test/; the full build writes it too
+//   --test-set: only the parts of the test set without card backs (test-set.ts) and out/print/test/; the full build writes it too
 // Writes out/print/*.pdf and the sample pictures out/print/obrazcy/. See tools/print/README.md.
 import path from 'node:path';
 import fs from 'node:fs';
@@ -11,7 +11,7 @@ import { mergePdf, writePdf, withControl } from './pdf';
 import { makeIcons } from './icons';
 import { pruneArt } from './art';
 import { cardParts } from './parts/cards';
-import { TEST_DIR, TEST_FILE, TEST_PARTS, buildTestSet } from './test-set';
+import { TEST_ONE, TEST_PARTS, TEST_TWO, buildTestSet } from './test-set';
 
 const args = process.argv.slice(2);
 const opt = (name: string, def: string) => { const i = args.indexOf(name); return i < 0 ? def : args[i + 1]; };
@@ -70,7 +70,7 @@ if (!opts.only) {
   const pruned = pruneArt(); if (pruned) console.log(`cache: removed ${pruned} unused file(s)`);
 }
 // the one-sided test set from the PDFs just written (the full build and --test-set)
-if (!opts.only || has('--test-set')) { const t = await buildTestSet(); console.log(`${path.relative(OUT, path.join(TEST_DIR, TEST_FILE))} — ${t.total} листов с одной стороны (${Object.entries(t.counts).map(([k, n]) => `${k} ${n}`).join(', ')})`); }
+if (!opts.only || has('--test-set')) { const t = await buildTestSet(); console.log(`test/${TEST_TWO} — ${t.two} листов с двух сторон, test/${TEST_ONE} — ${t.one} листов с одной стороны`); }
 if (opts.check && !(await (await import('./check')).checkLayout(ctx))) process.exitCode = 1;
 await browser.close();
 if (opts.checkPdf && !(await (await import('./check')).checkPdf())) process.exitCode = 1;
