@@ -42,7 +42,15 @@ const REPLACED: { file: 'rules' | 'memo'; was: string; now: string }[] = [
   { file: 'memo', was: 'Бортом к борту · одна на команду', now: 'Бортом к борту · одна на корабль' },
   // 11–12: the board has a nest for the Legend card (the boards v2 task, the user's request): it lies on the board, not beside it
   { file: 'rules', was: 'Положите Легенду каждого корабля открытой рядом с его планшетом', now: 'Положите Легенду каждого корабля открытой на его планшет' },
-  { file: 'rules', was: 'с начала игры лежит открытой рядом с планшетом', now: 'с начала игры лежит открытой на планшете' }
+  { file: 'rules', was: 'с начала игры лежит открытой рядом с планшетом', now: 'с начала игры лежит открытой на планшете' },
+  // 13–17: the memo said less than rules.md and a newcomer read it wrong (the memo review 17.11): the words of rules.md
+  // put back — Powder per team, the Pearl's Plans, Перестроение «раз в ход» for the team and free only for the Pirates,
+  // the Charge in the Command limit, Reactions only to cards against your team and «после Залпа» after the damage
+  { file: 'memo', was: '+3 Пороха (не больше 8)', now: '+3 Пороха на команду (не больше 8)' },
+  { file: 'memo', was: 'до 5 карт (Планы — в руке)', now: 'до 5 карт (Планы «Жемчужины» считаются картами в руке)' },
+  { file: 'memo', was: 'Перестроение: 1 Порох (пока «Жемчужина» на плаву — 0)', now: 'Перестроение: 1 Порох, раз в ход на команду (Пиратам — 0, пока «Жемчужина» на плаву)' },
+  { file: 'memo', was: '1 Заряд на Залп', now: '1 Заряд на Залп (в лимит Команды)' },
+  { file: 'memo', was: 'Играйте после объявления Залпа или карты, до урона.', now: 'Играйте после объявления Залпа или карты против вашей команды, до урона (карты «после Залпа» — после него).' }
 ];
 
 const squash = (s: string) => s.replace(/\s+/g, ' ').trim();
