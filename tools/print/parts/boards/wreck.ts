@@ -22,6 +22,7 @@ import { iconSvg, type IconName, type IconTone } from '../icons';
 import { TXT as FTXT, basePalette, jonesLine, md, measureMissing, noRef, rulesLine, rulesSection, widthOf, type Pal, type ShipKey, type ShipMaterial, type TO } from './frame';
 import { LOOKS, defsOf, ico, text, type Look } from './v2';
 import { emblemSvg } from './emblem';
+import { tokenSceneSvg } from '../tokens';
 import { PROP_DEFS, ageDefs, anemone, barnacle, charSvg, coralCrust, coralSprig, holeSvg, smallFan, tubeSponge, hullAgeDefs, jagLine, measureProps, placeProp, propIssues, propSvg, weed, type Kit, type Placed, type PropSpec, type WeedKind } from './wreck-props';
 
 type P = [number, number];
@@ -983,13 +984,11 @@ function physics(g: Geo, plates: Rect[]): string[] {
   return issues;
 }
 
-// ---- the ship token (the same picture as the new token on sheet 04: the kit ship on paper) ----
+// ---- the ship token: the same picture as the ship token on sheet 04 (tokens.ts — the ship at sea in the light of her deck back) ----
 const TPIC = { w: 30, h: 21.4 }, TPAPER = '#fbf6ea';
 async function tokenPic(ctx: Ctx, ship: Ship): Promise<string> {
-  const kind = DECK_KEY[ship.code], b = K.shipBox(kind, { x: 0, y: 0, scale: 1 }), m = 1.2, wl = TPIC.h - 1.4, k = Math.min((TPIC.w - 2 * m) / b.w, (wl - m) / b.h);
-  const body = K.ship('tk' + kind, K.makeLight(K.LIGHTS.endeavour, { horizon: wl - 2 }), { kind, x: TPIC.w / 2 - k * (b.x0 + b.x1) / 2, y: wl, scale: k });
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${TPIC.w} ${TPIC.h}"><rect width="${TPIC.w}" height="${TPIC.h}" fill="${TPAPER}"/>${body}<path d="M1 ${wl + 0.5}q1.2 -.6 2.4 0${'t2.4 0'.repeat(11)}" fill="none" stroke="#6f8a96" stroke-width=".25"/></svg>`;
-  return (await rasterJpeg(ctx.browser, 'token-ship-' + kind, svg, TPIC.w, TPIC.h, ctx.opts.draft ? 300 : 600, 0.92)).url;
+  const kind = DECK_KEY[ship.code];
+  return (await rasterJpeg(ctx.browser, 'token-sea-' + kind, tokenSceneSvg(kind), TPIC.w, TPIC.h, ctx.opts.draft ? 300 : 600, 0.92)).url;
 }
 
 // ---- the plates ----
@@ -1128,7 +1127,7 @@ function columnSvg(p: Plan, L: Look, pal: Pal, id: string, tokenUrl: string, shi
   out.push(`<rect data-plate="wcol" x="${col.x}" y="${col.y}" width="${col.w}" height="${r2(col.h)}" rx="2" fill="url(#${id}col)" stroke="${bd}" stroke-width=".35"/>`);
   out.push(`<rect x="${r2(col.x + 1.1)}" y="${r2(col.y + 1.1)}" width="${r2(col.w - 2.2)}" height="${r2(col.h - 2.2)}" rx="1.2" fill="none" stroke="${bd}" stroke-width=".2" stroke-opacity=".8"/><path d="M${r2(col.x + 2)} ${r2(col.y + 0.6)}H${r2(col.x + col.w - 2)}" stroke="#fff6d8" stroke-opacity=".6" stroke-width=".3"/>`);
   for (const [rx, ry] of [[col.x + 2.6, col.y + 2.6], [col.x + col.w - 2.6, col.y + 2.6], [col.x + 2.6, col.y + col.h - 2.6], [col.x + col.w - 2.6, col.y + col.h - 2.6]]) out.push(`<circle cx="${r2(rx)}" cy="${r2(ry)}" r=".9" fill="${bm}" stroke="${bd}" stroke-width=".22"/><circle cx="${r2(rx - 0.25)}" cy="${r2(ry - 0.25)}" r=".3" fill="#fff6d8" fill-opacity=".7"/>`);
-  // the token: the kit ship on paper, the band in the ship's colour with its letter
+  // the token: the ship at sea as on sheet 04, the band in the ship's colour with its letter
   const t = p.token, k = t.w / 30, band = { x: t.x, y: t.y + 21.4 * k, w: t.w, h: t.h - 21.4 * k };
   out.push(`<rect x="${r2(t.x + 0.6)}" y="${r2(t.y + 0.8)}" width="${t.w}" height="${t.h}" fill="#1a0e04" fill-opacity=".35"/><g data-plate="wtoken"><rect x="${t.x}" y="${t.y}" width="${t.w}" height="${t.h}" fill="${TPAPER}"/><image href="${tokenUrl}" x="${t.x}" y="${t.y}" width="${r2(TPIC.w * k)}" height="${r2(TPIC.h * k)}" preserveAspectRatio="none"/></g>`);
   out.push(`<rect data-plate="wtoken-band" x="${r2(band.x)}" y="${r2(band.y)}" width="${r2(band.w)}" height="${r2(band.h)}" fill="${ship.color}"/><path d="M${r2(band.x)} ${r2(band.y)}H${r2(band.x + band.w)}" stroke="${bl}" stroke-width=".35"/>`);
