@@ -1,7 +1,8 @@
 // The print-and-play set: HTML → PDF with Chromium (docs/tasks/print-kit.md, stage А).
 //   npm run print [-- --only 05,07] [--glass type|ship] [--index on|off] [--backs 1|2|3] [--draft] [--no-art]
 //                 [--draft-art] [--back-shift-x mm] [--back-shift-y mm] [--no-samples] [--check] [--check-pdf] [--board a|b]
-//                 [--counters board|strip] [--tokens old|new]
+//                 [--counters board|strip] [--tokens old|new] [--test-set]
+//   --test-set: only the parts of the one-sided test set (test-set.ts) and out/print/test/; the full build writes it too
 // Writes out/print/*.pdf and the sample pictures out/print/obrazcy/. See tools/print/README.md.
 import path from 'node:path';
 import fs from 'node:fs';
@@ -10,6 +11,7 @@ import { mergePdf, writePdf, withControl } from './pdf';
 import { makeIcons } from './icons';
 import { pruneArt } from './art';
 import { cardParts } from './parts/cards';
+import { TEST_DIR, TEST_FILE, TEST_PARTS, buildTestSet } from './test-set';
 
 const args = process.argv.slice(2);
 const opt = (name: string, def: string) => { const i = args.indexOf(name); return i < 0 ? def : args[i + 1]; };
@@ -20,7 +22,7 @@ const opts: Opts = {
   backs: (Number(opt('--backs', '1')) || 1) as 1 | 2 | 3,
   draft: has('--draft'), noArt: has('--no-art'), draftArt: has('--draft-art'),
   backShiftX: Number(opt('--back-shift-x', '0')), backShiftY: Number(opt('--back-shift-y', '0')),
-  only: opt('--only', '') ? opt('--only', '').split(',').map(s => s.trim()) : null,
+  only: opt('--only', '') ? opt('--only', '').split(',').map(s => s.trim()) : has('--test-set') ? TEST_PARTS : null,
   check: has('--check'), checkPdf: has('--check-pdf'), samples: !has('--no-samples'),
   board: opt('--board', 'b') === 'a' ? 'a' : 'b',
   counters: opt('--counters', 'strip') === 'board' ? 'board' : 'strip',
@@ -53,9 +55,10 @@ for (const [prefix, build] of builders) {
 if (opts.only?.some(o => o.startsWith('obr'))) await (await import('./samples')).buildSamples(ctx);
 // vse.pdf: everything in order, to look through on a screen (not for printing: one- and two-sided pages are mixed)
 if (!opts.only) {
-  const main = done.filter(p => !/^05[ab]|^obrazcy/.test(p.file) && !p.file.includes('-v'));
+  // without the rules (01) and the report form (08): the user's decision 17.11 — they live as their own files
+  const main = done.filter(p => !/^0[18]-|^05[ab]|^obrazcy/.test(p.file) && !p.file.includes('-v'));
   await mergePdf(main.map(p => path.join(OUT, p.file + '.pdf')), path.join(OUT, 'vse.pdf'), 'Бортом к борту — печатный набор (для просмотра)');
-  console.log(`vse.pdf — ${main.reduce((n, p) => n + p.pages.length + (p.duplex ? 2 : 1), 0)} стр.`);
+  console.log(`vse.pdf — ${main.reduce((n, p) => n + p.pages.length + (withControl(p.file) ? (p.duplex ? 2 : 1) : 0), 0)} стр.`);
   if (opts.samples) await (await import('./samples')).buildSamples(ctx);
   // index.html for the site (dist/print/): the files in plain words
   const site = JSON.parse(fs.readFileSync(path.join(HERE, 'text/site.json'), 'utf8')) as { title: string; lead: string; files: string[][]; shift: string; samples: string };
@@ -66,6 +69,8 @@ if (!opts.only) {
   fs.copyFileSync(path.join(HERE, 'text/PECHAT.txt'), path.join(OUT, 'PECHAT.txt'));
   const pruned = pruneArt(); if (pruned) console.log(`cache: removed ${pruned} unused file(s)`);
 }
+// the one-sided test set from the PDFs just written (the full build and --test-set)
+if (!opts.only || has('--test-set')) { const t = await buildTestSet(); console.log(`${path.relative(OUT, path.join(TEST_DIR, TEST_FILE))} — ${t.total} листов с одной стороны (${Object.entries(t.counts).map(([k, n]) => `${k} ${n}`).join(', ')})`); }
 if (opts.check && !(await (await import('./check')).checkLayout(ctx))) process.exitCode = 1;
 await browser.close();
 if (opts.checkPdf && !(await (await import('./check')).checkPdf())) process.exitCode = 1;
