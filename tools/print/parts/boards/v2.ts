@@ -743,8 +743,11 @@ function logInner(ship: Ship, L: Look, id: string): string {
   const extra = [TXT.heart[ship.code] ?? ''].filter(Boolean).map(t => `<div class="v2-p">${richNb(t)}</div>`).join('');
   return `<div class="v2-h">${esc(TXT.abilities)}</div>${ab}${extra}`;
 }
-/** the «раз в ход» cell beside an ability: a 13 mm cell like the tracks', floated right in the log */
-const onceCell = (L: Look, id: string) => `<svg viewBox="0 0 13 13" style="width:13mm;height:13mm;display:block;flex:none"><rect x=".2" y=".2" width="12.6" height="12.6" rx="1.8" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><rect x="1" y="1" width="11" height="11" rx="1.1" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".2"/></svg>`.replace('url(#' + id, 'url(#' + id);
+/** the «раз в ход» sign beside an ability: a brass seal with an engraved hourglass — a sign, not a cell to put a marker in
+ *  (the user's decision 17.11: no boxes); floated right in the log, the words under it */
+const HOURGLASS = '<path d="M6 3h12M6 21h12"/><path d="M7.5 3v2.5c0 2.6 4.5 4 4.5 6.5s-4.5 3.9-4.5 6.5V21M16.5 3v2.5c0 2.6-4.5 4-4.5 6.5s4.5 3.9 4.5 6.5V21"/><path d="M9.6 19.6c.8-1.6 1.6-2.4 2.4-2.4s1.6.8 2.4 2.4z" fill="currentColor" stroke="none"/>';
+const ONCE = 7.6;
+const onceCell = (L: Look, _id: string) => `<svg viewBox="0 0 ${ONCE} ${ONCE}" style="width:${ONCE}mm;height:${ONCE}mm;display:block;flex:none"><circle cx="${ONCE / 2}" cy="${ONCE / 2}" r="${ONCE / 2 - 0.15}" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><circle cx="${ONCE / 2}" cy="${ONCE / 2}" r="${ONCE / 2 - 0.9}" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".2"/><g transform="translate(${ONCE / 2 - 2.4} ${ONCE / 2 - 2.4}) scale(.2)" fill="none" stroke="${L.tone.ink}" color="${L.tone.ink}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${HOURGLASS}</g></svg>`;
 
 /** every line of the log has one line height (--lh), so the baselines stay on the ruled lines; a heading's larger size sits
  *  its baseline 0.33·Δem lower in the same line box and is lifted back (--lift-h, --lift-n) */
@@ -772,7 +775,7 @@ export const V2_CSS = `
 .v2-p{margin:0 0 var(--lh)}
 .v2-p:last-child{margin-bottom:0}
 .v2-p b{font-weight:800}
-.v2-tick{float:right;width:13.4mm;height:calc(13mm + var(--lh) + .6mm);margin:0 0 0 2mm;display:flex;flex-direction:column;align-items:center}
+.v2-tick{float:right;width:13.4mm;height:calc(7.6mm + var(--lh) + .6mm);margin:0 0 0 2mm;display:flex;flex-direction:column;align-items:center}
 .v2-tick i{display:block;font:italic 500 var(--fs) Alegreya,serif;letter-spacing:0;color:var(--soft);white-space:nowrap;margin-top:.6mm}
 `;
 
