@@ -24,7 +24,8 @@ interface Labels {
   partTitle: string; cut: string;
   back: { title: string; sub: string };
   path: { section: string; sign: string };
-  ticks: { section: string; title: string; items: string[] };
+  /** optional: «раз в ход» cells beside a section (the user dropped them 17.11: no such boxes on the memos) */
+  ticks?: { section: string; title: string; items: string[] };
   ship: { section: string; more: string; rulesHeading: string };
   icons: Record<string, string>;
   setup: { title: string; sub: string; rulesHeading: string; secretAfter: number; secretFrom: string };
@@ -255,7 +256,7 @@ function sectionHtml(ctx: Ctx, s: Section, pal: Pal, i: number, fs: number): str
     parts = [pathOf(parts[0], pal), ...parts.slice(1).map(p => p.replace('«' + L.path.sign + '»', bolt + '«' + L.path.sign + '»'))];
   }
   let val = parts.join('');
-  if (s.key === L.ticks.section)
+  if (L.ticks && s.key === L.ticks.section)
     val = `<div class="me-split"><div class="me-main">${val}</div><div class="me-tk"><div class="me-tkt" ${IN}>${esc(L.ticks.title)}</div><div class="me-tkr">${L.ticks.items.map((t, j) => `<div class="me-tc">${cellSvg(`@P-tick${j}`, pal.look)}<div ${IN}>${esc(t)}</div></div>`).join('')}</div></div></div>`;
   if (s.key === L.ship.section) val = `<div class="me-ship" data-plate="@P-ship">${val.replace(/data-in="@P-panel"/g, 'data-in="@P-ship"')}</div>`;
   // the name: as many words as fit beside the icon, the rest under it in the whole column («ХОД / ПРОТИВНИКА»)
@@ -380,7 +381,7 @@ export async function build(ctx: Ctx): Promise<Part[]> {
   const face = sideOf(ctx, faceBlocks.filter(b => b !== title && b !== sub)), back = sideOf(ctx, backBlocks);
   if (!back.types || back.types.length !== 4) throw new Error('memo.md: the back needs «::: types» with 4 rows');
   if (face.types) throw new Error('memo.md: «::: types» belongs to the back');
-  for (const k of [L.path.section, L.ticks.section]) if (!face.sections.some(s => s.key === k)) throw new Error(`memo.md: the face has no section «${k}»`);
+  for (const k of [L.path.section, ...(L.ticks ? [L.ticks.section] : [])]) if (!face.sections.some(s => s.key === k)) throw new Error(`memo.md: the face has no section «${k}»`);
 
   // «Мой корабль»: the ship's line of rules.md «Особенности кораблей», word for word, and «подробно — на планшете»
   const rules = parse(loadText('rules.md'));
