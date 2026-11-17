@@ -316,7 +316,7 @@ function markCell(pid: string, id: string, inner: (c: number) => string): string
 }
 const HC_B: WO = { w: 700, size: 9, lh: 3.6, color: LOOK.ink, align: 'right' };
 function holdHtml(t: HoldText, i: number, rule: string, id: string): { svg: string; html: string } {
-  const { x, w, h, cy, pad, sep, cellY } = HOLD_BOX, y = HOLD_BOX.y + i * h, side = t.side, ink = SIDE_INK[side], pid = `hold-${i}`, cr = HOLD.cell / 2;
+  const { x, w, h, cy, pad, sep, cellY } = HOLD_BOX, y = HOLD_BOX.y + i * h, side = t.side, ink = SIDE_INK[side], pid = `hold-${i}`, cr = HOLD.cell / 2, cd = cr - 0.5; // cd: the drawn ring, 21 mm on the 22 mm pitch — clear of the panel's rule (the user, 17.11)
   const svg: string[] = [];
   // the parchment, its double rule; the plate is the outer rule (1.2 mm inside the cut)
   svg.push(`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${GROUND}"/>`);
@@ -331,8 +331,8 @@ function holdHtml(t: HoldText, i: number, rule: string, id: string): { svg: stri
   const html: string[] = [];
   for (let k = 0; k < HOLD.cells; k++) {
     const cx = x + pad + cr + k * (HOLD.cell + HOLD.gap), cyy = y + cy;
-    svg.push(`<circle cx="${r(cx + 0.35)}" cy="${r(cyy + 0.5)}" r="${cr}" fill="#1a0e04" fill-opacity=".22"/>` + brassRing(`${pid}-c${k}`, cx, cyy, cr, 0.95, id, WELL));
-    svg.push(`<circle cx="${r(cx)}" cy="${r(cyy)}" r="${r(cr - 2.4)}" fill="none" stroke="${LOOK.paperLine}" stroke-opacity=".35" stroke-width=".2" stroke-dasharray="1.2 .9"/>`);
+    svg.push(`<circle cx="${r(cx + 0.35)}" cy="${r(cyy + 0.5)}" r="${cd}" fill="#1a0e04" fill-opacity=".22"/>` + brassRing(`${pid}-c${k}`, cx, cyy, cd, 0.95, id, WELL));
+    svg.push(`<circle cx="${r(cx)}" cy="${r(cyy)}" r="${r(cd - 2.4)}" fill="none" stroke="${LOOK.paperLine}" stroke-opacity=".35" stroke-width=".2" stroke-dasharray="1.2 .9"/>`);
     html.push(capWord(`${pid}-c${k}`, cx, cyy, String(k + 1), 4.8, { color: FAINT }));
   }
   html.push(wordAt(pid, x + 4.2, y + 7.3, t.name, nameO));
