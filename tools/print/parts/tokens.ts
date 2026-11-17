@@ -553,7 +553,7 @@ function shipTokensHtml(id: string, pics: Record<string, string> | null): { svg:
     // new: the letter in the band, left of the name, off the sails; old: the letter over the sky, the name centred in the band
     const m = pics ? { cx: x + 4.75, cy: y + 25.45, R: 2.6 } : { cx: x + 5.6, cy: y + 5.6, R: 3.5 };
     svg.push(brassRing(`${pid}-medal`, m.cx, m.cy, m.R, 0.6, id, deep));
-    html.push(capWord(`${pid}-medal`, m.cx, m.cy, s.code, m.R * 0.74, { color: CREAM, maxW: m.R * 0.95, inset: 0.6, name: `${s.code} (жетон)` }));
+    html.push(capWord(`${pid}-medal`, m.cx, m.cy + (pics ? 0.35 : 0), s.code, m.R * 0.74, { color: CREAM, maxW: m.R * 0.95, inset: 0.6, name: `${s.code} (жетон)` }));
     const nx = pics ? x + 18.4 : x + t / 2, room = pics ? 17.4 : 25, nO: TO = { font: 'Alegreya SC', w: 700, ls: '.06em' };
     let size = 9.6; while (size > 7 && W(s.nick, size, nO) > room) size = Math.round((size - 0.2) * 10) / 10;
     html.push(wordAt(`${pid}-band`, nx, y + 25.75, s.nick, { font: 'Alegreya SC', w: 700, size, lh: pt(size) * 1.2, ls: '.06em', color: CREAM, anchor: 'middle' }));
