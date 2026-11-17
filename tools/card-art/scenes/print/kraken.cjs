@@ -7,18 +7,22 @@
 // her men are flung off it into the air. In the foreground, low in the water, the beast's eye watches. The moon
 // behind the fog over the ship is the only light: the arms and the rigging stand against the glow, edged in pale
 // green; the eye glows on its own.
+// Refined (user's decision 16.11, from this chosen picture): more grandeur — the great arm towers higher, a still bigger
+// arm looms in the fog behind, higher than the card; stronger light — a brighter moon, its rays through the fog, a
+// stronger moonlit rim on the arms, the eye burning brighter; motion — the sea pouring off the arms in streams and
+// drops, the splashes where they burst out of the water higher.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
 const H = require('./lib/people.cjs');
 const { f, mix, lerp, nid, linGrad, radGrad, rng } = K;
-const { glow, gloom, motes } = PK;
+const { glow, gloom, motes, shafts } = PK;
 
 const HZ = 74;
 const SHIP = { kind: 'revenge', x: 116, y: 100, scale: .66, roll: 13, heel: 5, seed: 7 };
 const EYE = { x: 46, y: 104, w: 21 };
-const light = { time: 'fog', haze: .8, key: { type: 'moon', x: 124, y: 38, color: '#d4f4e4', power: .8 }, fill: { color: '#2f5a50', power: .45 },
-  rim: { az: 10, color: '#d8fff0', power: .55 }, locals: [{ x: EYE.x, y: EYE.y, color: '#d8ff80', power: .5, radius: 26 }] };
+const light = { time: 'fog', haze: .8, key: { type: 'moon', x: 124, y: 38, color: '#e0fff0', power: 1 }, fill: { color: '#2f5a50', power: .45 },
+  rim: { az: 10, color: '#e4fff4', power: .8 }, locals: [{ x: EYE.x, y: EYE.y, color: '#d8ff80', power: .65, radius: 30 }] };
 const skel = { horizon: HZ, eye: 1.5, light: 'the moon behind the fog, behind the ship (back light) + the glow of the eye', items: [
   ['ship', 62, 100, 100, 64, 'water, listing towards us'], ['arm L', 0, 128, 96, 100, 'out of the sea left, down on her bow'],
   ['arm M', 92, 70, 90, 70, 'one turn round her at the waterline; the foremast snapped'], ['arm R', 146, 116, 54, 84, 'out of the sea right, coiled round the mizzen'],
@@ -42,11 +46,23 @@ function tentacle(u, C, W, o = {}) {
   // a crease line along the spine and the under side
   s += `<path d="M${T.edge(.55 * lit, i0, i1).map(p => f(p[0]) + ' ' + f(p[1])).join('L')}" stroke="${TS.outline}" stroke-width="${f(Math.max(.3, W[0] * .02))}" fill="none" opacity=".5"/></g>`;
   // the rim of moonlight on the lit edge
-  s += `<path d="M${T.edge(-.97 * lit, i0, i1).map(p => f(p[0]) + ' ' + f(p[1])).join('L')}" stroke="${TS.rim}" stroke-width="${f(o.rimW || .8)}" fill="none" opacity=".75" stroke-linecap="round"/>`;
+  s += `<path d="M${T.edge(-.97 * lit, i0, i1).map(p => f(p[0]) + ' ' + f(p[1])).join('L')}" stroke="${TS.rim}" stroke-width="${f(o.rimW || 1)}" fill="none" opacity=".9" stroke-linecap="round"/>`;
   s += `<path d="${d}" fill="none" stroke="${TS.outline}" stroke-width=".45" opacity=".8"/>`;
   // suckers along the under side
   if (o.suckers !== false) for (let i = i0 + 1; i < i1; i += (o.step || 2)) { const q = T.S[i]; if (q.w < 1.6) continue; const p = T.at(i, .74 * lit), r = q.w * .16, a = Math.atan2(q.d[1], q.d[0]) * 180 / Math.PI;
     s += `<g transform="translate(${f(p[0])} ${f(p[1])}) rotate(${f(a)})"><ellipse rx="${f(r * 1.15)}" ry="${f(r * .8)}" fill="${TS.sucker}" stroke="${TS.outline}" stroke-width=".25"/><ellipse cx="${f(r * .1)}" rx="${f(r * .55)}" ry="${f(r * .36)}" fill="${TS.mouth}"/><path d="M${f(-r)} ${f(-r * .5)}q${f(r)} ${f(-r * .5)} ${f(r * 2)} 0" stroke="#f4ece0" stroke-width="${f(r * .2)}" fill="none" opacity=".6"/></g>`; }
+  return s;
+}
+// the sea pouring off an arm that has just burst out of it: from points along the spine C, thin pale streams fall
+// straight down (longer from the higher, thicker parts), breaking into drops at their ends
+function cascade(C, W, seed, o = {}) {
+  const R = rng(seed); let s = '';
+  for (let k = 0; k < C.length - 1; k++) for (let j = 0; j < (o.n || 3); j++) {
+    const t = R(), x = lerp(C[k][0], C[k + 1][0], t) + (R() - .5) * W[k] * .5, y = lerp(C[k][1], C[k + 1][1], t) + W[k] * .3, l = (o.len || 10) * (.4 + R()), w = .25 + R() * .45 * Math.min(1, W[k] / 14);
+    if (y + l > (o.floor || 130)) continue;
+    s += `<path d="M${f(x)} ${f(y)}q${f((R() - .5) * 1.2)} ${f(l * .5)} ${f((R() - .5) * 1.6)} ${f(l)}" stroke="#e4fff2" stroke-width="${f(w)}" fill="none" stroke-linecap="round" opacity="${f(.35 + R() * .35)}"/>`;
+    for (let d = 0; d < 3; d++) s += `<circle cx="${f(x + (R() - .5) * 2)}" cy="${f(y + l + 1 + d * 1.6 + R())}" r="${f(.2 + R() * .3)}" fill="#e4fff2" opacity="${f(.5 + R() * .3)}"/>`;
+  }
   return s;
 }
 // a sailor flung through the air: a small dark contour (body, head, flailing arms and legs), the moon on his edge
@@ -59,18 +75,22 @@ function flung(x, y, s, a, seed) {
     + `<circle cx="0" cy="-3.3" r="1.05" fill="#0a120e"/><path d="M.9 -3.6a1 1 0 0 1 -.2 1.4M.6 -2L.7 1.4" stroke="#c8ffe4" stroke-width=".3" fill="none" opacity=".7"/></g>`;
 }
 
-module.exports = { name: 'Кракен', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Кракен', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.5 });
     // the sky: green fog, the moon behind it over the ship, torn cloud
     let bg = K.sky(u, L, { horizon: HZ, stars: 14, seed: 5 }) + K.sunMoon(u, L, { r: 8 });
     for (const [x, y, w, h, sd, fr] of [[40, 30, 70, 9, 3, .3], [178, 52, 56, 7, 8, .45], [70, 62, 60, 6, 11, .6]]) bg += K.cloud(u, L, { x, y, w, h, seed: sd, far: fr });
-    bg += glow(u, 124, 40, 90, 60, '#bff8e0', .22);
+    bg += glow(u, 124, 40, 90, 60, '#bff8e0', .36) + glow(u, 124, 38, 30, 24, '#f0fff8', .4);
     bg += K.water(u, L, { horizon: HZ, bottom: 290, swell: .6, seed: 9, glitter: 124 });
     // small arms out of the far sea: the beast is bigger than we see
     bg += tentacle(u, [[6, 86], [4, 74], [12, 66], [18, 70], [15, 74]], [5, 3.6, 2.4, 1.4, .6], { lit: -1, seed: 2, step: 3, blur: .6, rimW: .4 })
       + tentacle(u, [[180, 84], [184, 72], [178, 66], [174, 70]], [4, 3, 1.6, .6], { lit: 1, seed: 4, step: 3, blur: .6, rimW: .4 });
+    // the biggest arm of all, far behind in the fog, rising higher than the card: the beast is bigger than we see
+    bg += '<g opacity=".5">' + tentacle(u, [[198, 86], [204, 50], [196, 16], [178, -2], [160, 0], [154, 12], [162, 18], [166, 12]], [22, 19, 15, 11, 8, 5, 2.6, 1], { lit: 1, seed: 12, step: 2, blur: 1.4 }) + '</g>';
     bg += K.fog(u, L, { y: HZ - 14, h: 26, density: .6, seed: 3 });
+    // the moon's rays fanning down through the fog, past the ship
+    bg += shafts(u, 124, 38, [[60, 140, 84, 140], [96, 140, 112, 140], [136, 140, 150, 140], [176, 140, 200, 130]], '#d8fff0', .2);
     // the arm on the right: out of the sea behind her stern, up and round the mizzen (behind her hull, over her sails)
     const armR = [[188, 116], [192, 84], [186, 58], [170, 40], [152, 40], [146, 50], [154, 56], [160, 50], [156, 46]], wR = [30, 22, 16, 12, 9, 7, 5, 3, 1.2];
     // the arm round her waist — one turn of a coil at the waterline: out of the near sea (thicker than her hull), up
@@ -114,16 +134,16 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'draft', cam: { x
       const R = rng(23); for (let i = 0; i < 9; i++) { const x = 68 + R() * 26, y = 48 + R() * 18, l = 1 + R() * 2.4, r = R() * Math.PI;
         mid += i % 3 ? `<path d="M${f(x)} ${f(y)}l${f(Math.cos(r) * l)} ${f(Math.sin(r) * l)}" stroke="${sp}" stroke-width="${f(.45 + R() * .4)}" stroke-linecap="round"/>`
           : `<path d="M${f(x)} ${f(y)}l${f(1 + R())} ${f(.4)}l${f(-.4)} ${f(1.2 + R())}Z" fill="${sl}" opacity=".9"/>`; } }
-    mid += tentacle(u, armR, wR, { lit: 1, seed: 6 });
+    mid += tentacle(u, armR, wR, { lit: 1, seed: 6, rimW: 1.2 }) + cascade(armR.slice(0, 5), wR, 43, { n: 3, len: 11 });
     mid += tentacle(u, armA, wA, { lit: 1, to: .78, seed: 5 }) + tentacle(u, armB, wB, { lit: 1, seed: 9 });
     mid += K.splash(u, { x: 107, y: 104, w: 20, h: 12, seed: 4, L, wind: -.4 }) + K.foam(u, { x: 106, y: 103.4, w: 22, h: 2.6, seed: 8, L }) + K.splash(u, { x: 160, y: 118, w: 30, h: 16, seed: 7, L, wind: .2 })
-      + K.splash(u, { x: 188, y: 112, w: 26, h: 15, seed: 1, L, wind: .3 });
+      + K.splash(u, { x: 188, y: 112, w: 32, h: 22, seed: 1, L, wind: .3 }) + cascade(armA.slice(0, 4), wA, 47, { n: 3, len: 8 });
     // her men flung off the tipped deck into the air
     mid += flung(84, 44, 1.1, -40, 1) + flung(136, 30, 1, 70, 2) + flung(62, 70, 1, 150, 3) + flung(170, 76, .9, -100, 4);
     // the great arm on the left: out of the sea at the left edge, up over her bowsprit, down on her bow
-    const armL = [[14, 132], [8, 96], [12, 60], [30, 34], [56, 26], [76, 34], [82, 50], [78, 64], [70, 66], [68, 58], [73, 56]], wL = [34, 32, 28, 23, 18, 14, 11, 8, 5, 3, 1.2];
-    let fg = tentacle(u, armL, wL, { lit: -1, seed: 8, blur: 1.6, rimW: 1.1 });
-    fg += K.splash(u, { x: 16, y: 120, w: 30, h: 18, seed: 2, L, wind: -.3 });
+    const armL = [[14, 132], [6, 96], [8, 56], [24, 24], [50, 12], [74, 20], [84, 42], [79, 62], [70, 66], [68, 58], [73, 56]], wL = [34, 32, 28, 23, 18, 14, 11, 8, 5, 3, 1.2];
+    let fg = tentacle(u, armL, wL, { lit: -1, seed: 8, blur: 1.6, rimW: 1.4 });
+    fg += cascade(armL.slice(0, 5), wL, 41, { n: 3, len: 11 }) + K.splash(u, { x: 16, y: 122, w: 40, h: 28, seed: 2, L, wind: -.3 }) + K.splash(u, { x: 30, y: 124, w: 22, h: 16, seed: 5, L, wind: -.2 });
     // spray and splinters where the arm comes down on her bow
     { const R = rng(9); for (let i = 0; i < 18; i++) { const a = -Math.PI * (.1 + R() * .8), d = 4 + R() * 14, x = 76 + Math.cos(a) * d, y = 64 + Math.sin(a) * d * .7, l = 1 + R() * 2.2, r = R() * Math.PI;
       fg += i % 2 ? `<circle cx="${f(x)}" cy="${f(y)}" r="${f(.3 + R() * .5)}" fill="#e0fff0" opacity=".8"/>` : `<path d="M${f(x)} ${f(y)}l${f(Math.cos(r) * l)} ${f(Math.sin(r) * l)}" stroke="#a88a5a" stroke-width=".55" stroke-linecap="round"/>`; } }
@@ -142,7 +162,7 @@ module.exports = { name: 'Кракен', kind: 'deck', status: 'draft', cam: { x
       // folds of skin round the socket
       for (const [k, op] of [[1.3, .7], [1.65, .5], [2, .35]]) fg += `<path d="M${f(e.x - w * .52 * k)} ${f(e.y + 1.5)}Q${e.x} ${f(e.y - 8.5 * k)} ${f(e.x + w * .52 * k)} ${f(e.y + 1.5)}" stroke="#0a140e" stroke-width=".7" fill="none" opacity="${op}"/><path d="M${f(e.x - w * .5 * k)} ${f(e.y + .6)}Q${e.x} ${f(e.y - 9.4 * k)} ${f(e.x + w * .5 * k)} ${f(e.y + .6)}" stroke="#8ab89a" stroke-width=".35" fill="none" opacity="${f(op * .6)}"/>`;
       // the eye itself: the glow first, then the iris, the slit, the wet glint, the heavy upper lid
-      fg += K.localGlow(u, { x: e.x, y: e.y - 1, color: '#d8ff80', power: .75, radius: 24 }, { squash: .65 })
+      fg += K.localGlow(u, { x: e.x, y: e.y - 1, color: '#d8ff80', power: .95, radius: 30 }, { squash: .65 })
         + `<path d="M${f(e.x - w * .55)} ${e.y}Q${e.x} ${e.y - 10} ${f(e.x + w * .55)} ${e.y}Q${e.x} ${e.y + 4.6} ${f(e.x - w * .55)} ${e.y}Z" fill="url(#${ir})" stroke="#0a1408" stroke-width=".6"/>`
         + `<path d="M${e.x - 1.1} ${e.y - 6.6}Q${e.x - 2.6} ${e.y - 1.6} ${e.x - 1.1} ${e.y + 3}H${e.x + 1.1}Q${e.x + 2.6} ${e.y - 1.6} ${e.x + 1.1} ${e.y - 6.6}Z" fill="#050805"/>`
         + `<ellipse cx="${e.x + 4.2}" cy="${e.y - 4}" rx="1.7" ry=".9" fill="#ffffff" opacity=".9"/><circle cx="${e.x - 5}" cy="${e.y + 1}" r=".5" fill="#ffffff" opacity=".6"/>`

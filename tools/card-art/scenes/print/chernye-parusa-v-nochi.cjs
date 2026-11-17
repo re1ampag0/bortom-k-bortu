@@ -51,7 +51,7 @@ function warmStreaks(u) {
   return s;
 }
 
-module.exports = { name: 'Чёрные паруса в ночи', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Чёрные паруса в ночи', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     // the sky: deep night, the Milky Way, many stars; the moon behind the cloud bank, its glow round the edges

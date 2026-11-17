@@ -40,7 +40,7 @@ const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
 const OFF = { lit: '#f4c49a', half: '#d4946a', shadow: '#86503a', outline: '#2e160c' };   // warm skin, a shade paler than the boatswain's
 const BOS = { lit: '#d8a070', half: '#a86c44', shadow: '#5a301a', outline: '#24120a' };
 
-module.exports = { name: 'Подкуп', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Подкуп', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VY, eye: 1.4 }), R = rng(17);
     return [hold(u, L, R), deal(u, L, R) + air(u, L)];

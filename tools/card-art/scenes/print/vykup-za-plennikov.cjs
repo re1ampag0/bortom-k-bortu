@@ -32,7 +32,7 @@ const skel = { horizon: HZ, eye: EYE, light: 'the setting sun low right behind h
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const pr = (X, Y, z) => [100 + X * FOC / z, HZ + (EYE - Y) * FOC / z];
 
-module.exports = { name: 'Выкуп за пленников', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Выкуп за пленников', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: EYE }), R = rng(43);
     L.pal = Object.assign({}, L.pal, { sky: ['#2a0c14', '#6a1e1e', '#c65a2c', '#f4b468'], sea: ['#e08a4a', '#5a2420', '#1a0a0a'], cloudLit: '#ffb878', cloudShade: '#4e1c26' });

@@ -29,7 +29,7 @@ const skel = { horizon: HZ, eye: 2, light: 'the afternoon sun behind us on the l
     ['boat C', 162, BC.y, 24, 12, 'water, pulling to the right'],
   ] };
 
-module.exports = { name: 'Торговый караван', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Торговый караван', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
     L.pal = Object.assign({}, L.pal, { sea: ['#86b6cc', '#3d6f88', '#16323f'], sky: ['#2f6cba', '#5b95d2', '#a6c9e6', '#f3e6c8'] });

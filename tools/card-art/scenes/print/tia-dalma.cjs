@@ -144,7 +144,7 @@ function jar(u, L, x, y, s, col, inside = '') {
   return out;
 }
 
-module.exports = { name: 'Тиа Дальма', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Тиа Дальма', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, f: FOC }), R = rng(23);
     const B = BW, cTL = [B.x0, B.y0], cTR = [B.x1, B.y0], cBL = [B.x0, B.y1], cBR = [B.x1, B.y1];

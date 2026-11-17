@@ -30,8 +30,12 @@ export interface Opts {
   check: boolean;
   checkPdf: boolean;
   samples: boolean;
-  /** 03-planshety.pdf: the board concept, 'a' «у борта» (default) or 'b' «стол капитана» */
+  /** 03-planshety.pdf: the board concept, 'b' «стол капитана» (default, v2 — the sea chart) or 'a' «у борта» */
   board?: 'a' | 'b';
+  /** concept B: «Осталось карт» / «Реакций сыграно» on the board ('board', default) or on strips on sheet 04 ('strip') */
+  counters?: 'board' | 'strip';
+  /** sheet 04: the ship tokens — 'new' (the kit ships of the backs and boards, default) or 'old' (the site's ships) */
+  tokens?: 'old' | 'new';
 }
 export interface PageSpec { html: string; land?: boolean }
 /** One PDF: its file name (without .pdf), CSS of its own, pages; duplex — printed on both sides: true — flip on the long edge,
@@ -110,7 +114,7 @@ export function rich(text: string, dark = false): string {
   const safe = text.replace(/<br\s*\/?>/g, '\n').replace(/<(\/?)b>/g, '\u0001$1b\u0002').replace(/</g, '&lt;').replace(/\u0001/g, '<').replace(/\u0002/g, '>').replace(/\n/g, '<br>');
   // a number stays with its word («на 1 урон», «до 2 Пороха»); «Это не Залп» is not broken
   return safe.replace(/(\d) (?=[А-ЯЁа-яё])/g, '$1\u00a0').replace(/ (—|–) /g, '\u00a0$1 ').replace(/(^|[ («>])([ВвКкСсУуОоИиАа]|[Нн][аеи]|[Оо]т|[Ии]з|[Пп]о|[Дд]о|[Зз]а|[Вв]о|[Кк]о|[Сс]о|[Оо]б) (?=[\dА-ЯЁа-яё«<])/g, '$1$2\u00a0').replace(/Это не Залп/g, 'Это\u00a0не\u00a0Залп')
-    .replace(/(?:(\d+)\s+)?(?<![А-Яа-яЁё])(Душ[а-яё]*)/g, (_, n, w) => (n ? `${n}\u00a0<img class="s-i" src="${FLASK_INLINE}" alt="">` : '') + `<span class="s-w" style="color:${col}">${w}</span>`);
+    .replace(/(?:(\d+)\s+)?(?<![А-Яа-яЁё])(Душ[а-яё]*)/g, (_, n, w) => n ? `<span style="white-space:nowrap">${n}\u00a0<img class="s-i" src="${FLASK_INLINE}" alt=""><span class="s-w" style="color:${col}">${w}</span></span>` : `<span class="s-w" style="color:${col}">${w}</span>`);
 }
 export const RICH_CSS = `.s-i{display:inline-block;height:1.05em;width:auto;vertical-align:-0.2em;margin:0 .12em 0 0}.s-w{font-weight:700}`;
 

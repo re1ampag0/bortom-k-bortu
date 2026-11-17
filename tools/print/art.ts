@@ -46,8 +46,11 @@ export const GLASS_TARGET = 0.02;
  *  less blur, less tint, a little lighter. The set itself is built with 0. */
 export const GLASS_CLEAR = Math.max(0, Math.min(40, Number(process.env.PRINT_GLASS_CLEAR) || 0)) / 100;
 
-export interface GlassBox { top: number; tint: string }
-export interface ArtInfo { url: string; file: string; dark: number; glassMean: number; glassP95: number }
+/** gold — the Legend's plate (colors.ts LEGEND.glass): golden-yellow, the picture shows only as soft light and shade in it;
+ *  inset, bottom — the plate's own place when it differs from FACE.glass (mm). Left out for every other card. */
+export interface GlassBox { top: number; tint: string; gold?: { lo: string; hi: string }; inset?: number; bottom?: number }
+/** glassP05 — the darkest 5 % under a light plate (the Legend's), where dark ink is read */
+export interface ArtInfo { url: string; file: string; dark: number; glassMean: number; glassP95: number; glassP05?: number }
 
 export function normalizeIds(svg: string): string {
   const map = new Map<string, string>();
@@ -100,7 +103,8 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
   await page.waitForTimeout(150); // embedded <image> pieces decode asynchronously
   const png = await page.screenshot({ clip: { x: 0, y: 0, width: uw, height: uh } });
   const k = W / CARD.w, g = FACE.glass;
-  const box = glass && { x: Math.round(g.inset * k), y: Math.round(glass.top * k), w: Math.round((CARD.w - 2 * g.inset) * k), h: Math.round((CARD.h - g.bottom - glass.top) * k), r: g.radius * k, tint: glass.tint };
+  const gi = glass?.inset ?? g.inset, gb = glass?.bottom ?? g.bottom;
+  const box = glass && { x: Math.round(gi * k), y: Math.round(glass.top * k), w: Math.round((CARD.w - 2 * gi) * k), h: Math.round((CARD.h - gb - glass.top) * k), r: g.radius * k, tint: glass.tint, gold: glass.gold ?? null };
   const res = await page.evaluate(async ({ b64, W, H, box, lut, target, sat, gsat, clear }) => {
     const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
     const c = document.createElement('canvas'); c.width = W; c.height = H;
@@ -115,8 +119,32 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       d[i] = y + (r - y) * sat; d[i + 1] = y + (gg - y) * sat; d[i + 2] = y + (b - y) * sat;
     }
     g.putImageData(id, 0, 0);
-    let mean = 0, p95 = 0;
-    if (box) {
+    let mean = 0, p95 = 0, p05 = -1;
+    if (box && box.gold) {
+      // the Legend's golden plate: the blurred picture's brightness only steers the gold between lo and hi (soft light and
+      // shade, never its colour); a sheen from the top; the plate is opaque enough that dark ink reads on all of it
+      const bc = document.createElement('canvas'); bc.width = W; bc.height = H;
+      const bg = bc.getContext('2d', { willReadFrequently: true })!;
+      bg.drawImage(c, 0, 0); bg.filter = `blur(${(W * 0.03).toFixed(1)}px)`; bg.drawImage(c, 0, 0);
+      const src = bg.getImageData(box.x, box.y, box.w, box.h).data, dst = g.getImageData(box.x, box.y, box.w, box.h), o = dst.data;
+      const lin = (v: number) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
+      const hx = (c: string) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)), lo = hx(box.gold.lo), hi = hx(box.gold.hi);
+      let ym = 0, yn = 0; for (let i = 0; i < src.length; i += 16) { ym += 0.2126 * src[i] + 0.7152 * src[i + 1] + 0.0722 * src[i + 2]; yn++; } ym /= yn * 255;
+      const hist = new Uint32Array(1001); let s = 0, n = 0;
+      for (let y = 0; y < box.h; y++) for (let x = 0; x < box.w; x++) {
+        const cx = x < box.r ? box.r : x > box.w - box.r ? box.w - box.r : x, cy = y < box.r ? box.r : y > box.h - box.r ? box.h - box.r : y;
+        if ((x - cx) ** 2 + (y - cy) ** 2 > box.r * box.r) continue;
+        const i = (y * box.w + x) * 4, yy = (0.2126 * src[i] + 0.7152 * src[i + 1] + 0.0722 * src[i + 2]) / 255;
+        // the picture's light and shade around the plate's mean, a sheen at the top, a soft diagonal glint
+        const t = Math.max(0, Math.min(1, 0.52 + (yy - ym) * 0.55 + 0.22 * (1 - y / box.h) - 0.12 + 0.08 * Math.cos((x / box.w - y / box.h) * Math.PI * 1.6)));
+        const p = lo.map((v, j) => v + (hi[j] - v) * t);
+        o[i] = p[0]; o[i + 1] = p[1]; o[i + 2] = p[2];
+        const L = 0.2126 * lin(p[0]) + 0.7152 * lin(p[1]) + 0.0722 * lin(p[2]); s += L; n++; hist[Math.min(1000, Math.round(L * 1000))]++;
+      }
+      g.putImageData(dst, box.x, box.y);
+      mean = s / n; let acc = 0; for (let b = 1000; b >= 0; b--) { acc += hist[b]; if (acc >= n * 0.05) { p95 = b / 1000; break; } }
+      acc = 0; for (let b = 0; b <= 1000; b++) { acc += hist[b]; if (acc >= n * 0.05) { p05 = b / 1000; break; } }
+    } else if (box) {
       const bc = document.createElement('canvas'); bc.width = W; bc.height = H;
       const bg = bc.getContext('2d', { willReadFrequently: true })!;
       bg.drawImage(c, 0, 0); // an unblurred copy under the blur keeps the canvas edge from fading to transparent
@@ -156,9 +184,9 @@ export async function makeArt(ctx: Ctx, key: string, svg: string, glass: GlassBo
       g.putImageData(dst, box.x, box.y);
       mean = s / n; let acc = 0; for (let b = 1000; b >= 0; b--) { acc += hist[b]; if (acc >= n * 0.05) { p95 = b / 1000; break; } }
     }
-    return { jpeg: c.toDataURL('image/jpeg', 0.9).split(',')[1], dark: dark / (rows * W), glassMean: mean, glassP95: p95 };
+    return { jpeg: c.toDataURL('image/jpeg', 0.9).split(',')[1], dark: dark / (rows * W), glassMean: mean, glassP95: p95, glassP05: p05 };
   }, { b64: png.toString('base64'), W, H, box, lut: curveLut(), target: GLASS_TARGET * (1 + GLASS_CLEAR * 3), sat: PROFILE_SAT, gsat: GLASS_SAT, clear: GLASS_CLEAR });
-  const info = { dark: +res.dark.toFixed(4), glassMean: +res.glassMean.toFixed(4), glassP95: +res.glassP95.toFixed(4) };
+  const info = { dark: +res.dark.toFixed(4), glassMean: +res.glassMean.toFixed(4), glassP95: +res.glassP95.toFixed(4), ...(res.glassP05 >= 0 ? { glassP05: +res.glassP05.toFixed(4) } : {}) };
   fs.writeFileSync(full, Buffer.from(res.jpeg, 'base64')); fs.writeFileSync(meta, JSON.stringify(info));
   return { url, file, ...info };
 }

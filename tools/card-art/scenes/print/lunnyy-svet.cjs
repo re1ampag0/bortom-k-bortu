@@ -61,7 +61,7 @@ const D = {
 const TIP = [134.4, 82.8];          // the point of the attacker's sabre, out of the defender's back
 const DTIP = [140.6, 30.6];         // the point of the defender's raised sabre
 
-module.exports = { name: 'Лунный свет', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Лунный свет', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.7 });
     L.pal = Object.assign({}, L.pal, { sky: ['#05081a', '#0c1430', '#1a2a4c', '#34486a'], sea: ['#5a7090', '#1e3048', '#0a1424'] });

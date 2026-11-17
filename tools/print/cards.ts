@@ -4,11 +4,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { data, esc, mm, rich, read, HERE, ROOT, RICH_CSS, fontCss, BASE_CSS, type Ctx, type PageSpec } from './kit';
-import { BRASS, BRASS_DARK, BRASS_LIGHT, DECK_BAND, DECK_KEY, DECK_NAME, DECK_RIM, DECK_TINT, ON_GLASS, SEA, TYPE, cutColor, darken, lighten, type CardType, type DeckCode } from './colors';
-import { A4, BLEED, BLEED_BOX, CARD, FACE, GRID, backSheet, cutLines, deckSheets, seaSheets, slot, slug, priceOf, type BackKind, type DeckCard, type Item, type SeaCard, type Sheet } from './layout';
+import { BRASS, BRASS_DARK, BRASS_LIGHT, DECK_BAND, DECK_KEY, DECK_NAME, DECK_RIM, DECK_TINT, LEGEND, ON_GLASS, SEA, TYPE, cutColor, darken, lighten, type CardType, type DeckCode } from './colors';
+import { A4, BLEED, BLEED_BOX, CARD, FACE, GRID, backSheet, cutLines, deckSheets, legendSheets, seaSheets, slot, slug, priceOf, type BackKind, type DeckCard, type Item, type SeaCard, type Sheet } from './layout';
 import { iconImg, ROSE_URI, typeIconUri } from './icons';
 import { backArtSvg, backSpec, backVariants, hasScene, makeArt, plainSvg, portraitSvg, profiled, type ArtInfo, type BackSpec } from './art';
 import { wxSvg } from '../../src/ui/game/art/wx';
+import { LB_DX, LB_FILL, LB_FRAME_SVG, LB_GOLD, LEGEND_BACK_CREST, LEGEND_BACK_FONT, legendCrestHtml, legendLetteringSvg, shiftBack } from './legend-back';
 
 export const TXT = JSON.parse(fs.readFileSync(path.join(HERE, 'text/cards.json'), 'utf8'));
 /** Back designs that exist (docs/tasks/print-kit.md 4.10): 1 «Корабль в море»; 2 and 3 come with stage Б. */
@@ -17,20 +18,38 @@ export interface Mode { glass: 'type' | 'ship'; index: boolean; backs: 1 | 2 | 3
 /** What the fitting pass decided for one face: sizes in pt, what stayed on the plate, the plate's height in mm. */
 export interface Fit { name: number; wrap: boolean; tp: number; big: boolean; flavor: boolean; fvBreak: boolean; h: number; over: boolean; idx: number; idxW: number; idxBottom: number }
 
-const G = FACE.glass, MAX_GLASS = CARD.h - G.minTop - G.bottom;
+const G = FACE.glass, MAX_GLASS = CARD.h - G.minTop - G.bottom, LG = FACE.legend, MAX_GLASS_LEGEND = CARD.h - G.minTop - LG.glass.bottom;
+const LF = LEGEND.frame;
+/** The look of the Legend's ship band (bandSvg): 'ship' or 'black'; PRINT_LEGEND_BAND overrides it for a comparison. */
+export const LEGEND_BAND: 'ship' | 'black' = process.env.PRINT_LEGEND_BAND === 'ship' ? 'ship' : 'black';
+/** The top of a Legend face (user's decision 16.11): 'none' — no plate (printed); 'small' — a small gold plate «ЛЕГЕНДА»
+ *  (without «раз за игру»), PRINT_LEGEND_PLATE=small renders it for a comparison. */
+export const LEGEND_PLATE: 'none' | 'small' = process.env.PRINT_LEGEND_PLATE === 'small' ? 'small' : 'none';
+const LEGEND_BAND_BLACK = '#17110b', LEGEND_BAND_INK = { ship: '#fff2d0', black: LEGEND.back.gold };
+
+/** The ship's band at the bottom of a face: the picture fades into the band colour over its top 26 %. Not a CSS gradient
+ *  with a transparent stop — Chromium writes that as a function-based shading (/ShadingType 1), which pdf.js (Firefox,
+ *  phone and messenger viewers) paints hot pink. Instead 12 stacked flat strips of the band colour, each from its step
+ *  down to the bottom: layer k has alpha 1/(13 − k), so k layers add up to k/12 — the same linear ramp, flat fills only. */
+const BAND_FADE = (() => {
+  const n = 12, ramp = FACE.band.h * 0.26, h = FACE.band.h;
+  let r = '';
+  for (let k = 1; k <= n; k++) { const y = Math.round((k - 1) / n * ramp * 1000) / 1000; r += `<rect x="0" y="${y}" width="${CARD.w}" height="${Math.round((h - y) * 1000) / 1000}" style="fill:var(--band)"${k < n ? ` fill-opacity="${Math.round(1000 / (n - k + 1)) / 1000}"` : ''}/>`; }
+  return `<svg class="bf" viewBox="0 0 ${CARD.w} ${h}" preserveAspectRatio="none">${r}</svg>`;
+})();
 
 export const CARD_CSS = `${RICH_CSS}
 .cd{position:absolute;width:${mm(CARD.w)};height:${mm(CARD.h)};overflow:hidden;background:#1c120a;color:#fff}
 .cd .art{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
 .cd .fr{position:absolute;inset:0;border:2mm solid var(--frame);box-sizing:border-box}
-.cd .fr2{position:absolute;inset:1.55mm;border:.25mm solid ${BRASS_DARK};box-sizing:border-box}
-.cd .bd{position:absolute;left:0;right:0;bottom:0;height:${mm(FACE.band.h)};background:linear-gradient(rgba(0,0,0,0),var(--band) 26%)}
+.cd .bd{position:absolute;left:0;right:0;bottom:0;height:${mm(FACE.band.h)}}
+.cd .bd .bf{position:absolute;left:0;top:0;width:100%;height:100%}
 .cd .bd span{position:absolute;left:0;right:0;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);text-align:center;font:800 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em;color:#f6e7c1;white-space:nowrap}
 .cd .bd i{position:absolute;right:4.4mm;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);font:800 9.5pt/1 'Alegreya Sans',sans-serif;font-style:normal;letter-spacing:.04em;color:#f6e7c1}
 .gl{position:absolute;left:${mm(G.inset)};right:${mm(G.inset)};bottom:${mm(G.bottom)};border-radius:${mm(G.radius)};box-sizing:border-box;border:.25mm solid var(--rim);padding:1.9mm 2.1mm 1.7mm;display:flex;flex-direction:column;align-items:center;gap:.95mm;text-align:center;color:${ON_GLASS.text}}
 .nm{font:700 14pt/1 'Alegreya SC',serif;color:${ON_GLASS.name};white-space:nowrap;max-width:100%;overflow:hidden;padding-bottom:.2mm}
 .nm.wrap{white-space:normal;text-wrap:balance;line-height:1.02;overflow:visible}
-.vr{width:19mm;height:.26mm;flex:none;background:linear-gradient(90deg,rgba(226,183,92,0),${BRASS_LIGHT},rgba(226,183,92,0))}
+.vr{width:19mm;height:.3mm;flex:none;background:${BRASS_LIGHT};clip-path:polygon(0 50%,50% 0,100% 50%,50% 100%)}
 .rb{flex:none;padding:.55mm 3.1mm .85mm;clip-path:polygon(1.7mm 0,calc(100% - 1.7mm) 0,100% 50%,calc(100% - 1.7mm) 100%,1.7mm 100%,0 50%);font:500 7pt/1 'Alegreya Sans',sans-serif;letter-spacing:.05em;white-space:nowrap;color:#fff}
 .rb b{font-weight:800;letter-spacing:.14em}
 .bg{font:800 11pt/1.08 'Alegreya Sans',sans-serif;color:${ON_GLASS.big}}
@@ -41,8 +60,20 @@ export const CARD_CSS = `${RICH_CSS}
 .pl span{flex:none;padding:.35mm 1.2mm .6mm;border-radius:.6mm;background:#1d1d1f;border:.2mm solid rgba(242,214,138,.7);color:#f2d68a;font:800 6pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em}
 .fv{font:italic 500 7pt/1.18 Alegreya,serif;color:${ON_GLASS.text};border-top:.2mm solid rgba(226,183,92,.55);padding-top:.55mm;width:100%;text-wrap:balance}
 .ix{white-space:normal;position:absolute;left:${mm(FACE.index.x)};top:${mm(FACE.index.y)};max-width:${mm(FACE.index.maxW)};box-sizing:border-box;padding:.6mm 1.1mm .8mm;border-radius:1.5mm;background:rgba(14,11,9,${FACE.index.alpha});color:${ON_GLASS.cream};font:700 7pt/1.08 'Alegreya Sans',sans-serif;text-align:left}
-.lg{position:absolute;left:50%;top:5.2mm;transform:translateX(-50%);padding:.7mm 1.8mm .95mm;background:linear-gradient(${BRASS_LIGHT},${BRASS});border:.25mm solid ${BRASS_DARK};border-radius:.8mm;font:500 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.04em;color:#2a180c;white-space:nowrap}
-.lg b{font-weight:800;letter-spacing:.12em}
+.lg{position:absolute;white-space:nowrap}
+/* the Legend («ЛЕГЕНДА»): engraved gold frame (SVG), golden glass baked into the picture, dark ink, the medallion, the ship's ribbon */
+.cd.lgd .lgf{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
+.cd.lgd .gl{left:${mm(LG.glass.inset)};right:${mm(LG.glass.inset)};bottom:${mm(LG.glass.bottom)};padding:1.8mm 1.5mm 1.5mm;border:.35mm solid ${LEGEND.glass.rim};color:${LEGEND.ink.text}}
+.cd.lgd .nm{color:${LEGEND.ink.name};text-shadow:0 .14mm 0 ${LEGEND.ink.light}}
+.cd.lgd .vr{width:22mm;height:.3mm;background:${LEGEND.frame.line}}
+.cd.lgd .bg{color:${LEGEND.ink.big}}
+.cd.lgd .fv{color:${LEGEND.ink.text};border-top-color:rgba(92,58,6,.6)}
+.cd.lgd .s-w{color:${LEGEND.ink.soul} !important}
+.cd.lgd .bd{height:${mm(LG.band.top)};background:none}
+.cd.lgd .bd svg{position:absolute;left:0;top:0;width:100%;height:100%}
+.cd.lgd .bd span{bottom:${mm((LG.frame + LG.band.top - .6) / 2)};color:${LEGEND_BAND_INK[LEGEND_BAND]}}
+.cd.lgd .lg{left:50%;top:${mm(LG.plate.top)};transform:translateX(-50%);padding:.6mm 1.7mm .8mm;background:linear-gradient(${LF.light},${LF.mid} 55%,${darken(LF.mid, .12)});border:.3mm solid ${LF.line};border-radius:.8mm;font:500 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.04em;color:${LEGEND.ink.text}}
+.cd.lgd .lg b{font-weight:800;letter-spacing:.12em}
 /* the spare card: a parchment plate to write on */
 .gl.paper{background:linear-gradient(#faf2de,#e8d6ac);border-color:${BRASS};color:#6e5a3c;justify-content:flex-start}
 .gl.paper .nl{width:100%;height:.2mm;background:#b9a274;margin-top:6.2mm}
@@ -66,13 +97,16 @@ export const CARD_CSS = `${RICH_CSS}
 .bk{position:absolute;width:${mm(CARD.w)};height:${mm(CARD.h)};overflow:hidden;background:var(--ground)}
 .bk .art{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
 .bk .tt{position:absolute;left:0;right:0;top:9.6mm;text-align:center;font:700 12pt/1 'Alegreya SC',serif;letter-spacing:.14em;color:#f3dc9d}
-.bk .tr{position:absolute;left:50%;top:15.2mm;width:25mm;margin-left:-12.5mm;height:.2mm;background:linear-gradient(90deg,rgba(217,171,82,0),#d9ab52,rgba(217,171,82,0))}
+.bk .tr{position:absolute;left:50%;top:15.2mm;width:25mm;margin-left:-12.5mm;height:.2mm;background:#d9ab52;clip-path:polygon(0 50%,50% 0,100% 50%,50% 100%)}
 .bk .cr{position:absolute;left:50%;top:57.4mm;width:18.9mm;height:18.9mm;margin-left:-9.45mm}
 .bk .bn{position:absolute;left:9mm;right:9mm;top:74.6mm;text-align:center;font:700 9.6pt/1.05 'Alegreya SC',serif;color:#fff2d4;letter-spacing:.04em}
-.bk .bl{position:absolute;left:50%;top:74.2mm;transform:translateX(-50%);padding:.7mm 2.4mm .95mm;background:linear-gradient(${BRASS_LIGHT},${BRASS});border:.25mm solid ${BRASS_DARK};border-radius:.8mm;font:800 7pt/1 'Alegreya Sans',sans-serif;letter-spacing:.16em;color:#2a180c}
 .bk.nt .pp{position:absolute;inset:10mm;border-radius:5mm;background:linear-gradient(#f4e8c8,#e2cfa0)}
 .bk.nt .tt{top:26mm;left:10mm;right:10mm;color:#5a3c14;font-size:10.5pt;letter-spacing:.08em}
 .bk.nt .rs{position:absolute;left:50%;top:36mm;width:22mm;height:22mm;margin-left:-11mm}
+/* the Legend's back: its deck's back, «ЛЕГЕНДА» in gold, the thin gold frame from the cut on through the bleed */
+.bk.lgb .lbf{position:absolute;left:${mm(-BLEED)};top:${mm(-BLEED)};width:${mm(CARD.w + 2 * BLEED)};height:${mm(CARD.h + 2 * BLEED)}}
+.bk.lgb .tt{text-shadow:0 .22mm 0 rgba(0,0,0,.55)}
+.bk.lgb .lbl{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
 /* sheet furniture */
 .sh-bleed{position:absolute;left:${mm(BLEED_BOX.x)};top:${mm(BLEED_BOX.y)};width:${mm(BLEED_BOX.w)};height:${mm(BLEED_BOX.h)}}
 .sh-blank{position:absolute;width:${mm(CARD.w)};height:${mm(CARD.h)};background:#fff}
@@ -87,7 +121,7 @@ const ribbon = (bold: string, rest: string, t: { t: string; td: string }) => `<d
 const splitPlan = (text: string): [string, string] => { const [rule, plan = ''] = text.split(/<b>План:<\/b>/); return [rule.replace(/(<br\s*\/?>\s*)+$/, ''), plan.trim()]; };
 /** Short lines (big result, flavour): a dash does not start a line, a number stays with its word. */
 const typo = (t: string) => esc(t).replace(/ (—|–) /g, '\u00a0$1 ').replace(/(\d) (?=[А-ЯЁа-яё])/g, '$1\u00a0');
-const nameStart = (n: string) => n.length <= 10 ? 14 : n.length <= 14 ? 13 : 12;
+const nameStart = (n: string, legend = false) => legend ? (n.length <= 10 ? 15.5 : n.length <= 14 ? 14.5 : 13.5) : n.length <= 10 ? 14 : n.length <= 14 ? 13 : 12;
 
 interface FaceSpec { key: string; name: string; art: string; frame: string; band: string; rim: string; tint: string; bandText: string; copies: number; medal: string; ribbon: string; big: string; text: string; flavor: string; price: { powder: number; soul: number }; legend: boolean; index: boolean; sceneName: string | null; artKey: string }
 
@@ -99,13 +133,43 @@ export function faceSpec(item: Extract<Item, { kind: 'card' | 'legend' | 'sea' }
   const c: DeckCard = item.card, deck: DeckCode = item.deck, t = TYPE[c.type as CardType], legend = item.kind === 'legend';
   const when = legend && c.type === 'РЕАКЦИЯ' ? TXT.ribbonLegendJack : t.when;
   return {
-    key: deck + '|' + c.name, name: c.name, art: '', frame: legend ? BRASS : DECK_BAND[deck], band: DECK_BAND[deck],
-    rim: mode.glass === 'ship' ? DECK_RIM[deck] : t.t, tint: mode.glass === 'ship' ? DECK_TINT[deck] : t.tint,
+    key: deck + '|' + c.name, name: c.name, art: '', frame: legend ? LEGEND.frame.mid : DECK_BAND[deck], band: DECK_BAND[deck],
+    // the Legend's glass is golden in both modes (its own card type), never the ship's colour
+    rim: legend ? LEGEND.glass.rim : mode.glass === 'ship' ? DECK_RIM[deck] : t.t, tint: legend ? LEGEND.glass.lo : mode.glass === 'ship' ? DECK_TINT[deck] : t.tint,
     bandText: DECK_NAME[deck].toUpperCase(), copies: legend ? 1 : c.copies ?? 1, medal: 'medal-' + t.key, ribbon: ribbon(c.type, when, t),
     big: c.big, text: c.text, flavor: c.flavor, price: priceOf(c), legend, index: mode.index && !legend,
     sceneName: legend ? null : c.name, artKey: legend ? 'legend-' + DECK_KEY[deck] : slug(c.name)
   };
 }
+
+// ——— the Legend: frame, medallion, ribbon, back (own SVG, units mm) ———
+const n2 = (v: number) => String(Math.round(v * 100) / 100);
+/** The gold frame of a Legend face, calm and thin (LG.frame): a flat gold band (the cut forgives a miss), one fine engraved
+ *  line along it with small rounded corners and a dot in each, a dark hairline on its inner edge. */
+const LEGEND_FRAME_SVG = (() => {
+  const W = CARD.w, H = CARD.h, F = LG.frame, o = F * .45, r = .9, i = F;
+  const rail = `M${o + r} ${o}H${W - o - r}A${r} ${r} 0 0 0 ${W - o} ${o + r}V${H - o - r}A${r} ${r} 0 0 0 ${W - o - r} ${H - o}H${o + r}A${r} ${r} 0 0 0 ${o} ${H - o - r}V${o + r}A${r} ${r} 0 0 0 ${o + r} ${o}Z`;
+  const ring = `M0 0H${W}V${H}H0Z M${i} ${i + 1}Q${i} ${i} ${i + 1} ${i}H${W - i - 1}Q${W - i} ${i} ${W - i} ${i + 1}V${H - i - 1}Q${W - i} ${H - i} ${W - i - 1} ${H - i}H${i + 1}Q${i} ${H - i} ${i} ${H - i - 1}Z`;
+  const inner = `M${i} ${i + 1}Q${i} ${i} ${i + 1} ${i}H${W - i - 1}Q${W - i} ${i} ${W - i} ${i + 1}V${H - i - 1}Q${W - i} ${H - i} ${W - i - 1} ${H - i}H${i + 1}Q${i} ${H - i} ${i} ${H - i - 1}Z`;
+  return `<svg class="lgf" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><path d="${ring}" fill-rule="evenodd" fill="${LF.mid}"/>`
+    + `<path d="${rail}" fill="none" stroke="${LF.deep}" stroke-width=".2"/>`
+    + [[o, o], [W - o, o], [o, H - o], [W - o, H - o]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r=".3" fill="${LF.deep}"/>`).join('')
+    + `<path d="${inner}" fill="none" stroke="${LF.line}" stroke-width=".25"/></svg>`;
+})();
+
+/** The ship's band at the bottom of a Legend, across the whole card (the gold frame covers its outer part), a gold edge
+ *  along its top. Two looks (user's choice 16.11): 'ship' — in the ship's colour, light letters; 'black' — black, gold
+ *  letters. LEGEND_BAND is the one printed; PRINT_LEGEND_BAND=ship|black renders the other. */
+function bandSvg(col: string): string {
+  const W = CARD.w, h = LG.band.top, f = LEGEND_BAND === 'black' ? LEGEND_BAND_BLACK : col, id = 'lgbd' + col.slice(1);
+  return `<svg viewBox="0 0 ${W} ${h}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">`
+    + `<stop offset="0" stop-color="${lighten(f, .1)}"/><stop offset=".5" stop-color="${f}"/><stop offset="1" stop-color="${darken(f, .25)}"/></linearGradient></defs>`
+    + `<rect width="${W}" height="${h}" fill="url(#${id})"/><rect width="${W}" height=".6" fill="${LF.mid}"/><rect y=".08" width="${W}" height=".2" fill="${LF.light}"/>`
+    + `<rect y=".6" width="${W}" height=".22" fill="${LF.line}"/></svg>`;
+}
+
+/** The colour of a Legend back's edge: the frame's gold, the bleed of the Legend sheet's back side (legend-back.ts). */
+export const LEGEND_BACK_EDGE = LB_GOLD;
 
 /** The face. fit = null: the measuring pass (everything on the plate, sizes set by the script). */
 export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string, pos = ''): string {
@@ -122,13 +186,14 @@ export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string,
     else if (s.price.soul) small = iconImg(ctx, `flask-${s.price.soul}`, x, y - .4, I.priceD, 'ixp');
   }
   const idx = ''; // the result plate under the medal is gone (user's decision 12.11): the result stays on the glass, the medal keeps the small price
-  const lg = s.legend ? `<div class="lg"><b>${esc(TXT.legendPlate[0])}</b> · ${esc(TXT.legendPlate[1])}</div>` : '';
-  return `<div class="cd" data-key="${esc(s.key)}" data-index="${s.index ? 1 : 0}" style="${pos}--frame:${s.frame};--band:${s.band};--rim:${s.rim}">`
+  const L = s.legend, lg = L && LEGEND_PLATE === 'small' ? `<div class="lg"><b>${esc(TXT.legendPlate[0].toUpperCase())}</b></div>` : '';
+  const band = L ? `<div class="bd">${bandSvg(s.band)}<span>${esc(s.bandText)}</span></div>` : `<div class="bd">${BAND_FADE}<span>${esc(s.bandText)}</span>${s.copies > 1 ? `<i>×${s.copies}</i>` : ''}</div>`;
+  return `<div class="cd${L ? ' lgd' : ''}" data-key="${esc(s.key)}" data-index="${s.index ? 1 : 0}" data-maxh="${L ? MAX_GLASS_LEGEND : MAX_GLASS}" style="${pos}--frame:${s.frame};--band:${s.band};--rim:${s.rim}">`
     + (artUrl ? `<img class="art" src="${artUrl}" alt="">` : '')
-    + `<div class="bd"><span>${esc(s.bandText)}</span>${s.copies > 1 ? `<i>×${s.copies}</i>` : ''}</div>`
-    + `<div class="gl"${fit ? ` style="height:${mm(fit.h)}"` : ''}><div class="nm${fit?.wrap ? ' wrap' : ''}" style="font-size:${fit?.name ?? nameStart(s.name)}pt">${esc(s.name)}</div><div class="vr"></div>${s.ribbon}${big}`
-    + `<div class="tx" style="font-size:${tp}pt">${rich(rule, true)}</div>${plan ? `<div class="pl" style="font-size:${tp}pt"><span>${esc(TXT.plan)}</span><div>${rich(plan, true)}</div></div>` : ''}${flavor}</div>`
-    + `<div class="fr"></div>${s.legend ? '<div class="fr2"></div>' : ''}${iconImg(ctx, s.medal, FACE.medal.x, FACE.medal.y)}${small}${idx}${price}${lg}</div>`;
+    + band
+    + `<div class="gl"${fit ? ` style="height:${mm(fit.h)}"` : ''}><div class="nm${fit?.wrap ? ' wrap' : ''}" style="font-size:${fit?.name ?? nameStart(s.name, L)}pt">${esc(s.name)}</div><div class="vr"></div>${s.ribbon}${big}`
+    + `<div class="tx" style="font-size:${tp}pt">${rich(rule, !L)}</div>${plan ? `<div class="pl" style="font-size:${tp}pt"><span>${esc(TXT.plan)}</span><div>${rich(plan, !L)}</div></div>` : ''}${flavor}</div>`
+    + (L ? LEGEND_FRAME_SVG : `<div class="fr"></div>`) + `${iconImg(ctx, s.medal, FACE.medal.x, FACE.medal.y)}${small}${idx}${price}${lg}</div>`;
 }
 
 /** The fitting pass: lays every distinct face out once and chooses sizes so the plate does not climb above 40 mm. */
@@ -138,9 +203,10 @@ export async function fitFaces(ctx: Ctx, specs: FaceSpec[]): Promise<Map<string,
   const f = path.join(ROOT, `out/print/html/_fit-${process.pid}.html`); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, html);
   await page.goto('file://' + f);
   await page.evaluate(() => document.fonts.ready);
-  const res = await page.evaluate(({ maxH, I }) => {
+  const res = await page.evaluate(({ maxDefault, I }) => {
     const MM = 96 / 25.4, out: Record<string, unknown> = {};
     for (const cd of Array.from(document.querySelectorAll<HTMLElement>('.cd'))) {
+      const maxH = Number(cd.dataset.maxh) || maxDefault; // the Legend's plate sits lower and narrower: its own limit
       const gl = cd.querySelector<HTMLElement>('.gl')!, nm = gl.querySelector<HTMLElement>('.nm')!, tx = gl.querySelector<HTMLElement>('.tx')!, pl = gl.querySelector<HTMLElement>('.pl');
       const bg = gl.querySelector<HTMLElement>('.bg'), fv = gl.querySelector<HTMLElement>('.fv'), ix = cd.querySelector<HTMLElement>('.ix');
       let name = parseFloat(nm.style.fontSize), wrap = false;
@@ -172,7 +238,7 @@ export async function fitFaces(ctx: Ctx, specs: FaceSpec[]): Promise<Map<string,
       out[cd.dataset.key!] = { name, wrap, tp: st[0], big: !!bg && st[1], flavor: !!fv && st[2], fvBreak, h: Math.ceil(h * 20) / 20, over: h > maxH + .2, idx, idxW, idxBottom };
     }
     return out;
-  }, { maxH: MAX_GLASS, I: FACE.index });
+  }, { maxDefault: MAX_GLASS, I: FACE.index });
   await page.close(); fs.rmSync(f, { force: true });
   return new Map(Object.entries(res) as [string, Fit][]);
 }
@@ -200,12 +266,12 @@ function seaBackSvg(): string {
 /** A soft fade of the back's picture into the deck colour towards the edges: no line near the edge, a shifted back shows no white. */
 const fadeEdges = (svg: string, ground: string) => svg.replace(/<\/svg>\s*$/, `<defs><filter id="fe" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter><mask id="fm"><rect x="-40" y="-40" width="280" height="360" fill="#fff"/><rect x="33" y="33" width="134" height="214" rx="22" fill="#000" filter="url(#fe)"/></mask></defs><rect x="-40" y="-40" width="280" height="360" fill="${ground}" mask="url(#fm)"/></svg>`).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
 
-export interface CardKit { mode: Mode; fits: Map<string, Fit>; art: Map<string, ArtInfo>; specs: Map<string, FaceSpec>; backs: Map<string, string>; crest: Map<string, string>; backSpecs: Map<string, BackSpec> }
+export interface CardKit { mode: Mode; fits: Map<string, Fit>; art: Map<string, ArtInfo>; specs: Map<string, FaceSpec>; backs: Map<string, string>; crest: Map<string, string>; backSpecs: Map<string, BackSpec>; legendBacks: Map<DeckCode, string>; legendCrest: Map<DeckCode, string> }
 
 /** Fits every face, rasterises every picture (faces with their glass, backs) for one mode. */
 export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Promise<CardKit> {
   const specs = new Map<string, FaceSpec>();
-  for (const sh of [...deckSheets(data), ...seaSheets(data)]) for (const it of sh.items) if (it.kind === 'card' || it.kind === 'legend' || it.kind === 'sea') { const s = faceSpec(it, mode); if (!specs.has(s.key) && (!only || only.has(s.key))) specs.set(s.key, s); }
+  for (const sh of [...deckSheets(data), ...legendSheets(data), ...seaSheets(data)]) for (const it of sh.items) if (it.kind === 'card' || it.kind === 'legend' || it.kind === 'sea') { const s = faceSpec(it, mode); if (!specs.has(s.key) && (!only || only.has(s.key))) specs.set(s.key, s); }
   const fits = await fitFaces(ctx, [...specs.values()]);
   const art = new Map<string, ArtInfo>();
   for (const s of specs.values()) {
@@ -215,9 +281,11 @@ export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Pr
     else if (s.sceneName && hasScene(s.sceneName, ctx.opts.draftArt)) svg = portraitSvg(s.sceneName, ctx.opts.draftArt);
     else if (s.key.startsWith('sea|')) { const c = data.sea.find(x => 'sea|' + x.name === s.key)!; svg = hasScene(c.name, ctx.opts.draftArt) ? portraitSvg(c.name, ctx.opts.draftArt) : seaTempSvg(c.key); }
     else { const deck = s.key[0] as DeckCode; svg = hasScene(s.name, ctx.opts.draftArt) ? portraitSvg(s.name, ctx.opts.draftArt) : legendTempSvg(deck); }
-    art.set(s.key, await makeArt(ctx, s.artKey, svg, { top: CARD.h - G.bottom - fit.h, tint: s.tint }));
+    art.set(s.key, await makeArt(ctx, s.artKey, svg, s.legend
+      ? { top: CARD.h - LG.glass.bottom - fit.h, tint: s.tint, gold: { lo: LEGEND.glass.lo, hi: LEGEND.glass.hi }, inset: LG.glass.inset, bottom: LG.glass.bottom }
+      : { top: CARD.h - G.bottom - fit.h, tint: s.tint }));
   }
-  const backs = new Map<string, string>(), crest = new Map<string, string>();
+  const backs = new Map<string, string>(), crest = new Map<string, string>(), legendBacks = new Map<DeckCode, string>(), legendCrest = new Map<DeckCode, string>();
   const crestHtml = (letter: string, col: string) => `<div style="position:absolute;left:10px;top:10px;width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.18),${col} 62%);box-shadow:0 0 0 3px #d9ab52,0 0 0 6px rgba(0,0,0,.5),0 0 0 7.5px rgba(217,171,82,.7),0 6px 12px rgba(0,0,0,.6),inset 0 0 16px rgba(0,0,0,.5);font:700 40px/1 'Alegreya SC',serif;color:#fbe7b0;text-shadow:0 2px 0 rgba(0,0,0,.6)">${letter}<i style="position:absolute;inset:5px;border-radius:50%;border:1px dashed rgba(251,231,176,.55)"></i></div>`;
   // the new backs (backs.cjs) bring their own ground colour and lettering places; without them — the earlier picture
   const backSpecs = new Map<string, BackSpec>(), xmlns = (v: string) => /xmlns=/.test(v.slice(0, 300)) ? v : v.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
@@ -228,9 +296,12 @@ export async function prepareCards(ctx: Ctx, mode: Mode, only?: Set<string>): Pr
       const svg = ctx.opts.noArt ? plainSvg(lighten(col, .2), col) : k === 'sea' ? seaBackSvg() : backArtSvg(kind);
       backs.set(k, (await makeArt(ctx, `back0-${kind}`, fadeEdges(shadeBack(svg), col), null)).url);
     }
+    // the Legend's back: the deck back's own picture; moved (LB_DX) only where the ship would touch the gold frame
+    if (spec && k !== 'sea') legendBacks.set(k, LB_DX[k] ? (await makeArt(ctx, `legend-back-${kind}`, shiftBack(xmlns(spec.svg), LB_DX[k], LB_FILL[k]), null, spec.bleed ?? 0)).url : backs.get(k)!);
+    if (k !== 'sea') legendCrest.set(k, await ctx.raster(`legend-crest-${kind}-${LEGEND_BACK_FONT}`, legendCrestHtml(k, col, LEGEND_BACK_FONT), 90, 92, 6));
     crest.set(k, await ctx.raster(`crest-${kind}`, crestHtml(k === 'sea' ? `<img src="${ROSE_URI}" style="width:52px;height:52px">` : k, col), 90, 92, 6));
   }
-  return { mode, fits, art, specs, backs, crest, backSpecs };
+  return { mode, fits, art, specs, backs, crest, backSpecs, legendBacks, legendCrest };
 }
 // the mock-up's dark veils at the top and bottom of a back (under the title and the name), baked into the picture
 const shadeBack = (svg: string) => svg.replace(/<\/svg>\s*$/, `<defs><linearGradient id="vt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></linearGradient><linearGradient id="vb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity="0"/><stop offset=".55" stop-color="#000" stop-opacity=".62"/><stop offset="1" stop-color="#000" stop-opacity=".75"/></linearGradient></defs><rect width="200" height="64" fill="url(#vt)"/><rect y="167" width="200" height="113" fill="url(#vb)"/></svg>`);
@@ -266,25 +337,34 @@ export function itemFace(ctx: Ctx, kit: CardKit, it: Item, pos: string): string 
 export function backHtml(kit: CardKit, b: BackKind, pos: string, ground = '#3a2c1c', edge = [0, 0, 0, 0]): string {
   if (b.back === 'none') return `<div class="sh-blank" style="${pos}"></div>`;
   if (b.back === 'neutral') return `<div class="bk nt" style="${pos}--ground:${ground}"><div class="pp"></div><div class="tt">${esc(TXT.title)}</div><img class="rs" src="${ROSE_URI}" alt=""></div>`;
+  // a Legend's back (user's decision 16.11, second round): the back of its deck as it is — «ЛЕГЕНДА» in gold for the title,
+  // the medallion if LEGEND_BACK_CREST, the thin gold frame (legend-back.ts); the gold is its ground and bleed
+  const L = b.back === 'deck' && b.legend;
   const k = b.back === 'sea' ? 'sea' : b.deck, name = b.back === 'sea' ? TXT.seaBackName : DECK_NAME[b.deck], sp = kit.backSpecs.get(k);
-  const tail = (y: string) => b.back === 'deck' && b.legend ? `<div class="bl" style="top:${y}">${esc(TXT.legendBack)}</div>` : `<div class="bn" style="top:${y}">${esc(name)}</div>`;
+  if (L && !sp) return `<div class="bk lgb" style="${pos}--ground:${LB_GOLD}"><div class="tt" style="color:${LEGEND.back.gold}">${esc(TXT.legendBack)}</div>${LB_FRAME_SVG}</div>`;
+  const tail = (y: string) => `<div class="bn" style="top:${y}">${esc(name)}</div>`;
   if (!sp) return `<div class="bk" style="${pos}--ground:${profiled(b.back === 'sea' ? SEA.band : DECK_BAND[b.deck])}"><img class="art" src="${kit.backs.get(k)}" alt=""><div class="tt">${esc(TXT.title)}</div><div class="tr"></div><img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:53.6mm;width:18.9mm;height:19.32mm;margin-left:-9.45mm">${tail('')}</div>`.replace(/ style="top:"/g, '');
   // lettering of a new back: places come from the picture (units of 200 × 280 → mm), colours from its tone
   const U = CARD.h / 280, ink = sp.tone === 'dark' ? ['#f3dc9d', '#fff2d4'] : ['#5a3c14', '#3a2410'];
-  const title = sp.title ? `<div class="tt" style="top:${mm(sp.title.y * U)};transform:translateY(-50%);color:${ink[0]}">${esc(TXT.title)}</div>` : '';
-  const cd = sp.crest ? sp.crest.d * U : 0, crest = sp.crest ? `<img class="cr" src="${kit.crest.get(k)}" alt="" style="left:50%;top:${mm(sp.crest.y * U - cd * 45 / 70)};width:${mm(cd * 90 / 70)};height:${mm(cd * 92 / 70)};margin-left:${mm(-cd * 45 / 70)}">` : '';
+  // a Legend's lettering: «ЛЕГЕНДА» between two gold compass stars and the ship's name, in metal gold (one SVG, legend-back.ts)
+  const lettering = L && sp.title ? legendLetteringSvg(name, sp.title.y * U, sp.name.y * U, LEGEND_BACK_FONT) : '';
+  const title = sp.title && !lettering ? `<div class="tt" style="top:${mm(sp.title.y * U)};transform:translateY(-50%);color:${L ? LEGEND.back.gold : ink[0]}">${esc(L ? TXT.legendBack : TXT.title)}</div>` : '';
+  const cd = sp.crest ? sp.crest.d * U : 0, crest = sp.crest && (!L || LEGEND_BACK_CREST) ? `<img class="cr" src="${(L && kit.legendCrest.get(b.deck)) || kit.crest.get(k)}" alt="" style="left:50%;top:${mm(sp.crest.y * U - cd * 45 / 70)};width:${mm(cd * 90 / 70)};height:${mm(cd * 92 / 70)};margin-left:${mm(-cd * 45 / 70)}">` : '';
   const ls = sp.letter ? sp.letter.size * U : 0, letter = !sp.letter ? '' : k === 'sea' ? `<img src="${ROSE_URI}" alt="" style="position:absolute;left:50%;top:${mm(sp.letter.y * U - ls / 2)};width:${mm(ls)};height:${mm(ls)};margin-left:${mm(-ls / 2)}">`
     : `<div style="position:absolute;left:0;right:0;top:${mm(sp.letter.y * U)};transform:translateY(-50%);text-align:center;font:700 ${(ls * 2.835).toFixed(1)}pt/1 'Alegreya SC',serif;color:${ink[1]}">${k}</div>`;
   // a back with bleed: the picture runs 3 mm past the card on the block's outer sides (edge = left, top, right, bottom), nowhere else
   const bu = sp.bleed ?? 0, art = bu ? ` style="left:${mm(-bu * U)};top:${mm(-bu * U)};width:${mm(CARD.w + 2 * bu * U)};height:${mm(CARD.h + 2 * bu * U)}"` : '',
     clip = bu ? `overflow:visible;clip-path:inset(${[1, 2, 3, 0].map(i => mm(-edge[i] * BLEED)).join(' ')});` : '';
-  return `<div class="bk" style="${pos}${clip}--ground:${profiled(sp.ground)}"><img class="art" src="${kit.backs.get(k)}" alt=""${art}>${title}${crest}${letter}`
-    + tail(`${mm(sp.name.y * U)};transform:translate(${b.back === 'deck' && b.legend ? '-50%,' : '0,'}-50%);color:${b.back === 'deck' && b.legend ? '#2a180c' : ink[1]}`) + `</div>`;
+  return `<div class="bk${L ? ' lgb' : ''}" style="${pos}${clip}--ground:${L ? LB_GOLD : profiled(sp.ground)}"><img class="art" src="${(L && kit.legendBacks.get(b.deck)) || kit.backs.get(k)}" alt=""${art}>${L ? LB_FRAME_SVG : ''}${title}${crest}${letter}${lettering}`
+    + (lettering ? '' : tail(`${mm(sp.name.y * U)};transform:translateY(-50%);color:${ink[1]}`)) + `</div>`;
 }
 
 const arrowUp = (x: number, y: number) => `<path d="M${x} ${y + 3.2}V${y}M${x - 1.1} ${y + 1.2}L${x} ${y}L${x + 1.1} ${y + 1.2}" stroke="#555" stroke-width=".35" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
-const sheetName = (sh: Sheet) => sh.deck === 'sea' ? TXT.seaBackName : DECK_NAME[sh.deck];
-const sheetColor = (sh: Sheet) => sh.deck === 'sea' ? SEA.band : DECK_BAND[sh.deck];
+const sheetName = (sh: Sheet) => sh.deck === 'sea' ? TXT.seaBackName : sh.deck === 'legend' ? TXT.legendSheet : DECK_NAME[sh.deck];
+const sheetColor = (sh: Sheet) => sh.deck === 'sea' ? SEA.band : sh.deck === 'legend' ? LEGEND.frame.mid : DECK_BAND[sh.deck];
+/** The block's outer bleed next to the slots of a sheet that have their own colour (or are empty, white), on the face or the back. */
+const bleedPatches = (colors: (string | null)[]) => colors.map((c, i) => { if (!c) return ''; const s = slot(i), l = s.col === 0 ? BLEED : 0, r = s.col === GRID.cols - 1 ? BLEED : 0, t = s.row === 0 ? BLEED : 0, b = s.row === GRID.rows - 1 ? BLEED : 0;
+  return l + r + t + b ? `<div style="position:absolute;left:${mm(s.x - l)};top:${mm(s.y - t)};width:${mm(s.w + l + r)};height:${mm(s.h + t + b)};background:${c}"></div>` : ''; }).join('');
 const pos = (i: number) => { const s = slot(i); return `left:${mm(s.x)};top:${mm(s.y)};`; };
 
 /** A sheet of faces: the frame colour bleeds 3 mm past the block; cut lines inside, marks to the sheet's edge; a 50 mm ruler. */
@@ -293,9 +373,8 @@ export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: 
   const ln = (l: { x1: number; y1: number; x2: number; y2: number }, c: string, w: number) => `<path d="M${l.x1} ${l.y1}L${l.x2} ${l.y2}" stroke="${c}" stroke-width="${w}"/>`;
   const rx = A4.w - GRID.x0 - 50 - 4; // clear of the cut mark at the block's right edge
   // a Legend (brass) or a reference card (brown) on the block's outer edge: the bleed there takes its frame colour
-  const own = (it: Item) => it.kind === 'legend' ? BRASS : it.kind === 'howto' || it.kind === 'howto-sea' ? HOWTO_FRAME : it.kind === 'empty' ? '#ffffff' : null;
-  const patches = sh.items.map((it, i) => { const c = own(it); if (!c) return ''; const s = slot(i), l = s.col === 0 ? BLEED : 0, r = s.col === GRID.cols - 1 ? BLEED : 0, t = s.row === 0 ? BLEED : 0, b = s.row === GRID.rows - 1 ? BLEED : 0;
-    return l + r + t + b ? `<div style="position:absolute;left:${mm(s.x - l)};top:${mm(s.y - t)};width:${mm(s.w + l + r)};height:${mm(s.h + t + b)};background:${c}"></div>` : ''; }).join('');
+  const own = (it: Item) => it.kind === 'legend' ? LEGEND.frame.mid : it.kind === 'howto' || it.kind === 'howto-sea' ? HOWTO_FRAME : it.kind === 'empty' ? '#ffffff' : null;
+  const patches = bleedPatches(sh.items.map(own));
   return { html: `<div class="sh-bleed" style="background:${col}"></div>${patches}${sh.items.map((it, i) => itemFace(ctx, kitOf(i), it, pos(i))).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${inner.map(l => ln(l, cutColor(col), .25)).join('')}${marks.map(l => ln(l, '#808080', .3)).join('')}`
     + `<path d="M${rx} 10.6H${rx + 50}M${rx} 9.4V11.8M${rx + 50} 9.4V11.8${[10, 20, 30, 40].map(d => `M${rx + d} 10V11.2`).join('')}" stroke="#555" stroke-width=".25" fill="none"/>${arrowUp(GRID.x0 + 1.2, 1.6)}</svg>`
@@ -304,10 +383,12 @@ export function faceSheet(ctx: Ctx, kit: CardKit, sh: Sheet, label = '', kitOf: 
 /** The sheet of backs behind a face sheet (mirrored columns); dx, dy shift the whole print, seen from the back. No cut lines: cut from the face. */
 export function backSheetPage(kit: CardKit, sh: Sheet, dx = 0, dy = 0, label = '', kitOf: (i: number) => CardKit = () => kit, sub = '', bleed = true): PageSpec {
   // the same colour as the edge of the back pictures in the JPEG (after the print profile): no seam between a card and the bleed
-  const col = profiled(kit.backSpecs.get(sh.deck)?.ground ?? sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
+  const col = sh.deck === 'legend' ? LB_GOLD : profiled(kit.backSpecs.get(sh.deck)?.ground ?? sheetColor(sh)), b = BLEED_BOX, L = 5, o = 1;
+  // an empty slot is white on the back too, its bleed as well (no dark strip round a blank card place)
+  const blanks = bleedPatches(backSheet(sh.items).map(bk => bk.back === 'none' ? '#ffffff' : null));
   const edgeOf = (i: number) => { const s = slot(i); return [+(s.col === 0), +(s.row === 0), +(s.col === GRID.cols - 1), +(s.row === GRID.rows - 1)]; };
   const corner = (x: number, y: number, sx: number, sy: number) => `<path d="M${x + sx * o} ${y}h${sx * L}M${x} ${y + sy * o}v${sy * L}" stroke="#808080" stroke-width=".3" fill="none"/>`;
-  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})">${bleed ? `<div class="sh-bleed" style="background:${col}"></div>` : ''}${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i), col, edgeOf(i))).join('')}`
+  return { html: `<div class="sh-shift" style="transform:translate(${mm(dx)},${mm(dy)})">${bleed ? `<div class="sh-bleed" style="background:${col}"></div>${blanks}` : ''}${backSheet(sh.items).map((bk, i) => backHtml(kitOf(i), bk, pos(i), col, edgeOf(i))).join('')}`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${corner(b.x, b.y, -1, -1)}${corner(b.x + b.w, b.y, 1, -1)}${corner(b.x, b.y + b.h, -1, 1)}${corner(b.x + b.w, b.y + b.h, 1, 1)}</svg></div>`
     + `<svg class="sh-svg" viewBox="0 0 ${A4.w} ${A4.h}">${arrowUp(GRID.x0 + 1.2, 1.6)}</svg>${sub ? `<div class="sh-sub">${esc(sub)}</div>` : ''}<div class="sh-lab" style="left:${mm(GRID.x0 + 4)}">${esc(label || `${TXT.sheetBack} · лист ${sh.n} из ${sh.of} · ${sheetName(sh)} · ${TXT.sheetTop}`)}</div>` };
 }

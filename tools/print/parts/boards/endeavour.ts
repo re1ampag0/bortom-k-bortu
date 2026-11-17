@@ -188,9 +188,9 @@ async function faceA(g: Geo): Promise<Layers> {
   // over: the wax seal in the header's free middle, a red double rule under the header like a ledger's head
   const h = g.zones.header, over = `<path d="M${r(h.x + 21)} ${r(h.y + h.h - 1.2)}H${r(h.x + h.w - 1.5)}M${r(h.x + 21)} ${r(h.y + h.h - 0.7)}H${r(h.x + h.w - 1.5)}" stroke="${C.red}" stroke-width=".2"/>` +
     waxSeal(h.x + h.w * 0.66, h.y + h.h / 2 - 1.2, 6.4, 7);
-  const s = g.scope, margin = `linear-gradient(90deg,transparent 1mm,${C.red} 1mm,${C.red} 1.2mm,transparent 1.2mm,transparent 1.5mm,${C.red} 1.5mm,${C.red} 1.7mm,transparent 1.7mm)`;
-  const css = `${s} .bo2-col .bo2-box{background:${margin},var(--f);outline:.3mm solid ${C.gilt};outline-offset:.5mm;box-shadow:none}` +
-    `${s} .bo2-col .bo2-legend{background:${margin},#fcf1d2}`;
+  const s = g.scope, margin = (f: string) => `linear-gradient(90deg,${f} 1mm,${C.red} 1mm,${C.red} 1.2mm,${f} 1.2mm,${f} 1.5mm,${C.red} 1.5mm,${C.red} 1.7mm,${f} 1.7mm)`; // opaque stops: a transparent stop becomes a /ShadingType 1, pink in pdf.js
+  const css = `${s} .bo2-col .bo2-box{background:${margin('var(--f)')};outline:.3mm solid ${C.gilt};outline-offset:.5mm;box-shadow:none}` +
+    `${s} .bo2-col .bo2-legend{background:${margin('#fcf1d2')}}`;
   return { under, over, css };
 }
 
@@ -370,14 +370,14 @@ async function faceB(g: Geo): Promise<Layers> {
   ].join('');
   // over: a red double rule under the header, as at the head of a ledger page
   const h = z.header, over = `<path d="M${r(h.x + 21)} ${r(h.y + h.h - 1.2)}H${r(h.x + h.w - 1.5)}M${r(h.x + 21)} ${r(h.y + h.h - 0.7)}H${r(h.x + h.w - 1.5)}" stroke="${C.red}" stroke-width=".2"/>`;
-  const s = g.scope, margin = `linear-gradient(90deg,transparent 1mm,${C.red} 1mm,${C.red} 1.2mm,transparent 1.2mm,transparent 1.5mm,${C.red} 1.5mm,${C.red} 1.7mm,transparent 1.7mm)`;
+  const s = g.scope, margin = (f: string) => `linear-gradient(90deg,${f} 1mm,${C.red} 1mm,${C.red} 1.2mm,${f} 1.2mm,${f} 1.5mm,${C.red} 1.5mm,${C.red} 1.7mm,${f} 1.7mm)`; // opaque stops: a transparent stop becomes a /ShadingType 1, pink in pdf.js
   const pin = `content:'';position:absolute;left:50%;top:-1.3mm;width:2.6mm;height:2.6mm;margin-left:-1.3mm;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6d8 0,${C.gilt} 45%,${C.giltDark} 100%)`;
   const css = `${s} .bo2-col .bo2-box{border-color:${C.rule};box-shadow:none}` +
     // the abilities: the Company's charter — a navy head band with an ochre line, the ledger margin, the seal by the title
-    `${s} .bo2-ab{border-top:1.6mm solid ${C.navy};background:${margin},var(--f);box-shadow:inset 0 .45mm 0 ${C.ochre}}` +
+    `${s} .bo2-ab{border-top:1.6mm solid ${C.navy};background:${margin('var(--f)')};box-shadow:inset 0 .45mm 0 ${C.ochre}}` +
     `${s} .bo2-ab::after{content:'';position:absolute;right:20mm;top:.5mm;width:7.4mm;height:7.4mm;background:url("${sealUri()}") center/contain no-repeat}` +
     // the Legend and the Powder: notes pinned to the ledger with brass pins
-    `${s} .bo2-legend{background:${margin},#fcf1d2}${s} .bo2-powder{background:${margin},var(--f)}` +
+    `${s} .bo2-legend{background:${margin('#fcf1d2')}}${s} .bo2-powder{background:${margin('var(--f)')}}` +
     `${s} .bo2-legend::before,${s} .bo2-powder::before{${pin}}`;
   return { under, over, css, engraving: await engravingB(g) };
 }

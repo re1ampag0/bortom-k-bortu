@@ -49,7 +49,7 @@ function inkwell(u, L, x, y, k = 1, qk = 1) {
   return sc + out + '</g>';
 }
 
-module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Бизнес есть бизнес', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VY, eye: 1.4 });
     const Lo = K.makeLight({ time: 'day', haze: .12, key: { type: 'sun', x: 128, y: 6, color: '#fff6dc', power: .9 } }, { horizon: 34 });

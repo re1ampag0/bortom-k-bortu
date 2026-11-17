@@ -40,7 +40,7 @@ const skel = { horizon: HZ, eye: 1.6, light: 'lantern on a hook under the beams 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
 const toward = (p, y) => { const t = (y - HZ) / (p[1] - HZ); return [VX + (p[0] - VX) * t, y]; };   // the point on the ray from the VP through p, at height y
 
-module.exports = { name: 'Плотник', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Плотник', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: HZ }), R = rng(31);
     const brD = 'M' + BREACH.map(P2).join('L') + 'Z';

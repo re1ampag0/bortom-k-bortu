@@ -20,7 +20,7 @@ const skel = { horizon: HZ, eye: 1.7, light: 'moon high right, behind the sails'
   ['topsail', -6, 150, 214, 58, 'yard (left arm broken)'], ['brokenArm', 18, 128, 48, 36, 'lift'], ['course', -12, 230, 224, 80, 'yard'],
   ['block', 86, 120, 8, 10, 'falling'], ['rail', -10, 290, 220, 38, 'deck']] };
 
-module.exports = { name: 'Книппели', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Книппели', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ });
     const R = rng(23);

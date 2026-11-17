@@ -13,7 +13,7 @@ const T = JSON.parse(fs.readFileSync(path.join(HERE, 'text/howto.json'), 'utf8')
 
 /** Text of howto.json → HTML: `name` is a file name, **x** is bold. */
 /** Russian typography: no line break after a number, around × and before a dash. */
-const typo = (s: string) => s.replace(/(\d) (?=\S)/g, '$1\u00a0').replace(/ × /g, '\u00a0×\u00a0').replace(/ — /g, '\u00a0— ');
+const typo = (s: string) => s.replace(/(^|[\s(«])([ВвКкСсУуОоИиАа]) (?=\S)/g, '$1$2\u00a0').replace(/(\d) (?=\S)/g, '$1\u00a0').replace(/ × /g, '\u00a0×\u00a0').replace(/ — /g, '\u00a0— ');
 const fmt = (s: string) => esc(typo(s)).replace(/\d[\d,]*–\d[\d,]*(?:\u00a0[^\s<,.;:)]+)?/g, m => `<span class="hw-nb">${m}</span>`).replace(/`([^`]+)`/g, '<span class="hw-f">$1</span>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
 const n3 = (v: number) => String(Math.round(v * 1000) / 1000);
 const plural = (n: number) => `${n} ${T.plural[n % 10 === 1 && n % 100 !== 11 ? 0 : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? 1 : 2]}`;
@@ -53,7 +53,7 @@ function page1(): string {
   const checks = (items: string[]) => `<ul class="hw-ul">${items.map(s => `<li>${CHECK}${fmt(s)}</li>`).join('')}</ul>`;
   const steps = (items: string[]) => `<ol class="hw-ol">${items.map((s, i) => `<li><span class="hw-num">${i + 1}</span>${fmt(s)}</li>`).join('')}</ol>`;
   const ruler50 = `<svg class="hw-r50" viewBox="-1 0 52 4"><path d="M0 2.2H50M0 .8V3.6M50 .8V3.6${[10, 20, 30, 40].map(d => `M${d} 1.5V2.9`).join('')}" stroke="#555" stroke-width=".25" fill="none"/></svg>`;
-  return `<div class="hw-p">${head(t.title, '')}`
+  return `<div class="hw-p hw-p1">${head(t.title, '')}`
     + `<div class="hw-first"><b class="hw-fh">${esc(t.firstH)}</b>${fmt(t.first)}</div>`
     + `<h2 class="hw-h2">${esc(t.setH)}</h2><table class="hw-t"><thead><tr>${(t.cols as string[]).map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`
     + `<p class="hw-dl">${fmt(t.duplexLine)}</p>`
@@ -170,9 +170,13 @@ const CSS = `
 .hw-t th:nth-child(1){width:36.5mm}.hw-t th:nth-child(3){width:22mm}.hw-t th:nth-child(4){width:31mm}.hw-t td:nth-child(4){padding-right:0}
 .hw-t tr.hw-dx td{background:${lighten(BRASS, .84)}}
 .hw-t tr.hw-no td{color:${MUTED}}
-.hw-pill{display:inline-block;padding:.5mm 1.8mm .6mm;border-radius:.8mm;background:${RED};color:#fff;font:800 8.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.06em;white-space:nowrap}
+.hw-pill{display:inline-block;max-width:100%;box-sizing:border-box;padding:.5mm 1.8mm .6mm;border-radius:.8mm;background:${RED};color:#fff;font:800 8.5pt/1.2 'Alegreya Sans',sans-serif;letter-spacing:.06em}
 .hw-dl{margin:1.6mm 0 0 !important;padding:1.6mm 3mm 1.8mm;border:.4mm solid ${RED};border-radius:1.5mm;font-size:11pt;text-align:center}
 .hw-2{display:flex;gap:7mm;margin-top:.4mm}.hw-2>div{flex:1 1 0;min-width:0}
+/* p. 1 holds the whole set's table and the advice on one sheet: a little tighter than the other pages (still ≥ 9.5 pt) */
+.hw-p1{font-size:9.6pt;line-height:1.12}.hw-p1 .hw-t{font-size:9.6pt}.hw-p1 .hw-t td{padding:.35mm 1.6mm .35mm 0}
+.hw-p1 .hw-first{font-size:10pt;padding:1.6mm 3mm 1.7mm}.hw-p1 .hw-dl{font-size:10pt;padding:1.2mm 3mm 1.4mm}
+.hw-p1 .hw-h2{margin:1.7mm 0 1mm}.hw-p1 .hw-pill{font-size:8pt;padding:.4mm 1.5mm .5mm}.hw-p1 .hw-ul li,.hw-p1 .hw-ol li{margin-bottom:.9mm}
 .hw-ul,.hw-ol{list-style:none;margin:0;padding:0}
 .hw-ul li,.hw-ol li{position:relative;padding-left:5.4mm;margin:0 0 1.2mm}
 .hw-ck{position:absolute;left:0;top:.75mm;width:3.5mm;height:3.5mm}

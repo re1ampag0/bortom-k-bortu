@@ -15,6 +15,8 @@
 // splinters on its open side (low right); a dark old crust grown in from the rim closes the rest, its lighter growing
 // front at the gap; on it two plate corals and eight branching heads (coral red, orange, ochre), lying flat on the side
 // and casting short shadows down; a few bigger lumps, barnacles, mussels on the rim; the bubbles stop below the cost mark.
+// Review fix (print): the breach is now fully closed — no black hole, no torn plank ends or splinters, no leaking
+// bubbles; where it was last open a plug of young pale coral (knobby polyps, a scallop, mussels) seals it.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -60,7 +62,7 @@ function scallop(u, x, y, r, a, col = '#d8c8b0') {
     + `<path d="M${f(-r * .35)} ${f(r * .05)}h${f(r * .7)}l${f(-r * .1)} ${f(r * .3)}h${f(-r * .5)}z" fill="${mix(col, '#2a1a10', .3)}"/></g>`;
 }
 
-module.exports = { name: 'Морские наросты', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Морские наросты', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VP[1], eye: 2 }), R = rng(5);
     // ——— the water: bright surface overhead, deep teal below; the hull runs into the murk on the left ———
@@ -117,49 +119,41 @@ module.exports = { name: 'Морские наросты', kind: 'deck', status: 
       fg += `<defs>${linGrad(wd, 0, BC[1] - RH, 0, BC[1] + RH, [[0, '#6a5a3c', 1], [1, '#3a3020', 1]])}${radGrad(g, BC[0] + 8, BC[1] + 10, 40, [[0, '#000201', 1], [.6, '#020806', 1], [1, '#0a1c16', 1]])}</defs>`
         + `<path d="${path(rim)}" fill="url(#${wd})" stroke="#030805" stroke-width=".9"/>`
         + `<path d="${path(inner)}" fill="url(#${g})"/>`;
-      // a rib of her frame dimly seen inside, across the gap
-      { const r0 = Hp(22, -6), r1 = Hp(26, 40); fg += `<path d="M${P2(r0)}L${P2(r1)}" stroke="#16302a" stroke-width="5" opacity=".7"/><path d="M${f(r0[0] - 2)} ${f(r0[1])}L${f(r1[0] - 2)} ${f(r1[1])}" stroke="#3a6a5a" stroke-width=".6" opacity=".5"/>`; }
       // the strake seams cut through the raw edge
       for (let y = TOP; y <= BOT; y += 13.6) { const b = (strY(y, BC[0]) - BC[1]); if (Math.abs(b) > RH) continue; const a = Math.sqrt(RH * RH - b * b);
         for (const s of [-1, 1]) { const p = Hp(s * a * .97, b), q = Hp(s * a * .86, b); fg += `<path d="M${P2(p)}L${P2(q)}" stroke="#030805" stroke-width=".7"/>`; } } }
-    // the broken planks at the open part: each strake ends in a torn, splintered end (pale raw wood), at its own
-    // length; one is bent in; along the lower edge long splinters of the plank below stick out along the grain
-    { const Rs = rng(13); let k = 0;
-      for (let y = TOP; y < BOT; y += 13.6, k++) { const b0 = strY(y, BC[0]) - BC[1], b1 = strY(y + 13.6, BC[0]) - BC[1], bm = (b0 + b1) / 2;
-        if (Math.abs(bm) >= RH * .92) continue; const ar = Math.sqrt(RH * RH - bm * bm), th = Math.atan2(bm, ar) * 180 / Math.PI; if (!inGap(th)) continue;
-        const h = b1 - b0, aOut = ar * 1.04, aEnd = ar - 4 - Rs() * 5, bent = k % 3 === 1, jag = [[aEnd + 3, b0 + .3], [aEnd + .6, b0 + h * .22], [aEnd - 2.2, b0 + h * .36], [aEnd - .2, b0 + h * .58], [aEnd - 4.2, b0 + h * .78], [aEnd + 1, b1 - .3]];
-        const g = nid('pk', u), pa = Hp(aOut, b0), pb = Hp(aOut, b1);
-        fg += `<defs>${linGrad(g, 0, pa[1], 0, pb[1], bent ? [[0, '#3a4236', 1], [1, '#121a14', 1]] : [[0, '#6a7662', 1], [.2, '#4a5646', 1], [.8, '#2a362e', 1], [1, '#121a14', 1]])}</defs>`
-          + `<path d="M${P2(Hp(aOut, b0 + .3))}L${jag.map(q => P2(Hp(q[0], q[1]))).join('L')}L${P2(Hp(aOut, b1 - .3))}Z" fill="url(#${g})" stroke="#030805" stroke-width=".55"/>`
-          // the torn end: a band of raw wood just behind the break, its fibres lighter
-          + `<path d="M${jag.map(q => P2(Hp(q[0], q[1]))).join('L')}L${jag.slice().reverse().map(q => P2(Hp(q[0] + 2.2, q[1]))).join('L')}Z" fill="${bent ? '#6a5a3c' : '#b49a68'}"/>`
-          + `<path d="M${jag.map(q => P2(Hp(q[0] + .3, q[1]))).join('L')}" stroke="${bent ? '#9a8a64' : '#ecdcae'}" stroke-width=".5" fill="none"/>`;
-        // a few fibres torn out past the end, along the grain
-        for (let j = 0; j < 3; j++) { const bb = b0 + h * (.2 + j * .3) + (Rs() - .5) * 1.4, a0 = aEnd + (Rs() - .5) * 2, l = 2.5 + Rs() * 4;
-          fg += `<path d="M${P2(Hp(a0, bb))}L${P2(Hp(a0 - l, bb + (Rs() - .5) * 1.2))}" stroke="${bent ? '#7a6a4a' : '#c8b48a'}" stroke-width=".55" stroke-linecap="round"/>`; } }
-      for (const [a0, bb, l, w] of [[24, 33, 15, 1.6], [14, 36, 12, 1.4], [31, 27.6, 10, 1.3]]) { const tip = [a0 - l, bb - 2.2];
-        fg += `<path d="M${P2(Hp(a0, bb - w))}L${P2(Hp(a0 - l * .5, bb - w * .9 - .8))}L${P2(Hp(tip[0], tip[1]))}L${P2(Hp(a0, bb + w))}Z" fill="#9a8660" stroke="#0a0e08" stroke-width=".4"/><path d="M${P2(Hp(a0, bb - w * .5))}L${P2(Hp(tip[0] + 1.4, tip[1] + .1))}" stroke="#ecdcae" stroke-width=".45"/>`; } }
     // cracks run out from the breach along and across the planks
     { const Rk = rng(19); for (const th of [30, 140, 200, 260, 330]) { const p = polar(th, RH + 4), d = polar(th + (Rk() - .5) * 30, 1), len = 8 + Rk() * 9;
         fg += `<path d="M${P2(Hp(p[0], p[1]))}L${P2(Hp(p[0] + d[0] * len * .5 + (Rk() - .5) * 3, p[1] + d[1] * len * .5))}L${P2(Hp(p[0] + d[0] * len, p[1] + d[1] * len + (Rk() - .5) * 4))}" stroke="#040a08" stroke-width=".8" fill="none"/>`; } }
-    // ——— the growth: grown in from the edges over half the breach ———
-    // the old crust closing it: a mat of coral from the rim (dark, pitted with polyp cups), lighter and pinker
-    // towards its growing front at the gap; the gap is what is left of the breach, low on the right
+    // ——— the growth: the breach is closed — grown over from the rim to the middle ———
+    // the old crust: a mat of coral from the rim (dark, pitted with polyp cups); low on the right, where the hole was
+    // last open, a plug of young pale coral has sealed it (review fix: no open black hole, no splinters — the repair
+    // is the subject)
     const gapIn = [[-1.5, 37], [-4, 28], [-1.6, 18.6], [4, 10.4], [12.6, 4.6], [22, 1.4], [31, 1.2], [37.6, 4]];
     { const g = nid('cs', u), Rl = rng(23), gc = Hp(14, 16);
-      const k0 = rim.findIndex((_, i) => i * 9 > GAP[1]), pts = [];
-      for (let i = 0; i < rim.length; i++) { const j = (k0 + i) % rim.length; if (!inGap(j * 9)) pts.push([rim[j][0] * .97, rim[j][1] * .97]); }
-      const cover = [...pts, ...gapIn.slice().reverse()];
-      fg += `<defs>${radGrad(g, gc[0], gc[1], 44, [[0, '#a8604e', 1], [.32, '#6e4038', 1], [.6, '#3e2e2a', 1], [1, '#262420', 1]])}</defs>`
+      const cover = rim.map(([a, b]) => [a * .97, b * .97]);
+      fg += `<defs>${radGrad(g, gc[0], gc[1], 44, [[0, '#a8604e', 1], [.32, '#6e4038', 1], [.6, '#4e3630', 1], [1, '#2e2a24', 1]])}</defs>`
         + `<path d="${path(cover)}" fill="url(#${g})" stroke="#140a08" stroke-width=".6"/>`;
-      // polyp cups: small dark pits with a lit lower lip, all over the mat
-      for (let i = 0; i < 80; i++) { const th = Rl() * 360, r = Math.sqrt(Rl()) * RH * .9, q = polar(th, r);
-        if (Math.hypot(q[0] - 14, q[1] - 16) < 22 && q[0] > -5 && q[1] > 0) continue;
-        const p = Hp(q[0], q[1]), rr = .55 + Rl() * .5; fg += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(rr * SQ)}" ry="${f(rr * .8)}" fill="#120a08" opacity=".6"/><path d="M${f(p[0] - rr * SQ)} ${f(p[1] + .2)}q${f(rr * SQ)} ${f(rr * .9)} ${f(rr * 2 * SQ)} 0" stroke="#b07a68" stroke-width=".3" fill="none" opacity=".55"/>`; }
-      // its growing front: a soft lip at the gap, lit on top, its shadow falling into the gap
+      // the young plug where the hole was last open: pale pink new coral, bulging a little (lit on top)
+      const arc = []; for (let th = GAP[0]; th <= GAP[1] + .1; th += 9) arc.push(polar(th, RH * .95));
+      const plug = [...gapIn, ...arc.slice().reverse()], pg = nid('pg', u), pc = Hp(20, 18);
+      fg += `<defs>${radGrad(pg, pc[0] - 2, pc[1] - 4, 26, [[0, '#f8cdb4', 1], [.45, '#e8a088', 1], [.85, '#c07060', 1], [1, '#8a4a3e', 1]])}</defs>`
+        + `<path d="${path(plug)}" fill="url(#${pg})" stroke="#5a2a20" stroke-width=".5"/>`;
+      // polyp cups: small dark pits with a lit lower lip, all over the mat (and finer, lighter ones on the plug)
+      for (let i = 0; i < 110; i++) { const th = Rl() * 360, r = Math.sqrt(Rl()) * RH * .9, q = polar(th, r), young = inGap(th) && r > 12;
+        const p = Hp(q[0], q[1]), rr = (young ? .4 : .55) + Rl() * .45; fg += `<ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(rr * SQ)}" ry="${f(rr * .8)}" fill="${young ? '#8a3a30' : '#120a08'}" opacity="${young ? .45 : .6}"/><path d="M${f(p[0] - rr * SQ)} ${f(p[1] + .2)}q${f(rr * SQ)} ${f(rr * .9)} ${f(rr * 2 * SQ)} 0" stroke="${young ? '#fde0d0' : '#b07a68'}" stroke-width=".3" fill="none" opacity=".55"/>`; }
+      // the seam where the two growing fronts met: a raised soft lip, lit on top, a faint shadow under it
       const lip = path(gapIn, false);
-      fg += `<path d="${lip}" stroke="#020403" stroke-width="2.8" fill="none" opacity=".6" transform="translate(.6 1.6)" stroke-linecap="round"/>`
-        + `<path d="${lip}" stroke="#d88a70" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="${lip}" stroke="#f4bca0" stroke-width=".7" fill="none" stroke-linecap="round" transform="translate(-.3 -.7)" opacity=".8"/>`; }
+      fg += `<path d="${lip}" stroke="#2a0e08" stroke-width="2.6" fill="none" opacity=".35" transform="translate(.6 1.4)" stroke-linecap="round"/>`
+        + `<path d="${lip}" stroke="#d88a70" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="${lip}" stroke="#f4bca0" stroke-width=".7" fill="none" stroke-linecap="round" transform="translate(-.3 -.7)" opacity=".8"/>`;
+      // the plug is living coral, not a smooth lid: star-coral cups of young polyps all over it (rims lit on top), a shell and two mussels settled on it
+      const inPlug = (x, y) => { let c = false; for (let i = 0, j = plug.length - 1; i < plug.length; j = i++) { const [xi, yi] = plug[i], [xj, yj] = plug[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c; } return c; };
+      const Rp = rng(29); let knobs = 0;
+      for (let i = 0; i < 400 && knobs < 34; i++) { const q = [Rp() * 40, Rp() * 40]; if (!inPlug(q[0], q[1])) continue; knobs++;
+        // a star-coral cup: a low crater in the plug's own tone, its dark open mouth, the rim lit on top — no glossy beads
+        const p = Hp(q[0], q[1]), r = .9 + Rp() * 1.2, c = Rp() > .5 ? ['#e2967e', '#9a4638', '#f6c0a6'] : ['#d8846c', '#8a3a2e', '#f0b094'];
+        fg += `<ellipse cx="${f(p[0] + .3)}" cy="${f(p[1] + r * .45)}" rx="${f(r * SQ * 1.1)}" ry="${f(r * .45)}" fill="#6a2a20" opacity=".3"/><ellipse cx="${f(p[0])}" cy="${f(p[1])}" rx="${f(r * SQ * 1.05)}" ry="${f(r * .7)}" fill="${c[0]}" stroke="${c[1]}" stroke-width=".3"/><ellipse cx="${f(p[0])}" cy="${f(p[1] + r * .08)}" rx="${f(r * SQ * .55)}" ry="${f(r * .35)}" fill="${c[1]}"/><path d="M${f(p[0] - r * SQ)} ${f(p[1] - r * .05)}q${f(r * SQ)} ${f(-r * .75)} ${f(r * SQ * 2)} 0" stroke="${c[2]}" stroke-width=".35" fill="none" opacity=".85"/>`; }
+      { const p = Hp(29, 27), m = Hp(9, 32); fg += scallop(u, p[0], p[1], 3.6, 15, '#f4e0c8') + mussel(m[0], m[1], 3.4, 20) + mussel(m[0] + 2.6, m[1] + 1, 3, 0); } }
     // the coral, lying on her side: two plates and eight branching heads from the rim, reaching in over the breach;
     // each casts a short shadow down on the planks (the light is overhead). Three colours: coral red, orange, ochre.
     const CR = { red: ['#d8604c', '#8a2a20', '#f29a84'], orange: ['#e48c48', '#94481a', '#f8c088'], ochre: ['#d0a464', '#6a4a26', '#f0d49c'] };
@@ -199,16 +193,12 @@ module.exports = { name: 'Морские наросты', kind: 'deck', status: 
     const LUMP = [[mix(CR.red[0], '#4a5a50', .3), CR.red[1], mix(CR.red[2], '#8aa898', .3)], [mix(CR.ochre[0], '#4a5a50', .3), CR.ochre[1], CR.ochre[2]], ['#6a8a74', '#22382c', '#a8c8b0']];
     const lg = LUMP.map((c, i) => { const id = nid('lp' + i, u); fg += `<defs><radialGradient id="${id}" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="${c[2]}"/><stop offset=".55" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></radialGradient></defs>`; return id; });
     { const Rc = rng(17);
-      for (let i = 0; i < 14; i++) { const th = i * 25.7 + Rc() * 10; if (inGap(th)) continue; const q = polar(th, RH + 1 + Rc() * 3), p = Hp(q[0], q[1]), r = 1.6 + Rc() * 1.1;
+      for (let i = 0; i < 14; i++) { const th = i * 25.7 + Rc() * 10; const q = polar(th, RH + 1 + Rc() * 3), p = Hp(q[0], q[1]), r = 1.6 + Rc() * 1.1;
         fg += `<ellipse cx="${f(p[0] + .5)}" cy="${f(p[1] + 1.4)}" rx="${f(r * SQ * 1.1)}" ry="${f(r * .8)}" fill="#020806" opacity=".4"/><path d="M${f(p[0] - r * SQ)} ${f(p[1] + r * .3)}Q${f(p[0] - r * SQ * .9)} ${f(p[1] - r)} ${f(p[0])} ${f(p[1] - r * .95)}Q${f(p[0] + r * SQ * 1.1)} ${f(p[1] - r * .8)} ${f(p[0] + r * SQ)} ${f(p[1] + r * .4)}Q${f(p[0])} ${f(p[1] + r * .9)} ${f(p[0] - r * SQ)} ${f(p[1] + r * .3)}Z" fill="url(#${lg[i % 3]})" stroke="#0a120e" stroke-width=".3"/>`
           + `<ellipse cx="${f(p[0] + .2)}" cy="${f(p[1] - r * .25)}" rx="${f(r * .3 * SQ)}" ry="${f(r * .22)}" fill="#1a1010" opacity=".55"/>`; }
-      for (const th of [110, 165, 250, 320]) { const q = polar(th, RH + 6), p = Hp(q[0], q[1]); fg += barnacles(u, p[0], p[1], 4, 1.3, 60 + th); }
+      for (const th of [40, 110, 165, 250, 320]) { const q = polar(th, RH + 6), p = Hp(q[0], q[1]); fg += barnacles(u, p[0], p[1], 4, 1.3, 60 + th); }
       for (const th of [100, 190, 300]) { const q = polar(th, RH + 5), p = Hp(q[0], q[1]); fg += mussel(p[0], p[1], 3.8, th + 90) + mussel(p[0] + 3, p[1] + 1.2, 3.2, th + 70); }
       for (const [th, r, a, c] of [[104, 4.2, -20, '#f0d8c0'], [228, 4, 160, '#f4e0c8']]) { const q = polar(th, RH + 3), p = Hp(q[0], q[1]); fg += scallop(u, p[0], p[1], r, a, c); } }
-    // the air of the hold: a short stream of bubbles out of the gap, gone before it reaches the cost mark
-    { const Rq = rng(31), s0 = Hp(16, 18);
-      for (let i = 0; i < 11; i++) { const t = i / 10, y = s0[1] - 4 - t * (s0[1] - 52), x = s0[0] + Math.sin(t * 5 + 1) * 3 * t + (Rq() - .5) * 3 + t * 4, r = .6 + Rq() * (.8 + t * 1.2);
-        fg += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="#d8fff4" fill-opacity=".12" stroke="#e8fff8" stroke-width=".35" opacity="${f(.75 - t * .35)}"/><circle cx="${f(x - r * .35)}" cy="${f(y - r * .35)}" r="${f(r * .3)}" fill="#ffffff" opacity=".7"/>`; } }
     // ——— the life round her: a small school far off in the murk, one fish near, weed ———
     { const Rf = rng(41); for (let i = 0; i < 9; i++) fg += `<g opacity=".55">${PK.fish(14 + Rf() * 40, 120 + Rf() * 30, .55 + Rf() * .2, 1, '#5a8a84')}</g>`; }
     fg += PK.fish(174, 132, 1.4, -1, '#8ab8b0') + PK.weed(10, 290, 60, '#1e4a34', 7) + PK.weed(192, 290, 54, '#1e4a34', 9, -1);

@@ -92,7 +92,7 @@ function waterColumn(u, L, x, y, h, w, seed, ballY) {
   return body;
 }
 
-module.exports = { name: 'Из пучины', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Из пучины', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: .4 });
     // ——— above: the green fog over a dark sea, the moon low through it, the far enemy ———

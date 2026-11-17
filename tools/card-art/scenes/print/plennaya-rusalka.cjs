@@ -39,7 +39,7 @@ const HAIR = { col: '#e4dccc', hi: '#fff6ea', lo: '#8a8274' };
 const RIMC = '#ffe2c8';
 const lerp2 = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 
-module.exports = { name: 'Пленная русалка', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Пленная русалка', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
     L.pal = Object.assign({}, L.pal, { sky: ['#0a0306', '#2a0a10', '#6a1e16', '#a8442a'], sea: ['#6a2a1e', '#2a0c0a', '#0a0204'], cloudLit: '#d07050', cloudShade: '#2a0a10' });

@@ -1,8 +1,9 @@
 // «Гроза» (Колода моря): a thunderstorm at night. Three ships ride the dark sea; the man-of-war in the middle carries
 // the tallest masts and all her sail — and a bolt of lightning out of the cloud base strikes her main truck: the
-// topgallant sail bursts into flame, sparks rain off the yard. The brig on the left and the merchantman on the right,
-// lower masts and reefed sails, are untouched. The flash is the one light: it stands behind the ships (back light,
-// rims on the hulls and sails, the cloud bellies lit from below); the burning sail is the warm local.
+// topgallant is ripped open from the head to the foot, its torn cloth streaming downwind, scraps blown away. The brig
+// on the left and the merchantman on the right, lower masts and reefed sails, are untouched. The flash is the one
+// light: it stands behind the ships (back light, rims on the hulls and sails, the cloud bellies lit from below).
+// Print review fix: the topgallant burned (flames, embers) — the card puts no Fire, so now the sail is torn, not burning.
 // Not «Буря» (rain, a heeled ship, a miss): here it is the lightning, and one mast higher than the others.
 // Card: the ship with the highest Паруса takes 2 damage to Паруса.
 // Brief: docs/mockups/print/card-briefs.md «Гроза».
@@ -26,14 +27,14 @@ const light = {
   key: { type: 'moon', x: 112, y: 14, color: '#e4e2ff', power: .95 },
   fill: { color: '#2a2f52', power: .5 },
   rim: { az: 0, color: '#eae8ff', power: .8 },
-  locals: [{ x: TG.x, y: (TG.y0 + TG.y1) / 2, h: 30, color: '#ff9a3a', power: .8, radius: 46 }],
+  locals: [],
   haze: .4,
 };
 const skel = {
-  horizon: HZ, eye: 3, light: 'the lightning behind the ships, high in the middle: back light, rims towards it; the burning sail warm',
+  horizon: HZ, eye: 3, light: 'the lightning behind the ships, high in the middle: back light, rims towards it',
   items: [
     ['bolt', 92, 0, 36, 36, 'from the cloud base out of frame to the main truck of the man-of-war'],
-    ['warship', 38, WAR.y, 128, 88, 'on the water, full sail, the tallest masts, the topgallant on fire'],
+    ['warship', 38, WAR.y, 128, 88, 'on the water, full sail, the tallest masts, the topgallant torn by the strike'],
     ['brig', 2, 114, 40, 40, 'on the water, left, reefed, lower masts, behind the warship\'s stern'],
     ['merchant', 176, 114, 40, 38, 'on the water, right, reefed, lower masts'],
     ['near sea', 0, 280, 200, 150, 'rough water under the glass'],
@@ -70,44 +71,43 @@ function bolt(u, a, b, seed) {
   return s;
 }
 
-// ——— the burning topgallant: a ragged hole burnt through the cloth, its edge glowing, the flame licking up from it
-// and blown downwind (to the bow, right), sparks and burning shreds falling off the yard
-function burningSail(u, L) {
-  const cx = TG.x + 1.5, cy = lerp(TG.y0, TG.y1, .55), R = rng(5), w = TG.hw * 1.15, h = (TG.y1 - TG.y0) * .62;
-  const pts = []; for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, r = (.75 + R() * .4); pts.push([cx + Math.cos(a) * w * .6 * r, cy + Math.sin(a) * h * .6 * r]); }
-  const d = 'M' + pts.map(p => f(p[0]) + ' ' + f(p[1])).join('L') + 'Z', ge = nid('be', u);
-  let s = `<defs>${blur(ge, .8, [cx - 30, cy - 30, 60, 60])}</defs>`;
-  // the scorch round the hole, then the hole (the dark sky through it), then its glowing edge
-  s += `<path d="${d}" fill="#2a160c" opacity=".75" transform="translate(${f(cx)} ${f(cy)}) scale(1.35) translate(${f(-cx)} ${f(-cy)})" filter="url(#${ge})"/>`;
-  s += `<path d="${d}" fill="${PAL.sky[1]}"/>`;
-  s += `<path d="${d}" fill="none" stroke="#ff8a2a" stroke-width="1.1" filter="url(#${ge})"/><path d="${d}" fill="none" stroke="#ffd27a" stroke-width=".4"/>`;
-  // the warm light of the fire: a wide soft glow round the flame, the foot of the burning sail and the topsail under it lit
-  s += K.localGlow(u, { x: cx + 3, y: cy - 2, color: '#ff8a2a', power: .9, radius: 20 }, { core: false });
-  s += K.localGlow(u, { x: cx + 1, y: TG.y1 + 7, color: '#ffa040', power: .75, radius: 15 }, { squash: .75, core: false });
-  { const gf = nid('bf', u); s += `<defs>${blur(gf, 1.2, [cx - 30, TG.y1 - 10, 60, 20])}</defs><ellipse cx="${f(cx)}" cy="${f(TG.y1 + .6)}" rx="${f(TG.hw * 1.15)}" ry="1.5" fill="#ffb860" opacity=".8" filter="url(#${gf})" style="mix-blend-mode:screen"/>`
-    + `<ellipse cx="${f(cx + 1)}" cy="${f(TG.y1 + 5)}" rx="${f(TG.hw * 1.1)}" ry="4.5" fill="#ff9a40" opacity=".35" filter="url(#${gf})" style="mix-blend-mode:screen"/>`; }
-  // the flame: unequal masses, the tallest off-centre, ragged tongues
-  s += K.fire(u, { x: cx - 1, y: cy + h * .5, w: w * 2, h: h * 2.8, seed: 3, wind: .55, glow: false, pool: false });
-  s += K.fire(u, { x: cx + w * .7, y: TG.y1 + 1, w: w * 1.1, h: h * 1.9, seed: 8, wind: .75, glow: false, pool: false });
-  s += K.fire(u, { x: cx - w * .8, y: TG.y1 + 2, w: w * .8, h: h * 1.1, seed: 13, wind: .5, glow: false, pool: false });
-  s += K.fire(u, { x: cx + w * .2, y: cy - h * .1, w: w * .9, h: h * 1.5, seed: 17, wind: .9, glow: false, pool: false });
-  // tongues torn off and streaming back downwind (to the right), thinning out
-  for (const [x, y, l, wd, b, sd] of [[cx + 4, cy - h * 1.2, 13, 2.2, -.35, 1], [cx + 6, cy - h * .4, 10, 1.8, -.2, 2], [cx + 2, cy - h * 1.9, 9, 1.4, -.5, 3], [cx + 8, cy + h * .3, 7, 1.3, -.1, 4]]) s += tongue(u, x, y, l, wd, b, sd);
-  // sparks and shreds of burning canvas falling off, drifting downwind
-  let sp = '';
-  for (let i = 0; i < 26; i++) { const x = cx - 4 + R() * 26, y = cy + R() * 40, r = .25 + R() * .45; sp += `<circle cx="${f(x)}" cy="${f(y)}" r="${f(r)}" fill="${R() > .5 ? '#ffd890' : '#ff9a40'}" opacity="${f(.5 + R() * .5)}"/>`; }
-  for (let i = 0; i < 4; i++) { const x = cx + 4 + R() * 16, y = cy + 10 + R() * 26, a = R() * 90; sp += `<path d="M${f(x)} ${f(y)}l1.6 -.5l.4 1.2l-1.4 .6Z" fill="#ffb050" transform="rotate(${f(a)} ${f(x)} ${f(y)})" opacity=".9"/>`; }
-  return s + sp;
-}
-
-// a flame tongue torn off downwind: a tapering, wavering blade from (x, y) to the right, rising by bend × length,
-// hot yellow at the root, red and transparent at the tip
-function tongue(u, x, y, len, w, bend, seed) {
-  const R = rng(seed), n = 10, top = [], bot = [], id = nid('tg', u);
-  for (let i = 0; i <= n; i++) { const t = i / n, px = x + len * t, py = y + bend * len * t * t + Math.sin(t * 7 + R() * 2) * .6 * t, hw = w * (1 - t) * (.6 + .4 * Math.sin(t * 9 + seed)) + .05;
-    top.push([px, py - hw]); bot.unshift([px + .3, py + hw * .7]); }
-  const d = 'M' + top.concat(bot).map(q => f(q[0]) + ' ' + f(q[1])).join('L') + 'Z';
-  return `<defs>${lin(id, x, y, x + len, y + bend * len, [[0, '#fff2b0'], [.25, '#ffc040'], [.6, '#ff7a1a', .8], [1, '#b02a08', 0]])}</defs><path d="${d}" fill="url(#${id})" style="mix-blend-mode:screen"/>`;
+// ——— the topgallant torn by the strike: a jagged rent from the head down through the cloth (the dark sky through it),
+// the cloth on the right ripped from its foot and streaming downwind (to the right), a tatter hanging off the left
+// clew, loose threads along the torn edges, a few scraps blown away. No fire: the flash only lights the torn edges
+// cold white-violet.
+function tornSail(u, L) {
+  const x0 = TG.x, y0 = TG.y0, y1 = TG.y1, hw = TG.hw, h = y1 - y0, R = rng(5), P = pts => 'M' + pts.map(q => f(q[0]) + ' ' + f(q[1])).join('L');
+  const ge = nid('te', u), cl = nid('tc', u), cs = nid('ts', u);
+  const CL = '#dcdae4', CM = '#a9a8bc', CD = '#5a5a78', EDGE = '#f2f0ff';
+  let s = `<defs>${blur(ge, .7, [x0 - 30, y0 - 20, 70, 50])}`
+    + lin(cl, x0, y0, x0 + hw + 12, y0 + 6, [[0, CM], [.5, CL], [1, '#c4c2d4']]) + lin(cs, x0 - hw, y1 - 6, x0 - hw - 4, y1 + 8, [[0, CM], [1, CD]]) + '</defs>';
+  // the rent: wide at the foot, closing up to a split under the head, ragged on both sides
+  const left = [], right = [];
+  for (let i = 0; i <= 8; i++) { const t = i / 8, y = lerp(y0 + 1.6, y1 - .2, t), w = lerp(.4, 1, Math.pow(t, .8)), j = (R() - .5) * 1.4;
+    left.push([x0 + .6 - w * 4.2 + j, y]); right.push([x0 + 1.4 + w * (hw - 3.2) + (R() - .5) * 1.4, y]); }
+  const rent = left.concat(right.slice().reverse());
+  s += `<path d="${P(rent)}Z" fill="#2c2b56"/>`;
+  // the torn edges caught by the flash: a cold glow, then a thin bright line
+  s += `<g fill="none" stroke-linejoin="round"><path d="${P(left)}" stroke="${EDGE}" stroke-width=".9" opacity=".55" filter="url(#${ge})"/><path d="${P(right)}" stroke="${EDGE}" stroke-width=".9" opacity=".55" filter="url(#${ge})"/>`
+    + `<path d="${P(left)}" stroke="${EDGE}" stroke-width=".35"/><path d="${P(right)}" stroke="${EDGE}" stroke-width=".35"/></g>`;
+  // loose threads hanging off the torn edges into the rent
+  let th = '';
+  for (const [side, k] of [[left, .9], [right, -.9]]) for (let i = 2; i < side.length - 1; i += 1) { const p = side[i], l = 1 + R() * 1.6;
+    th += `<path d="M${f(p[0])} ${f(p[1])}q${f(k * l * .5)} ${f(l * .4)} ${f(k * l * .3 + .6)} ${f(l)}" stroke="${CL}" stroke-width=".25" fill="none" opacity=".85"/>`; }
+  s += th;
+  // the right half ripped from its foot: the cloth bellies out and streams to the right, its end in ragged tongues
+  const fr = [[x0 + hw - .4, y0 + 1.2], [x0 + hw + 4, y0 + 2.4], [x0 + hw + 8.6, y0 + 3.4], [x0 + hw + 12, y0 + 3.2], [x0 + hw + 10.4, y0 + 5], [x0 + hw + 13.4, y0 + 6.4],
+    [x0 + hw + 9.6, y0 + 7.4], [x0 + hw + 11.6, y0 + 9.6], [x0 + hw + 7, y0 + 9.4], [x0 + hw + 5, y0 + 11.6], [x0 + hw + 3.2, y0 + 9.8], [x0 + hw - .2, y0 + h * .62], [right[5][0], right[5][1]], [right[2][0], right[2][1]]];
+  s += `<path d="${P(fr)}Z" fill="url(#${cl})" stroke="${CD}" stroke-width=".3" stroke-linejoin="round"/>`
+    + `<path d="M${f(x0 + hw)} ${f(y0 + 2.6)}Q${f(x0 + hw + 5)} ${f(y0 + 4.6)} ${f(x0 + hw + 9)} ${f(y0 + 5.2)}M${f(x0 + hw - .2)} ${f(y0 + 6)}Q${f(x0 + hw + 3)} ${f(y0 + 7.6)} ${f(x0 + hw + 6)} ${f(y0 + 8.6)}" stroke="${CD}" stroke-width=".3" fill="none" opacity=".6"/>`
+    + `<path d="${P(fr.slice(0, 4))}" stroke="${EDGE}" stroke-width=".4" fill="none" opacity=".9"/>`;
+  // a tatter torn off the left clew, hanging and flicking downwind
+  const tl = [[x0 - hw + .6, y1 - 4.2], [x0 - hw + 2.6, y1 - .4], [x0 - hw + 2.2, y1 + 3.2], [x0 - hw + 3.4, y1 + 6.4], [x0 - hw + 1.2, y1 + 4.4], [x0 - hw - .2, y1 + 6.8], [x0 - hw - .4, y1 + 2.4], [x0 - hw - .6, y1 - 1.6]];
+  s += `<path d="${P(tl)}Z" fill="url(#${cs})" stroke="${CD}" stroke-width=".3" stroke-linejoin="round"/><path d="${P(tl.slice(0, 3))}" stroke="${EDGE}" stroke-width=".3" fill="none" opacity=".7"/>`;
+  // scraps of canvas blown away downwind, tumbling (pale cloth, not burning)
+  for (const [x, y, a, sc] of [[x0 + hw + 15, y0 + 1, 20, 1.2], [x0 + hw + 19, y0 + 8, -35, .9], [x0 + hw + 13, y0 + 13, 60, .8], [x0 + hw + 23, y0 + 3, 10, .65], [x0 + 6, y1 + 3, -20, .6]])
+    s += `<path d="M0 0l2.2 -.6l.6 .9l1.4 .2l-.8 1.6l-2 .3l-.6 -.8Z" fill="${CL}" stroke="${CD}" stroke-width=".25" transform="translate(${f(x)} ${f(y)}) rotate(${a}) scale(${sc})"/>`;
+  return s;
 }
 
 // ——— the strike at the truck: a white star of light, a ring of sparks thrown off
@@ -131,7 +131,7 @@ function rain(u, L, o) {
 }
 
 module.exports = {
-  name: 'Гроза', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+  name: 'Гроза', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, PAL);
@@ -158,8 +158,7 @@ module.exports = {
     // ——— the man-of-war: all sail, the tallest masts; the bolt hits her main truck
     let mid = K.ship(u, L, Object.assign({ wake: true }, WAR));
     mid += K.foam(u, { x: WAR.x, y: WAR.y + .3, w: 96, h: 1.2, seed: 9, L });
-    mid += K.localGlow(u, { x: TG.x, y: TG.y1 + 30, color: '#ff9a3a', power: .3, radius: 44 }, { core: false });
-    mid += burningSail(u, L);
+    mid += tornSail(u, L);
     let fx = bolt(u, BOLT0, [STRIKE[0], STRIKE[1] - .6], 21) + impact(u, STRIKE);
     // the flash on the water under the ship, cold
     fx += K.localGlow(u, { x: 112, y: HZ + 6, color: '#c8c4ff', power: .3, radius: 50 }, { squash: .2, core: false });

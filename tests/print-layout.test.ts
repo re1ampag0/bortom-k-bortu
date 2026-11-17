@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import raw from '../data/game-data.json';
 import {
   A4, BACK_CLEAR, BLEED, BLEED_BOX, BLOCK, BOARD, CARD, COUNTS, DECKS, FACE, FRAME, GRID, HOLD, SAFE, TABLE, TOKEN,
-  backOf, backSheet, backSlotOf, cutLines, deckList, deckSheets, priceOf, seaSheets, slot, slug, trackCells, trackWidth,
+  backOf, backSheet, backSlotOf, cutLines, deckList, deckSheets, legendSheets, priceOf, seaSheets, slot, slug, trackCells, trackWidth,
   type GameData
 } from '../tools/print/layout';
 
@@ -56,26 +56,33 @@ describe('print layout: faces and backs', () => {
       expect(backSlotOf(backSlotOf(i))).toBe(i);
     }
   });
-  it('12 deck sheets: 96 cards with copies, 4 Legends, 4 «Как читать карту», 4 spares', () => {
+  it('12 deck sheets: 96 cards with copies, 4 «Как читать карту», 4 spares; the 4 Legends on their own sheet', () => {
     const sheets = deckSheets(data);
     expect(sheets).toHaveLength(12);
     const items = sheets.flatMap(s => s.items);
     expect(items).toHaveLength(108);
     expect(items.filter(i => i.kind === 'card')).toHaveLength(96);
-    expect(items.filter(i => i.kind === 'legend')).toHaveLength(4);
+    expect(items.filter(i => i.kind === 'legend')).toHaveLength(0);
+    expect(items.filter(i => i.kind === 'empty')).toHaveLength(4);
     expect(items.filter(i => i.kind === 'howto')).toHaveLength(4);
     expect(items.filter(i => i.kind === 'spare')).toHaveLength(4);
     for (const deck of DECKS) {
       expect(deckList(data, deck)).toHaveLength(24);
       const own = sheets.filter(s => s.deck === deck);
       expect(own).toHaveLength(3);
-      // every card of a deck sheet belongs to the sheet's deck, the Legend lies on the deck's third sheet
+      // every card of a deck sheet belongs to the sheet's deck
       for (const s of own) for (const it of s.items) if ('deck' in it) expect(it.deck).toBe(deck);
-      expect(own[2].items.filter(i => i.kind === 'legend').map(i => i.kind === 'legend' && i.card.name)).toEqual([data.legends[deck].name]);
       // copies as in the data
       for (const c of data.decks[deck]) expect(own.flatMap(s => s.items).filter(i => i.kind === 'card' && i.card.name === c.name)).toHaveLength(c.copies ?? 1);
     }
     expect(sheets.map(s => s.n)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  });
+  it('1 Legend sheet: the four Legends in the decks\' order in slots 0–3, the rest empty', () => {
+    const sheets = legendSheets(data);
+    expect(sheets).toHaveLength(1);
+    expect(sheets[0].items).toHaveLength(9);
+    expect(sheets[0].items.slice(0, 4).map(i => i.kind === 'legend' && i.card.name)).toEqual(DECKS.map(d => data.legends[d].name));
+    expect(sheets[0].items.slice(4).every(i => i.kind === 'empty')).toBe(true);
   });
   it('2 sea sheets: 17 cards and «Как читать карту моря»', () => {
     const sheets = seaSheets(data), items = sheets.flatMap(s => s.items);
@@ -85,7 +92,7 @@ describe('print layout: faces and backs', () => {
     expect(96 + 4 + items.filter(i => i.kind === 'sea').length).toBe(117);
   });
   it('every slot: the back lies behind its face; an empty slot is empty on both sides', () => {
-    for (const sh of [...deckSheets(data), ...seaSheets(data)]) {
+    for (const sh of [...deckSheets(data), ...legendSheets(data), ...seaSheets(data)]) {
       const backs = backSheet(sh.items);
       expect(backs).toHaveLength(9);
       sh.items.forEach((it, i) => {

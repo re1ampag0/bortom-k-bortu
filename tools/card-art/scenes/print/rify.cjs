@@ -66,7 +66,7 @@ function coral(u, L, cx, cy, rx, seed, o = {}) {
   return s;
 }
 
-module.exports = { name: 'Рифы', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Рифы', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 14 });
     L.pal = Object.assign({}, L.pal, PAL);

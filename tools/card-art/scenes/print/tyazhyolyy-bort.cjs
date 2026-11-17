@@ -154,7 +154,7 @@ function flying(u, L, x0, y0, x1, y1, r) {
 
 // the helpers are shared with «Прикрыть бортом» and «Ответный залп» (the same Revenge, the same hits)
 const helpers = { lin, blur, sp, tiltShip, sidePt, portXH, stuckBall, dent, burst, flying, portSmoke, portFlash };
-module.exports = { helpers, name: 'Тяжёлый борт', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { helpers, name: 'Тяжёлый борт', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 2 });
     L.pal = Object.assign({}, L.pal, { sky: ['#1a0e22', '#4a1c30', '#a8462e', '#f09a5a'], sea: ['#b8664a', '#4a2030', '#140a14'], cloudLit: '#f0a070', cloudShade: '#3e1e30' });

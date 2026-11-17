@@ -2,7 +2,7 @@
 // through the storm clouds ahead of us on the left and lays a gold path on a swell strewn with rum kegs. Our longboat
 // lies among them, bow to the left; a sailor kneels in the bow and leans out with a boathook — its hook is in the
 // rope becket of a keg on the gold water; behind him a mate stands and hauls a second keg in to the boat's side with
-// his own boathook; a keg already caught lies in the stern, another bobs by our ship. The ship that lowered the boat lies hove-to on the
+// his own boathook, the pole lying over the near gunwale in a rowlock; a keg already caught lies in the stern, another bobs by our ship. The ship that lowered the boat lies hove-to on the
 // right, the other ship far on the left — both get their rum. One key light: the low sun (warm rims on the wet oak,
 // the men's faces lit, their backs in cool shade). No kegs under the glass. Not «Ром для всех» (that is on deck): here the rum is in the sea.
 // Brief: docs/mockups/print/card-briefs.md «Ром в волнах». Men: lib/people.cjs contours.
@@ -60,6 +60,8 @@ const POLE_A = { hook: HOOK1, end: [131, 90.6] }, POLE_B = { hook: HOOK2, end: [
 const onPole = (P, x) => { const t = (x - P.hook[0]) / (P.end[0] - P.hook[0]); return lerp2(P.hook, P.end, t); };
 const onPoleY = (P, y) => { const t = (y - P.hook[1]) / (P.end[1] - P.hook[1]); return lerp2(P.hook, P.end, t); };
 A.grips = { far: onPole(POLE_A, 108), near: onPole(POLE_A, 124) };
+// where a pole goes over the near gunwale (its line meets the sheer)
+const overRail = P => { let x0 = P.hook[0], x1 = P.end[0]; for (let i = 0; i < 40; i++) { const m = (x0 + x1) / 2; if (onPole(P, m)[1] > sheerY(m)) x0 = m; else x1 = m; } return (x0 + x1) / 2; };
 B.grips = { far: onPoleY(POLE_B, 94), near: onPoleY(POLE_B, 88) };
 
 function tone(L, c, k = .5) { return { lit: mix(c, mix(L.keyColor, '#ffffff', .25), .5), half: c, core: c, shadow: mix(c, '#141c2c', k), outline: '#1a120c' }; }
@@ -219,7 +221,7 @@ function rays(u) {
   return s;
 }
 
-module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft', cam: CAM, light, skel,
+module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'accepted', cam: CAM, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: .75 });
     L.pal = Object.assign({}, L.pal, PAL);
@@ -256,8 +258,13 @@ module.exports = { name: 'Ром в волнах', kind: 'sea', status: 'draft',
     fg += K.foam(u, { x: 96, y: WL - .2, w: 7, h: 1.4, L, seed: 75 });
     // the second keg by the near side of the bow, in B's hook (in front of the boat)
     fg += keg(u, L, KEG2, show, { becket: true, lift: 1.6, hump: 1.4 }) + K.splash(u, { x: KEG2.x - 9, y: KEG2.y - 8.6 * KEG2.s + .4, w: 7, h: 5, seed: 4, L });
-    // the poles over the gunwale, then the near arms and the hands round them
+    // the poles over the gunwale, then the near arms and the hands round them. B's pole runs out over the near
+    // gunwale to the keg in front of the boat: it lies in a rowlock there — two thole pins on the rail, the pole
+    // between them (the forward pin behind it, the after pin in front), its shadow on the rail under it
+    const cx = overRail(POLE_B), pin = x => K.propTube(u, L, 'oak', `M${f(x)} ${f(sheerY(x) + .3)}L${f(x + .15)} ${f(sheerY(x) - 2.8)}`, .5, [x, sheerY(x) - 1]);
+    fg += pin(cx - 1.7) + `<ellipse cx="${f(cx + .3)}" cy="${f(sheerY(cx) + .2)}" rx="1.9" ry=".5" fill="#140c08" opacity=".55"/>`;
     fg += boathook(u, L, POLE_A, 31) + boathook(u, L, POLE_B, 33);
+    fg += pin(cx + 1.7);
     fg += a.near + b.near;
     // drops falling from the becket the hook lifts out of the water
     { const R = rng(51); for (const H0 of [HOOK1, HOOK2]) for (let i = 0; i < 6; i++) { const x = H0[0] + (R() - .5) * 3, y = H0[1] + 1 + R() * 5; fg += `<ellipse cx="${f(x)}" cy="${f(y)}" rx=".3" ry="${f(.45 + R() * .4)}" fill="#fff2d8" opacity="${f(.5 + R() * .4)}"/>`; } }

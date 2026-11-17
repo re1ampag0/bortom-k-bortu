@@ -138,7 +138,7 @@ function skeletonShadow(u, x, y, s) {
     + st('M-4 -14C-16 -10 -26 -14 -27 -26C-28 -36 -20 -42 -14 -38', 1.4) + '</g>';
 }
 
-module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'draft', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'accepted', variant: 'a', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.2 }), Lo = K.makeLight({ time: 'night', haze: .3, key: { type: 'moon', x: 33, y: 60, el: 14, color: '#d8e4fa', power: .8 } }, { horizon: 74 });
     const [vx, vy] = VP, ray = (x, y, k) => [vx + (x - vx) * k, vy + (y - vy) * k];   // a point slid along its line to the vanishing point
@@ -236,15 +236,17 @@ module.exports = { name: 'Обезьянка Джек', kind: 'deck', status: 'd
     fg += K.castShadow(u, L, { x: MK.x, y: MK.y - 1, w: 28, h: 56, horizon: HZ, d: .5, opacity: .6 }) + K.contactShadow(u, MK.x, MK.y - .4, 36, L, { ry: 1.6, opacity: .75 });
     fg += monkey(u, L, MK);
     const W = (lx, ly) => [MK.x + lx * MK.s, MK.y + ly * MK.s];
-    // the stolen card held high: the palm behind its lower edge, four fingers curled over it in front
+    // the stolen card held high: the palm behind its lower edge, four fingers curled over it in front, the thumb up
+    // behind the card (drawn first; only its root shows under the edge, left of the index finger)
     { const cs = 1.28 * MK.s, c = W(-19.4, -61.6 - 10 * cs / MK.s), a = -8, rd = a * Math.PI / 180, bot = (dx) => { dx *= MK.s; return [c[0] + dx * Math.cos(rd) - 10 * cs * Math.sin(rd), c[1] + dx * Math.sin(rd) + 10 * cs * Math.cos(rd)]; };
+      { const p = bot(-5.4); fg += `<path d="M${f(p[0] - 1)} ${f(p[1] + 3.4)}C${f(p[0] - 2.2)} ${f(p[1] + .6)} ${f(p[0] - 1.6)} ${f(p[1] - 4)} ${f(p[0] - .2)} ${f(p[1] - 4.4)}C${f(p[0] + 1.1)} ${f(p[1] - 4.4)} ${f(p[0] + 1.6)} ${f(p[1] - 1.6)} ${f(p[0] + 2.2)} ${f(p[1] + 2.8)}Z" fill="#3a2010" stroke="#140804" stroke-width=".35"/>`
+        + `<path d="M${f(p[0] - 1.3)} ${f(p[1] + 2.6)}C${f(p[0] - 1.8)} ${f(p[1] + 1)} ${f(p[0] - 1.6)} ${f(p[1] - .4)} ${f(p[0] - 1.2)} ${f(p[1] - 1)}" stroke="#8a5a36" stroke-width=".3" fill="none"/>`; }
       fg += `<g transform="translate(${f(c[0] - 1.6)} ${f(c[1] + 1.4)}) rotate(${a})"><rect x="${f(-7 * cs)}" y="${f(-10 * cs)}" width="${f(14 * cs)}" height="${f(20 * cs)}" rx="1.4" fill="#0a0a14" opacity=".35"/></g>`
         + card(u, c[0], c[1], a, cs, 1, .85);
       for (const [dx, l0] of [[-3.2, 2.6], [-1.05, 3.1], [1.1, 3], [3.1, 2.4]]) { const p = bot(dx), l = l0 * MK.s;
         fg += `<path d="M${f(p[0] - 1.05)} ${f(p[1] + 1.4)}C${f(p[0] - 1.15)} ${f(p[1] - l * .6)} ${f(p[0] - .7)} ${f(p[1] - l)} ${f(p[0])} ${f(p[1] - l)}C${f(p[0] + .7)} ${f(p[1] - l)} ${f(p[0] + 1.15)} ${f(p[1] - l * .6)} ${f(p[0] + 1.05)} ${f(p[1] + 1.4)}Z" fill="#3a2010" stroke="#140804" stroke-width=".35"/>`
           + `<path d="M${f(p[0] - .5)} ${f(p[1] - l + .5)}q.5 -.3 1 0" stroke="#8a5a36" stroke-width=".3" fill="none"/>`; }
-      fg += `<path d="M${f(bot(-5)[0])} ${f(bot(-5)[1] + 1.2)}q-1.6 -2.6 -.4 -4.6q1.2 .2 1.4 2.6" fill="#3a2010" stroke="#140804" stroke-width=".35"/>`
-        + K.localGlow(u, { x: c[0], y: c[1], color: '#e8f0ff', power: .3, radius: 16 }, { core: false }); }
+      fg += K.localGlow(u, { x: c[0], y: c[1], color: '#e8f0ff', power: .3, radius: 16 }, { core: false }); }
     // the gold coin in the other paw, held up by the shoulder: the moon's glint on it, the thumb over its rim
     { const c = W(23, -42.6), r = 3.3 * MK.s, cg = nid('cn', u);
       fg += `<defs>${radGrad(cg, c[0] - 1, c[1] - 1, r * 1.3, [[0, '#fff6c8', 1], [.35, '#f2c860', 1], [.8, '#b8862a', 1], [1, '#6a4410', 1]])}</defs>`

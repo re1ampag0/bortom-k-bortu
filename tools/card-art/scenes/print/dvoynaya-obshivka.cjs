@@ -43,7 +43,7 @@ function holePts(R) {
 }
 const poly = (P, dx = 0, dy = 0) => 'M' + P.map(p => `${f(p[0] + dx)} ${f(p[1] + dy)}`).join('L') + 'Z';
 
-module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Двойная обшивка', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     // the Endeavour's matt ochre, warmer and darker than the ramp's lit lemon at this size

@@ -37,7 +37,7 @@ const poly = pts => 'M' + pts.map(P2).join('L') + 'Z';
 const LIGHTS = [[17, 52], [58, 142], [148, 183]];
 const WTOP = 8;                                      // the window head
 
-module.exports = { name: 'Ничего личного', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ничего личного', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: VY, eye: .25 }), Lo = K.makeLight(lightOut, { horizon: VY, eye: 3 }), R = rng(31);
     return [outside(u, Lo) + cabin(u, L, R), table(u, L, R) + air(u)];

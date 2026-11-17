@@ -31,7 +31,7 @@ const skel = { horizon: HZ, eye: 4, light: 'the low sun ahead right behind the P
   ['hits', 50, 112, 40, 16, 'the Revenge\'s side at her bow quarter, round the forward ports'],
   ['shot trails', 20, 108, 50, 16, 'in the air between the enemy and the Revenge']] };
 
-module.exports = { name: 'Прикрыть бортом', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Прикрыть бортом', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     L.pal = Object.assign({}, L.pal, { sky: ['#160a18', '#40162a', '#9a3a24', '#ec8240'], sea: ['#b8603a', '#44182a', '#120810'], cloudLit: '#f08a50', cloudShade: '#3a1a2c' });

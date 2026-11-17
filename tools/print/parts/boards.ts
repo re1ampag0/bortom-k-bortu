@@ -16,6 +16,8 @@ import { material as pearl } from './boards/pearl';
 import { material as revenge } from './boards/revenge';
 import { material as endeavour } from './boards/endeavour';
 import { material as dutch } from './boards/dutch';
+import { boardV2, V2_CSS } from './boards/v2';
+import { wreckV3 } from './boards/wreck';
 
 const require = createRequire(import.meta.url);
 /** The ships of the art kit (tools/card-art/scenes/kit/ship.cjs): the same ships as on the card backs. */
@@ -44,7 +46,7 @@ const shipImage = (pic: ShipPic, cx: number, wy: number, maxW: number, maxH: num
  * samples. 'a' («у борта») and 'b' («стол капитана») — the shared frame of boards/frame.ts with each ship's material
  * (boards/<ship>.ts) and the back «Затонул». 03-planshety.pdf takes the concept of --board (a by default). */
 export type BoardVariant = 'top' | 'side' | Concept;
-export const BOARD_DEFAULT: Concept = 'a';
+export const BOARD_DEFAULT: Concept = 'b';
 const MATERIALS: Record<ShipKey, ShipMaterial> = { pearl, revenge, endeavour, dutch };
 
 interface TrackText { name: string; note?: string; zero?: string; start?: string; max?: string }
@@ -246,7 +248,8 @@ function footer(ship: Ship, pal: Pal): string {
 
 /** One face of a board; in 'a' and 'b' the material's own CSS goes with the page. */
 export async function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): Promise<PageSpec> {
-  if (variant === 'a' || variant === 'b') return withCss(await framePage(ctx, ship, variant, MATERIALS[DECK_KEY[ship.code]]));
+  if (variant === 'b') return withCss(await boardV2(ctx, ship, ctx.opts.counters ?? 'strip'));
+  if (variant === 'a') return withCss(await framePage(ctx, ship, variant, MATERIALS[DECK_KEY[ship.code]]));
   const pal = palette(ship.color), bodyTop = EDGE + HEAD_H[variant] + BODY_GAP, id = `bo-b${++UID}`, pic = await kitShip(ctx, DECK_KEY[ship.code]);
   const svg: string[] = [], html: string[] = [];
   // the sheet: parchment inside a frame of the ship colour with a brass hairline
@@ -276,7 +279,7 @@ export async function boardPage(ctx: Ctx, ship: Ship, variant: BoardVariant): Pr
   return { html: `<svg class="bo-svg" viewBox="0 0 ${PAGE.w} ${PAGE.h}">${svg.join('\n')}</svg>\n${html.join('\n')}`, land: true };
 }
 
-export const BOARD_CSS = `${RICH_CSS}${FRAME_CSS}
+export const BOARD_CSS = `${RICH_CSS}${FRAME_CSS}${V2_CSS}
 .bo-svg{position:absolute;left:0;top:0;width:297mm;height:210mm}
 .bo-abs{position:absolute}
 .bo-nl{display:flex;align-items:center;gap:4.5mm;white-space:nowrap}
@@ -316,11 +319,11 @@ export const BOARD_CSS = `${RICH_CSS}${FRAME_CSS}
 
 const withCss = (p: { html: string; css: string }): PageSpec => ({ html: (p.css ? `<style>${p.css}</style>` : '') + p.html, land: true });
 /** The back «Затонул» of a board (the same in both concepts, in the ship's style). */
-export async function wreckBack(ctx: Ctx, ship: Ship): Promise<PageSpec> { return withCss(await wreckPage(ctx, ship, MATERIALS[DECK_KEY[ship.code]])); }
+export async function wreckBack(ctx: Ctx, ship: Ship, concept: Concept = 'b'): Promise<PageSpec> { return withCss(concept === 'b' ? await wreckV3(ctx, ship, MATERIALS[DECK_KEY[ship.code]]) : await wreckPage(ctx, ship, MATERIALS[DECK_KEY[ship.code]])); }
 /** Face, back, face, back…: printed on both sides, flipped on the short edge. */
 async function boardsPart(ctx: Ctx, concept: Concept, file: string): Promise<Part> {
   const pages: PageSpec[] = [];
-  for (const ship of data.ships) pages.push(await boardPage(ctx, ship, concept), await wreckBack(ctx, ship)); // one at a time: makeArt has a single raster page
+  for (const ship of data.ships) pages.push(await boardPage(ctx, ship, concept), await wreckBack(ctx, ship, concept)); // one at a time: makeArt has a single raster page
   return { file, title: TXT.title + (concept === 'b' ? ' (концепт Б)' : ''), css: BOARD_CSS, pages, duplex: 'short' };
 }
 

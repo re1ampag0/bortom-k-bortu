@@ -58,7 +58,7 @@ function bolt(u, x0, y0, x1, y1, seed) {
     + `<path d="${d}" stroke="#e8fff6" stroke-width="1.1" fill="none" stroke-linejoin="bevel"/><path d="${fd}" stroke="#e8fff6" stroke-width=".55" fill="none" opacity=".85"/></g>`;
 }
 
-module.exports = { name: 'Водоворот', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Водоворот', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 }), R = rng(41);
     L.pal = Object.assign({}, L.pal, { sky: ['#050c0b', '#0e1e1b', '#1c3832', '#36584e'], sea: ['#6a9a8a', '#173c34', '#05120f'], cloudLit: '#a8d4c4', cloudShade: '#0c1a17' });

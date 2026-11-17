@@ -39,7 +39,7 @@ function tarBarrel(u, L, o) {
     + K.fire(u, { x, y: y - 29 * s, w: 18 * s, h: o.h || 40 * s, seed: o.seed + 3, wind: .55, glow: false, pool: false });
 }
 
-module.exports = { name: 'Брандер', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Брандер', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     L.pal = Object.assign({}, L.pal, { sky: ['#120a16', '#36121e', '#7e2c1e', '#d0642c'], sea: ['#a8502e', '#3a1820', '#100810'], cloudLit: '#d86a40', cloudShade: '#301626' });

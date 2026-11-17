@@ -30,7 +30,7 @@ const skel = { horizon: HZ, eye: 3, light: 'the low sun behind us on the right; 
   ['enemy (Endeavour)', 150, 101, 52, 46, 'water on the horizon, right, beyond the Revenge\'s bowsprit'],
   ['enemy hits', 150, 104, 50, 20, 'her side and the water round her']] };
 
-module.exports = { name: 'Ответный залп', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ответный залп', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 3 });
     L.pal = Object.assign({}, L.pal, { sky: ['#1a0c1e', '#46182c', '#a2402a', '#f0904e'], sea: ['#b05e40', '#44182a', '#120810'], cloudLit: '#f09a60', cloudShade: '#3e1c2e' });

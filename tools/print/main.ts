@@ -1,14 +1,17 @@
 // The print-and-play set: HTML → PDF with Chromium (docs/tasks/print-kit.md, stage А).
 //   npm run print [-- --only 05,07] [--glass type|ship] [--index on|off] [--backs 1|2|3] [--draft] [--no-art]
 //                 [--draft-art] [--back-shift-x mm] [--back-shift-y mm] [--no-samples] [--check] [--check-pdf] [--board a|b]
+//                 [--counters board|strip] [--tokens old|new] [--test-set]
+//   --test-set: only the parts of the test set without card backs (test-set.ts) and out/print/test/; the full build writes it too
 // Writes out/print/*.pdf and the sample pictures out/print/obrazcy/. See tools/print/README.md.
 import path from 'node:path';
 import fs from 'node:fs';
 import { HERE, OUT, SAMPLES, esc, launch, makeCtx, type Opts, type Part } from './kit';
-import { mergePdf, writePdf } from './pdf';
+import { mergePdf, writePdf, withControl } from './pdf';
 import { makeIcons } from './icons';
 import { pruneArt } from './art';
 import { cardParts } from './parts/cards';
+import { TEST_ONE, TEST_PARTS, TEST_TWO, buildTestSet } from './test-set';
 
 const args = process.argv.slice(2);
 const opt = (name: string, def: string) => { const i = args.indexOf(name); return i < 0 ? def : args[i + 1]; };
@@ -19,9 +22,11 @@ const opts: Opts = {
   backs: (Number(opt('--backs', '1')) || 1) as 1 | 2 | 3,
   draft: has('--draft'), noArt: has('--no-art'), draftArt: has('--draft-art'),
   backShiftX: Number(opt('--back-shift-x', '0')), backShiftY: Number(opt('--back-shift-y', '0')),
-  only: opt('--only', '') ? opt('--only', '').split(',').map(s => s.trim()) : null,
+  only: opt('--only', '') ? opt('--only', '').split(',').map(s => s.trim()) : has('--test-set') ? TEST_PARTS : null,
   check: has('--check'), checkPdf: has('--check-pdf'), samples: !has('--no-samples'),
-  board: opt('--board', 'a') === 'b' ? 'b' : 'a'
+  board: opt('--board', 'b') === 'a' ? 'a' : 'b',
+  counters: opt('--counters', 'strip') === 'board' ? 'board' : 'strip',
+  tokens: opt('--tokens', 'new') === 'old' ? 'old' : 'new'
 };
 
 const t0 = Date.now();
@@ -37,29 +42,35 @@ const builders: [string, () => Promise<Part[]>][] = [
   ['03', async () => (await import('./parts/boards')).build(ctx)],
   ['04', async () => (await import('./parts/tokens')).build(ctx)],
   ['05', async () => cardParts(ctx, 'decks')],
+  ['06', async () => cardParts(ctx, 'legends')],
   ['07', async () => cardParts(ctx, 'sea')],
   ['08', async () => (await import('./parts/report')).build(ctx)]
 ];
 const done: Part[] = [];
 for (const [prefix, build] of builders) {
   if (opts.only && !opts.only.some(o => o.startsWith(prefix) || prefix.startsWith(o.slice(0, 2)))) continue;
-  for (const part of await build()) { if (!want(part.file)) continue; await writePdf(ctx, part); done.push(part); console.log(`${part.file}.pdf — ${part.pages.length} стр.`); }
+  for (const part of await build()) { if (!want(part.file)) continue; await writePdf(ctx, part); done.push(part); console.log(`${part.file}.pdf — ${part.pages.length + (withControl(part.file) ? (part.duplex ? 2 : 1) : 0)} стр.${withControl(part.file) ? ' (с проверочной)' : ''}`); }
 }
 // `--only obrazcy` (alone or with part numbers): the sample pictures without the full set
 if (opts.only?.some(o => o.startsWith('obr'))) await (await import('./samples')).buildSamples(ctx);
 // vse.pdf: everything in order, to look through on a screen (not for printing: one- and two-sided pages are mixed)
 if (!opts.only) {
-  const main = done.filter(p => !/^05[ab]|^obrazcy/.test(p.file) && !p.file.includes('-v'));
+  // without the rules (01) and the report form (08): the user's decision 17.11 — they live as their own files
+  const main = done.filter(p => !/^0[18]-|^05[ab]|^obrazcy/.test(p.file) && !p.file.includes('-v'));
   await mergePdf(main.map(p => path.join(OUT, p.file + '.pdf')), path.join(OUT, 'vse.pdf'), 'Бортом к борту — печатный набор (для просмотра)');
-  console.log(`vse.pdf — ${main.reduce((n, p) => n + p.pages.length, 0)} стр.`);
+  console.log(`vse.pdf — ${main.reduce((n, p) => n + p.pages.length + (withControl(p.file) ? (p.duplex ? 2 : 1) : 0), 0)} стр.`);
   if (opts.samples) await (await import('./samples')).buildSamples(ctx);
   // index.html for the site (dist/print/): the files in plain words
   const site = JSON.parse(fs.readFileSync(path.join(HERE, 'text/site.json'), 'utf8')) as { title: string; lead: string; files: string[][]; shift: string; samples: string };
   const li = (f: string, t: string, n = '') => `<li><a href="${esc(f)}">${esc(t)}</a>${n ? ` <small>— ${esc(n)}</small>` : ''}</li>`;
   const shifts = fs.readdirSync(OUT).filter(f => /^05b-rubashki-.+\.pdf$/.test(f)).sort(), pngs = fs.existsSync(SAMPLES) ? fs.readdirSync(SAMPLES).filter(f => f.endsWith('.png')).sort() : [];
   fs.writeFileSync(path.join(OUT, 'index.html'), `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(site.title)}</title><style>body{font:18px/1.5 Georgia,serif;max-width:46em;margin:2em auto;padding:0 1em;color:#2a1c0c;background:#f6ecd4}small{color:#6e5a3c}li{margin:.35em 0}</style></head><body><h1>${esc(site.title)}</h1><p>${esc(site.lead)}</p><ul>${site.files.filter(f => fs.existsSync(path.join(OUT, f[0]))).map(f => li(f[0], f[1], f[2])).join('')}</ul>${shifts.length ? `<p>${esc(site.shift)}</p><ul>${shifts.map(f => li(f, f)).join('')}</ul>` : ''}${pngs.length ? `<p>${esc(site.samples)}</p><ul>${pngs.map(f => li('obrazcy/' + f, f)).join('')}</ul>` : ''}</body></html>`);
+  // the memo for the print shop, in the set
+  fs.copyFileSync(path.join(HERE, 'text/PECHAT.txt'), path.join(OUT, 'PECHAT.txt'));
   const pruned = pruneArt(); if (pruned) console.log(`cache: removed ${pruned} unused file(s)`);
 }
+// the one-sided test set from the PDFs just written (the full build and --test-set)
+if (!opts.only || has('--test-set')) { const t = await buildTestSet(); console.log(`test/${TEST_TWO} — ${t.two} листов с двух сторон, test/${TEST_ONE} — ${t.one} листов с одной стороны`); }
 if (opts.check && !(await (await import('./check')).checkLayout(ctx))) process.exitCode = 1;
 await browser.close();
 if (opts.checkPdf && !(await (await import('./check')).checkPdf())) process.exitCode = 1;

@@ -23,7 +23,7 @@ const skel = { horizon: HZ, eye: 4, light: 'sun behind the fog ahead-right (152,
 const PAL = { sky: ['#8b959a', '#b3babb', '#dbdbd4', '#ecebe3'], sea: ['#d6d6cd', '#76858a', '#283a41'], fog: '#f1efe8', cloudLit: '#f4f2ea', cloudShade: '#a3abae', smoke: '#d9d9d2' };
 const blur = (id, sd) => `<filter id="${id}" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="${sd}"/></filter>`;
 
-module.exports = { name: 'Туман', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Туман', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 4 });
     L.pal = Object.assign({}, L.pal, PAL);

@@ -49,7 +49,7 @@ function rockFace(u, d, box, base, R, n, seed) {
   return o + '</g>';
 }
 
-module.exports = { name: 'Фонтан молодости', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Фонтан молодости', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.4 }), R = rng(13);
     // ——— the grotto: the vault, the side walls, the back wall (lit where the shaft spills), the hole in the vault ———

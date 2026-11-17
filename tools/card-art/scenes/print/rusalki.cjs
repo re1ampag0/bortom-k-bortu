@@ -42,7 +42,7 @@ const skel = { horizon: HZ, eye: .5, light: 'the full moon low ahead over the ro
 const pts = a => a.map(p => f(p[0]) + ' ' + f(p[1]));
 const sp = H.sp;
 
-module.exports = { name: 'Русалки', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Русалки', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: .5 });
     // the lilac afterglow of the set sun low over the sea, the full moon rising in it

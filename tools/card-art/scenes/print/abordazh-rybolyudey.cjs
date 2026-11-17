@@ -15,6 +15,8 @@
 // thicker grip; a thick dark-edged guard with the knuckle bow closed to the pommel; the scallop lower on the shoulder,
 // half sunk into the coat with a lip and a shadow; the heads in the water left and right bigger and lit (crest, eye
 // glint); the right-edge crab replaced by the right head's whole claw over the rail; the crest's rim along the spines.
+// Print review: the lantern hung on its line from nothing (from the cost icon) — now it hangs on a short line from an
+// iron hook on the end of a boom that comes in over our deck from the left edge.
 'use strict';
 const K = require('../kit/index.cjs');
 const PK = require('../portrait-kit.cjs');
@@ -24,7 +26,8 @@ const { glow, gloom, motes } = PK;
 
 const HZ = 100, RAIL = 112, FOOT = 148;            // the horizon; the top of our rail; the deck at the foot of the bulwark
 const HC = [98, 48];                                // the fish head's centre
-const LAMP = { x: 28, y: 88, s: 1.05, hang: 16 };   // the enemy's lantern, hanging on the left
+const LAMP = { x: 28, y: 92, s: 1.05, hang: 3 };    // the enemy's lantern, hanging on the left from a hook on the boom
+const BOOM = [[-8, 51.6], [40, 55]];                // the end of a boom over our deck, coming in from the left edge
 const LL = K.lantern.local(LAMP);
 const light = { time: 'fog', haze: .75, key: { type: 'moon', x: 112, y: 18, el: 30, color: '#cfeee0', power: .6 },
   fill: { color: '#24443c', power: .45 }, rim: { az: 20, color: '#bff8e0', power: .7 },
@@ -33,7 +36,7 @@ const skel = { horizon: HZ, eye: 1.6, light: 'a bright patch of fog behind him, 
   ['sea', -10, RAIL, 220, RAIL - HZ, 'beyond the rail'], ['Dutchman', 150, HZ + 1, 50, 50, 'water, far, in the fog'],
   ['fish heads', 10, 112, 60, 8, 'in the water beyond the rail'], ['fishman', 52, RAIL, 120, 92, 'climbs over our rail from the sea (hips behind the bulwark)'],
   ['claw', 18, 124, 52, 30, 'clamped on the rail cap'], ['cutlass', 124, 88, 22, 70, 'in his left fist'],
-  ['lantern', 16, LAMP.y, 24, 46, 'hangs on its line from above'], ['bulwark', -10, FOOT, 220, FOOT - RAIL, 'deck'],
+  ['boom', -8, 58, 48, 7, 'spar, its far end off the left edge'], ['lantern', 16, LAMP.y, 24, 38, 'hangs on a short line from a hook on the boom'], ['bulwark', -10, FOOT, 220, FOOT - RAIL, 'deck'],
   ['cap', 120, 200, 30, 14, 'deck'], ['puddle', 40, 196, 120, 30, 'deck']] };
 
 const P2 = p => `${f(p[0])} ${f(p[1])}`;
@@ -190,7 +193,7 @@ function claw(u, L, el, wr, ang) {
   return { svg: s, tipUp: P(46, -1.8), tipDn: P(45.4, 1.6) };
 }
 
-module.exports = { name: 'Абордаж рыболюдей', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Абордаж рыболюдей', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 });
     // ——— the night fog: the sky, a bright patch behind him, the sea, the Dutchman far on the right ———
@@ -310,6 +313,14 @@ module.exports = { name: 'Абордаж рыболюдей', kind: 'deck', stat
     const knuck = (() => { const k = hL.P(4.6, -.4, .2); return glow(u, k[0], k[1], 8, 7, '#bff8e0', .15); })();
     let fg = man + armL + sword.back + sword.front + knuck + head + rail + armR + rags + shell + bite;
     // ——— light and air: the lantern (hanging on the left), its warmth on the claw and the face, fog, the dark below ———
+    // the boom's end over our deck (off the left edge): an iron band with a hook under it, the lantern's line on the hook
+    { const [a, b] = BOOM, yAt = x => a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]), hy = yAt(LAMP.x), top = LAMP.y - (29 + LAMP.hang) * LAMP.s;
+      fg += K.shadeCyl(u, ...a, ...b, 2.4, L, 'oak', { r1: 2.5, r2: 2.2, ell: .3, face: 2, outline: .45, seed: 11 })
+        + `<path d="M${f(a[0])} ${f(a[1] - 2)}L${f(b[0] - 1)} ${f(b[1] - 1.8)}" stroke="${RIMC}" stroke-width=".5" opacity=".55"/>`
+        + `<path d="M${f(b[0] - 3)} ${f(yAt(b[0] - 3) - 2.3)}V${f(yAt(b[0] - 3) + 2.3)}" stroke="#141a16" stroke-width="1.2"/>`
+        + `<path d="M${f(LAMP.x - 1.6)} ${f(hy - 2.4)}V${f(hy + 2.4)}M${f(LAMP.x + 1.6)} ${f(hy - 2.4)}V${f(hy + 2.4)}" stroke="#141a16" stroke-width="1"/>`
+        + `<path d="M${f(LAMP.x)} ${f(hy + 2.2)}V${f(top - .6)}q0 1.8 1.4 1.6q1 -.2 .9 -1.4" stroke="#141a16" stroke-width="1" fill="none" stroke-linecap="round"/>`
+        + `<path d="M${f(LAMP.x - .3)} ${f(hy + 2.4)}V${f(top - 1)}" stroke="#8a9a90" stroke-width=".35" opacity=".7"/>`; }
     fg += K.lantern(u, L, LAMP) + K.localGlow(u, { x: LL.x, y: LL.y, color: '#ffc070', power: .75, radius: 22 })
       + glow(u, 56, 92, 60, 50, WARM, .14) + glow(u, 30, 156, 40, 14, WARM, .18)
       + motes(22, 0, 30, 200, 90, '#dffff0', 7) + K.fog(u, L, { y: RAIL - 4, h: 22, density: .3, seed: 9 })

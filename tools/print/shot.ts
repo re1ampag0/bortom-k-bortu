@@ -2,7 +2,8 @@
 // user judges and for the reviewers (docs/progress/print-kit.md). Not part of the set.
 //   npx vite-node tools/print/shot.ts -- --names "Анжелика,Ром для всех" --out report/print-kit/shots [--px 720]
 //        [--mode compare|new|old] [--variant a|b] [--sheet name]
-//   npx vite-node tools/print/shot.ts -- --backs "Ж,М,И,Г,sea" --out … — the backs as printed (backs.cjs variant 1), <code>-back.png and backs.png
+//   npx vite-node tools/print/shot.ts -- --backs "Ж,М,И,Г,sea,L:Ж" --out … — the backs as printed (backs.cjs variant 1), <code>-back.png and backs.png;
+//        L:<deck> — the back of that deck's Legend (legend-<deck>-back.png)
 // compare (default) — <slug>.png: the first-round picture | the new scene (draft allowed), side by side, ≤ 1500 px wide;
 // new / old — <slug>-new.png / <slug>-old.png, one card. --sheet <name> — also <name>.png: every card of the run on one sheet.
 // --grid N (compare) — instead of the one-row sheet: numbered «old | new» pairs, 3 across, N a sheet, <sheet>-1.jpg …; --start K — the first number.
@@ -10,10 +11,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { HTML_DIR, data, esc, launch, makeCtx, mm, pageHtml, type Ctx, type Opts } from './kit';
-import { CARD, deckSheets, seaSheets, type Item } from './layout';
+import { CARD, backOf, deckSheets, legendSheets, seaSheets, type BackKind, type Item } from './layout';
+import type { DeckCode } from './colors';
 import { CARD_CSS, backHtml, itemFace, prepareCards, type CardKit } from './cards';
 import { makeIcons } from './icons';
-import { ON_GLASS, luminance } from './colors';
+import { LEGEND, ON_GLASS, luminance } from './colors';
 
 const args = process.argv.slice(2);
 const opt = (n: string, d: string) => { const i = args.indexOf(n); return i < 0 ? d : args[i + 1]; };
@@ -23,7 +25,7 @@ const grid = Number(opt('--grid', '0')), variant = opt('--variant', ''), sheet =
 if (!names.length && !backs.length) { console.error('--names "Card,Card" is required'); process.exit(2); }
 
 const itemName = (it: Item) => it.kind === 'card' || it.kind === 'legend' || it.kind === 'sea' ? it.card.name : '';
-const all = [...deckSheets(data), ...seaSheets(data)].flatMap(s => s.items);
+const all = [...deckSheets(data), ...legendSheets(data), ...seaSheets(data)].flatMap(s => s.items);
 const items = (backs.length ? ['Ядра'] : names).map(n => { const it = all.find(i => itemName(i) === n); if (!it) throw new Error(`card not found: ${n}`); return it as Extract<Item, { kind: 'card' | 'legend' | 'sea' }>; });
 const keyOf = (it: Item) => it.kind === 'sea' ? 'sea|' + it.card.name : it.kind === 'card' || it.kind === 'legend' ? `${it.deck}|${it.card.name}` : '';
 const TR: Record<string, string> = { а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya' };
@@ -40,8 +42,9 @@ async function kitAs(v: string, draftArt: boolean): Promise<CardKit> {
   if (prev === undefined) delete process.env.PRINT_VARIANT; else process.env.PRINT_VARIANT = prev; return k;
 }
 const kOld = mode === 'new' || backs.length ? null : await kitAs('old', false), kNew = mode === 'old' ? null : await kitAs(variant, true);
-const lt = luminance(ON_GLASS.text);
-const contrast = (k: CardKit, it: Item) => { const a = k.art.get(keyOf(it))!; return { mean: (lt + .05) / (a.glassMean + .05), p95: (lt + .05) / (a.glassP95 + .05) }; };
+const lt = luminance(ON_GLASS.text), ld = luminance(LEGEND.ink.text);
+// white text on a dark glass; the Legend — dark ink on its golden glass (p95 then is the darkest 5 % of the glass)
+const contrast = (k: CardKit, it: Item) => { const a = k.art.get(keyOf(it))!; return it.kind === 'legend' && a.glassP05 != null ? { mean: (a.glassMean + .05) / (ld + .05), p95: (a.glassP05 + .05) / (ld + .05) } : { mean: (lt + .05) / (a.glassMean + .05), p95: (lt + .05) / (a.glassP95 + .05) }; };
 
 const W = CARD.w, H = CARD.h, GAP = 3, k = px / (W * 96 / 25.4);
 const cap = (t: string) => `<div style="position:absolute;left:0;right:0;top:${mm(H + 1)};font:600 9pt/1.2 'Alegreya Sans',sans-serif;color:#e8dcc0;text-align:center">${esc(t)}</div>`;
@@ -58,8 +61,11 @@ async function shoot(html: string, w: number, h: number, file: string) {
 fs.mkdirSync(out, { recursive: true });
 if (backs.length) {
   fs.mkdirSync(out, { recursive: true });
-  const kit = kNew!, cellB = (b: string, x: number) => `<div style="position:absolute;left:${mm(x)};top:0">${backHtml(kit, b === 'sea' ? { back: 'sea' } : { back: 'deck', deck: b as 'Ж' | 'М' | 'И' | 'Г' }, 'left:0;top:0;')}</div>`;
-  for (const b of backs) await shoot(cellB(b, 0), W, H, path.join(out, `${b === 'sea' ? 'sea' : slug(b)}-back.png`));
+  // a code: Ж … Г — the deck's back, sea — the sea deck's, L:Ж … L:Г — the back of that deck's Legend (as it lies behind it on its sheet)
+  const kindOf = (b: string): BackKind => b === 'sea' ? { back: 'sea' } : b.startsWith('L:') ? backOf({ kind: 'legend', deck: b.slice(2) as DeckCode, card: data.legends[b.slice(2) as DeckCode] }) : { back: 'deck', deck: b as DeckCode };
+  const fileOf = (b: string) => b === 'sea' ? 'sea' : b.startsWith('L:') ? 'legend-' + slug(b.slice(2)) : slug(b);
+  const kit = kNew!, cellB = (b: string, x: number) => `<div style="position:absolute;left:${mm(x)};top:0">${backHtml(kit, kindOf(b), 'left:0;top:0;')}</div>`;
+  for (const b of backs) await shoot(cellB(b, 0), W, H, path.join(out, `${fileOf(b)}-back.png`));
   await shoot(backs.map((b, i) => cellB(b, i * (W + GAP))).join(''), backs.length * (W + GAP) - GAP, H, path.join(out, 'backs.png'));
   await browser.close(); console.log(`→ ${path.relative(process.cwd(), out)}`); process.exit(0);
 }

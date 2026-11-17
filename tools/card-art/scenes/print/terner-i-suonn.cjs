@@ -148,7 +148,7 @@ function ladyHilt(u, L, o) {
   return s;
 }
 
-module.exports = { name: 'Тёрнер и Суонн', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Тёрнер и Суонн', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), R = rng(17);
     // ——— the sky: dusk, a low bank of clouds lit from below, the sun half set behind the sabres; the sea ———

@@ -38,7 +38,7 @@ const WHT = { lit: '#ffffff', half: '#e4e0d6', shadow: '#9a968c', outline: '#4a4
 const BLK = { lit: '#5a5a62', half: '#25252a', shadow: '#0c0c10', outline: '#050508' };
 const SKIN = { lit: '#f2c8a2', half: '#cc9670', shadow: '#7a4a32', outline: '#3a2014' };
 
-module.exports = { name: 'Приказ лорда Беккета', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Приказ лорда Беккета', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: EYE }), R = rng(37);
     // ——— the day: sky, clouds, the sea to the bulwark, the ally on the horizon answering ———

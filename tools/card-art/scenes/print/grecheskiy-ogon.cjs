@@ -23,7 +23,7 @@ const EN = { kind: 'endeavour', x: 160, y: 113, scale: .6, sails: 'full', seed: 
 const HIT = { x: 150, y: 104 };                             // the fire on her side
 const light = { time: 'dusk', haze: .3, key: { type: 'sun', x: 166, y: 101, color: '#ff9a5a', power: .55 }, fill: { color: '#6e4a70', power: .42 },
   rim: { az: 30, color: '#ffc890', power: .5 },
-  locals: [{ x: POT.x, y: POT.y, color: '#ffa040', power: .9, radius: 60 }, { x: HIT.x, y: HIT.y, color: '#ff8a2a', power: .8, radius: 36 }, { x: MZ.x, y: MZ.y, color: '#ffb050', power: .6, radius: 30 }] };
+  locals: [{ x: POT.x, y: POT.y, color: '#ffa040', power: .9, radius: 60 }, { x: HIT.x, y: HIT.y, color: '#ff8a2a', power: .8, radius: 36 }, { x: MZ.x + 12, y: MZ.y - 8, color: '#ffb050', power: .3, radius: 22 }] };
 const skel = { horizon: HZ, eye: 6, light: 'the fire of the pot (main); the sun on the horizon behind the enemy; her burning side; the flash at the bow port', items: [
   ['pot', POT.x - 14, POT.y + 14, 28, 28, 'in the air: the top of its arc'],
   ['trail', MZ.x, MZ.y, 80, 72, 'from the Revenge\'s bow port up to the pot'],
@@ -33,7 +33,10 @@ const skel = { horizon: HZ, eye: 6, light: 'the fire of the pot (main); the sun 
   ['fires on the sea', 92, 116, 50, 10, 'water, under the arc']] };
 
 // the arc of the shot: a parabola from the port through the pot (its top) on down towards her side
-const arc = t => { const x = MZ.x + (POT.x - MZ.x) * t, k = (x - POT.x) / (POT.x - MZ.x); return [x, POT.y + (MZ.y - POT.y) * k * k]; };
+// the gun of the Revenge: its barrel runs out of the bow port, up towards the pot; the shot leaves at its muzzle (GM),
+// clear of her hull — so the flash and the trail start in the open air, not on her side
+const GA = -32 * Math.PI / 180, GL = 10, GM = { x: MZ.x + Math.cos(GA) * GL, y: MZ.y + Math.sin(GA) * GL };
+const arc = t => { const x = GM.x + (POT.x - GM.x) * t, k = (x - POT.x) / (POT.x - GM.x); return [x, POT.y + (GM.y - POT.y) * k * k]; };
 
 // a clay fire-pot (KIT-CANDIDATE): a round belly, a short neck along `a` (deg, screen), throwing rings across the
 // axis, a black painted band with a zigzag, a cord round the neck, a rag stuffed in it. Lit by its own fire from the
@@ -93,7 +96,7 @@ function seaFire(u, L, o) {
   return s;
 }
 
-module.exports = { name: 'Греческий огонь', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Греческий огонь', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 6 });
     // a late, deep-red sunset: the fire, not the sky, is the brightest thing in the picture
@@ -131,12 +134,19 @@ module.exports = { name: 'Греческий огонь', kind: 'deck', status: 
       fill: { color: '#4a2a40', power: .4 }, rim: { az: 60, color: '#ffc080', power: .4 } }, { horizon: HZ, eye: 6 });
     Lr.pal = L.pal;
     let rev = K.ship(u, Lr, Object.assign({ wake: true, reflect: true, lights: true }, REV));
-    rev += K.localGlow(u, { x: MZ.x + 4, y: MZ.y - 6, color: '#ff9a3a', power: .55, radius: 34 }, { core: false });
-    rev += K.smoke(u, L, { x: MZ.x + 6, y: MZ.y - 4, w: 30, h: 34, wind: -.5, seed: 21, opacity: .85, glow: { color: '#ffa040', power: .8 } });
-    // the flash at the port: big and white-hot, over her smoke and the trail
-    const flash = K.localGlow(u, { x: MZ.x + 6, y: MZ.y - 5, color: '#ffc060', power: .95, radius: 40 }, { core: false })
-      + K.muzzleFlash(u, { x: MZ.x, y: MZ.y, dir: -38, len: 52, seed: 1, smoke: false })
-      + `<circle cx="${f(MZ.x + 1.5)}" cy="${f(MZ.y - 1.2)}" r="3.4" fill="#fff6d8" opacity=".95"/>`;
+    // the gun run out of the bow port: a dark iron barrel with its muzzle ring, angled up at the pot
+    { const ca = Math.cos(GA), sa = Math.sin(GA), nx = -sa, ny = ca, P = (a, b, w) => `${f(MZ.x + ca * a + nx * w)} ${f(MZ.y + sa * a + ny * w)}`, gb = nid('gb', u);
+      rev += `<defs>${linGrad(gb, MZ.x + nx * -1.6, MZ.y + ny * -1.6, MZ.x + nx * 1.6, MZ.y + ny * 1.6, [[0, '#8a5a3a'], [.35, '#3a2a24'], [1, '#100a08']])}</defs>`
+        + `<rect x="${f(MZ.x - 2.6)}" y="${f(MZ.y - 2.4)}" width="5.2" height="4.6" fill="#0c0606"/>`
+        + `<path d="M${P(-1, 0, -1.55)}L${P(GL - 1.2, 0, -1.05)}L${P(GL - 1.2, 0, 1.05)}L${P(-1, 0, 1.55)}Z" fill="url(#${gb})" stroke="#0a0606" stroke-width=".3"/>`
+        + `<path d="M${P(GL - 1.4, 0, -1.4)}L${P(GL, 0, -1.4)}L${P(GL, 0, 1.4)}L${P(GL - 1.4, 0, 1.4)}Z" fill="#2a1c18" stroke="#0a0606" stroke-width=".3"/>`
+        + `<path d="M${P(1, 0, -1.3)}L${P(GL - 1.6, 0, -.9)}" stroke="#ffb070" stroke-width=".35" opacity=".7"/>`; }
+    // the gun's smoke: pale powder smoke rolling back from the muzzle over her bow — smoke, not flame
+    const Lg = Object.assign({}, L, { pal: Object.assign({}, L.pal, { smoke: '#c8b4a8' }) });
+    rev += K.smoke(u, Lg, { x: GM.x - 2, y: GM.y - 3, w: 24, h: 26, wind: -.5, seed: 21, opacity: .7, glow: { color: '#ffa040', power: .25 } });
+    // the flash at the muzzle: short, out in the air in front of the barrel, pointing along the shot
+    const flash = K.localGlow(u, { x: GM.x + 4, y: GM.y - 2, color: '#ffc060', power: .5, radius: 20 }, { core: false })
+      + K.muzzleFlash(u, { x: GM.x, y: GM.y, dir: GA * 180 / Math.PI, len: 20, seed: 0, smoke: true, glow: false });
 
     // ——— the trail: old smoke along the arc from the port, thickening and darker the older it is; nearer the pot it
     // is fire — an orange streak with a yellow core, sparks shed behind

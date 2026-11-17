@@ -1,6 +1,6 @@
 // «Тортуга» (Колода моря): the blue hour on the quay of a pirate port. Under one lantern hung from the tavern's iron bracket
 // two men strike a bargain across a rum barrel used as a table: a bearded pirate on the left sets a keg of powder down
-// on the barrel head with both hands (a second keg already stands behind it; black powder trickles from a cracked
+// on the barrel head with his near hand (a second keg already stands behind it; black powder trickles from a cracked
 // stave), a fence in a tricorne on the right holds out two cards fanned in his fingers, backs to us — powder for
 // cards. Behind them the tavern's door and windows glow, people at the door; in the harbour the ships ride at their
 // moorings with lights aboard, the town's lights climb the hill. Card: each team may spend up to 2 Порох and draw as
@@ -9,6 +9,7 @@
 // as a beer mug, the chart did not say «cards» — now the men are drawn as contours (lib/people.cjs: sleeves with folds
 // and cuffs, hands with fingers on what they hold, heads in profile with eye, brow, nose, mouth, the lantern warm on
 // the cheeks); the kegs are squat casks with hoops and the black bomb mark; the chart is a fan of two cards.
+// Third pass (print review): an orphan hand lay on the left keg's right side, no arm reached it — removed.
 // The blue hour with lamps was chosen for the port (the sea series is day, the brief leaves it to the author).
 // Brief: docs/mockups/print/card-briefs.md «Тортуга».
 'use strict';
@@ -32,7 +33,7 @@ const skel = { horizon: HZ, eye: 1.6, light: 'one lantern hung between the two m
     ['pirate', 28, 140, 52, 104, 'left of the barrel, from the waist up, about 75 units/m (a head of 17 units)'],
     ['fence', 118, 140, 54, 98, 'right of the barrel, from the waist up'],
     ['barrel', 80, 168, 42, 62, 'a rum barrel standing on the quay as a table'],
-    ['keg', 80, 108, 20, 24, 'a keg of powder on the barrel head, both the pirate\'s hands on it, powder trickling out'],
+    ['keg', 80, 108, 20, 24, 'a keg of powder on the barrel head, the pirate\'s near hand on it, powder trickling out'],
     ['keg 2', 100, 105, 17, 20, 'the second keg at the back of the barrel head'],
     ['cards', 108, 76, 18, 18, 'two cards fanned in the fence\'s hand, backs to us, over the second keg'],
     ['lantern', 94, 40, 12, 24, 'hung from the bracket on a hook'],
@@ -48,7 +49,7 @@ function sp(P, closed) {
   return d + (closed ? 'Z' : '');
 }
 
-module.exports = { name: 'Тортуга', kind: 'sea', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Тортуга', kind: 'sea', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ, eye: 1.6 }), LF = K.makeLight(lightFar, { horizon: HZ, eye: 1.6 });
     // the blue hour: the sky still deep blue over the hill, the lamps already lit
@@ -69,12 +70,12 @@ module.exports = { name: 'Тортуга', kind: 'sea', status: 'draft', cam: { 
     fg += K.castShadow(u, L, { x: 100, y: 168, w: 42, h: 60, horizon: HZ });
     fg += K.barrel(u, L, { x: 100, y: 168, s: 2, kind: 'rum', seed: 3 });
     // two kegs of powder (up to 2 Порох): one already stands at the back of the barrel head, the pirate sets the
-    // other down in front of it with both hands; the fence holds out two cards to him
+    // other down in front of it with his near hand; the fence holds out two cards to him
     const P = pirate(u, L);
     fg += K.castShadow(u, L, { x: 108, y: 105.4, w: 16, h: 20, horizon: HZ, d: .6 }) + keg(u, L, { x: 108.6, y: 105.4, h: 20, r: 7.8, seed: 5, lightX: 104 });
     fg += P.body;
     fg += K.castShadow(u, L, { x: KEG.x, y: KEG.y, w: KEG.r * 2, h: KEG.h, horizon: HZ, d: .6 }) + keg(u, L, Object.assign({ seed: 8, spill: true }, KEG));
-    fg += P.farFingers + P.arm;
+    fg += P.arm;
     fg += fence(u, L);
     fg += crates(u, L);
     return [bg, fg];
@@ -170,8 +171,8 @@ const ang = (a, b) => Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
 const skinOf = (L, x, y) => { const r = L.ramp('skin', x, y); return { lit: mix(r.lit, '#ffd8a0', .25), half: r.half, core: r.core, shadow: r.shadow, outline: r.outline }; };
 const WARM = '#ffc27a';
 // the pirate on the left, facing right, seen from the waist up behind the barrel: a loose shirt, an open leather
-// waistcoat, a red sash; he sets the keg of powder down on the barrel head with both hands. Returns the parts in
-// their layers: `body` (behind the keg), `farFingers` (round the keg's far side) and `arm` (the near arm, over it)
+// waistcoat, a red sash; he sets the keg of powder down on the barrel head with his near hand. Returns the parts in
+// their layers: `body` (behind the keg) and `arm` (the near arm, over it)
 function pirate(u, L) {
   let s = '';
   // the far arm goes forward behind his body and the keg: only its shoulder shows
@@ -200,11 +201,9 @@ function pirate(u, L) {
   arm += H.cloth(u, { spine: [sh0, [62.4, 80], lerp2(el, wr, .16)], w: [9, 8.2, 7.4], tone: lin, lit: -1, cuff: { from: .74, k: 1.1, roll: true }, seed: 8, capA: true, drapes: 4 });
   const hn = H.hand(u, { at: wr, a: -16, s: 1.25, m: 1, pose: 'open', spread: 7, curl: .3, tone: sk, thumb: 'front', sw: .42 });
   arm += hn.back + hn.front;
-  // his far hand round the keg's far side: only the fingers show, curled over its flank
-  const fh = H.hand(u, { at: [KEG.x + KEG.r + 7.2, KEG.y - KEG.h * .55], a: 172, s: 1.15, m: -1, pose: 'hook', spread: 5, curl: .55, tone: mixT(sk, .3), thumb: 'back', sw: .42 });
-  return { body: s, arm, farFingers: fh.front };
+  // (his far arm stays behind his body: no hand of his on the keg's far side, nothing that no arm could reach)
+  return { body: s, arm };
 }
-const mixT = (t, k) => ({ lit: mix(t.lit, t.half, k), half: mix(t.half, t.shadow, k), core: mix(t.core || t.half, t.shadow, k), shadow: mix(t.shadow, '#05060c', k * .5), outline: t.outline });
 
 // the keg of powder: a squat cask with heavy hoops, a round head with the bung, the black mark of powder stencilled on
 // its belly (a bomb with a burning fuse), powder trickling from a cracked stave into a little heap

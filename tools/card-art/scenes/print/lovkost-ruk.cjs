@@ -51,7 +51,7 @@ function card(u, c, a, s, o = {}) {
   return r;
 }
 
-module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'draft', cam: { x: 0, y: 0, w: 200 }, light, skel,
+module.exports = { name: 'Ловкость рук', kind: 'deck', status: 'accepted', cam: { x: 0, y: 0, w: 200 }, light, skel,
   scene: u => {
     const L = K.makeLight(light, { horizon: HZ }), Lo = K.makeLight(lightOut, { horizon: WIN.y + 38 }), R = rng(17);
     // ——— the brick wall: bricks of different fire, recessed mortar, the edge facing the lantern lit ———
