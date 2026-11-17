@@ -27,17 +27,29 @@ export const LEGEND_BAND: 'ship' | 'black' = process.env.PRINT_LEGEND_BAND === '
 export const LEGEND_PLATE: 'none' | 'small' = process.env.PRINT_LEGEND_PLATE === 'small' ? 'small' : 'none';
 const LEGEND_BAND_BLACK = '#17110b', LEGEND_BAND_INK = { ship: '#fff2d0', black: LEGEND.back.gold };
 
+/** The ship's band at the bottom of a face: the picture fades into the band colour over its top 26 %. Not a CSS gradient
+ *  with a transparent stop — Chromium writes that as a function-based shading (/ShadingType 1), which pdf.js (Firefox,
+ *  phone and messenger viewers) paints hot pink. Instead 12 stacked flat strips of the band colour, each from its step
+ *  down to the bottom: layer k has alpha 1/(13 − k), so k layers add up to k/12 — the same linear ramp, flat fills only. */
+const BAND_FADE = (() => {
+  const n = 12, ramp = FACE.band.h * 0.26, h = FACE.band.h;
+  let r = '';
+  for (let k = 1; k <= n; k++) { const y = Math.round((k - 1) / n * ramp * 1000) / 1000; r += `<rect x="0" y="${y}" width="${CARD.w}" height="${Math.round((h - y) * 1000) / 1000}" style="fill:var(--band)"${k < n ? ` fill-opacity="${Math.round(1000 / (n - k + 1)) / 1000}"` : ''}/>`; }
+  return `<svg class="bf" viewBox="0 0 ${CARD.w} ${h}" preserveAspectRatio="none">${r}</svg>`;
+})();
+
 export const CARD_CSS = `${RICH_CSS}
 .cd{position:absolute;width:${mm(CARD.w)};height:${mm(CARD.h)};overflow:hidden;background:#1c120a;color:#fff}
 .cd .art{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
 .cd .fr{position:absolute;inset:0;border:2mm solid var(--frame);box-sizing:border-box}
-.cd .bd{position:absolute;left:0;right:0;bottom:0;height:${mm(FACE.band.h)};background:linear-gradient(rgba(0,0,0,0),var(--band) 26%)}
+.cd .bd{position:absolute;left:0;right:0;bottom:0;height:${mm(FACE.band.h)}}
+.cd .bd .bf{position:absolute;left:0;top:0;width:100%;height:100%}
 .cd .bd span{position:absolute;left:0;right:0;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);text-align:center;font:800 6.5pt/1 'Alegreya Sans',sans-serif;letter-spacing:.14em;color:#f6e7c1;white-space:nowrap}
 .cd .bd i{position:absolute;right:4.4mm;bottom:${mm(FACE.band.textCenter)};transform:translateY(50%);font:800 9.5pt/1 'Alegreya Sans',sans-serif;font-style:normal;letter-spacing:.04em;color:#f6e7c1}
 .gl{position:absolute;left:${mm(G.inset)};right:${mm(G.inset)};bottom:${mm(G.bottom)};border-radius:${mm(G.radius)};box-sizing:border-box;border:.25mm solid var(--rim);padding:1.9mm 2.1mm 1.7mm;display:flex;flex-direction:column;align-items:center;gap:.95mm;text-align:center;color:${ON_GLASS.text}}
 .nm{font:700 14pt/1 'Alegreya SC',serif;color:${ON_GLASS.name};white-space:nowrap;max-width:100%;overflow:hidden;padding-bottom:.2mm}
 .nm.wrap{white-space:normal;text-wrap:balance;line-height:1.02;overflow:visible}
-.vr{width:19mm;height:.26mm;flex:none;background:linear-gradient(90deg,rgba(226,183,92,0),${BRASS_LIGHT},rgba(226,183,92,0))}
+.vr{width:19mm;height:.3mm;flex:none;background:${BRASS_LIGHT};clip-path:polygon(0 50%,50% 0,100% 50%,50% 100%)}
 .rb{flex:none;padding:.55mm 3.1mm .85mm;clip-path:polygon(1.7mm 0,calc(100% - 1.7mm) 0,100% 50%,calc(100% - 1.7mm) 100%,1.7mm 100%,0 50%);font:500 7pt/1 'Alegreya Sans',sans-serif;letter-spacing:.05em;white-space:nowrap;color:#fff}
 .rb b{font-weight:800;letter-spacing:.14em}
 .bg{font:800 11pt/1.08 'Alegreya Sans',sans-serif;color:${ON_GLASS.big}}
@@ -53,7 +65,7 @@ export const CARD_CSS = `${RICH_CSS}
 .cd.lgd .lgf{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
 .cd.lgd .gl{left:${mm(LG.glass.inset)};right:${mm(LG.glass.inset)};bottom:${mm(LG.glass.bottom)};padding:1.8mm 1.5mm 1.5mm;border:.35mm solid ${LEGEND.glass.rim};color:${LEGEND.ink.text}}
 .cd.lgd .nm{color:${LEGEND.ink.name};text-shadow:0 .14mm 0 ${LEGEND.ink.light}}
-.cd.lgd .vr{width:22mm;height:.26mm;background:linear-gradient(90deg,rgba(92,58,6,0),${LEGEND.frame.line},rgba(92,58,6,0))}
+.cd.lgd .vr{width:22mm;height:.3mm;background:${LEGEND.frame.line}}
 .cd.lgd .bg{color:${LEGEND.ink.big}}
 .cd.lgd .fv{color:${LEGEND.ink.text};border-top-color:rgba(92,58,6,.6)}
 .cd.lgd .s-w{color:${LEGEND.ink.soul} !important}
@@ -85,7 +97,7 @@ export const CARD_CSS = `${RICH_CSS}
 .bk{position:absolute;width:${mm(CARD.w)};height:${mm(CARD.h)};overflow:hidden;background:var(--ground)}
 .bk .art{position:absolute;left:0;top:0;width:${mm(CARD.w)};height:${mm(CARD.h)}}
 .bk .tt{position:absolute;left:0;right:0;top:9.6mm;text-align:center;font:700 12pt/1 'Alegreya SC',serif;letter-spacing:.14em;color:#f3dc9d}
-.bk .tr{position:absolute;left:50%;top:15.2mm;width:25mm;margin-left:-12.5mm;height:.2mm;background:linear-gradient(90deg,rgba(217,171,82,0),#d9ab52,rgba(217,171,82,0))}
+.bk .tr{position:absolute;left:50%;top:15.2mm;width:25mm;margin-left:-12.5mm;height:.2mm;background:#d9ab52;clip-path:polygon(0 50%,50% 0,100% 50%,50% 100%)}
 .bk .cr{position:absolute;left:50%;top:57.4mm;width:18.9mm;height:18.9mm;margin-left:-9.45mm}
 .bk .bn{position:absolute;left:9mm;right:9mm;top:74.6mm;text-align:center;font:700 9.6pt/1.05 'Alegreya SC',serif;color:#fff2d4;letter-spacing:.04em}
 .bk.nt .pp{position:absolute;inset:10mm;border-radius:5mm;background:linear-gradient(#f4e8c8,#e2cfa0)}
@@ -175,7 +187,7 @@ export function faceHtml(ctx: Ctx, s: FaceSpec, fit: Fit | null, artUrl: string,
   }
   const idx = ''; // the result plate under the medal is gone (user's decision 12.11): the result stays on the glass, the medal keeps the small price
   const L = s.legend, lg = L && LEGEND_PLATE === 'small' ? `<div class="lg"><b>${esc(TXT.legendPlate[0].toUpperCase())}</b></div>` : '';
-  const band = L ? `<div class="bd">${bandSvg(s.band)}<span>${esc(s.bandText)}</span></div>` : `<div class="bd"><span>${esc(s.bandText)}</span>${s.copies > 1 ? `<i>×${s.copies}</i>` : ''}</div>`;
+  const band = L ? `<div class="bd">${bandSvg(s.band)}<span>${esc(s.bandText)}</span></div>` : `<div class="bd">${BAND_FADE}<span>${esc(s.bandText)}</span>${s.copies > 1 ? `<i>×${s.copies}</i>` : ''}</div>`;
   return `<div class="cd${L ? ' lgd' : ''}" data-key="${esc(s.key)}" data-index="${s.index ? 1 : 0}" data-maxh="${L ? MAX_GLASS_LEGEND : MAX_GLASS}" style="${pos}--frame:${s.frame};--band:${s.band};--rim:${s.rim}">`
     + (artUrl ? `<img class="art" src="${artUrl}" alt="">` : '')
     + band

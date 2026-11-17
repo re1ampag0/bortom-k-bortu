@@ -5,6 +5,7 @@
 //   --check-pdf  the PDFs with poppler (pdfinfo, pdffonts, pdfimages): pages, A4, fonts embedded and only Alegreya,
 //                no Type 3, card pictures JPEG ≥ 350 ppi, PrintScaling None (Duplex on the two-sided files).
 import fs from 'node:fs';
+import zlib from 'node:zlib';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { PDFDocument, PDFName, PDFDict } from 'pdf-lib';
@@ -165,6 +166,16 @@ const EXPECT: Record<string, [number | [number, number], boolean?]> = {
   '00-kak-pechatat': [5], '01-pravila': [[3, 4]], '02-pamyatki': [[4, 6], true], '03-planshety': [8, true], '04-tryumy-zhetony': [[2, 3]], '04b-skhema-boya': [1, true],
   '05-karty': [24], '05a-lica': [13], '05b-rubashki': [13], '06-legendy': [2], '07-more': [4], '08-otchet': [1]
 };
+/** the number of /ShadingType 1 in a PDF, object streams inflated */
+export function shadingType1(file: string): number {
+  const buf = fs.readFileSync(file), str = buf.toString('latin1'), re = /stream\r?\n/g;
+  let n = (str.match(/\/ShadingType\s+1\b/g) ?? []).length, m: RegExpExecArray | null;
+  while ((m = re.exec(str))) {
+    const e = str.indexOf('endstream', m.index);
+    try { n += (zlib.inflateSync(buf.subarray(m.index + m[0].length, e)).toString('latin1').match(/\/ShadingType\s+1\b/g) ?? []).length; } catch { /* not deflated */ }
+  }
+  return n;
+}
 export async function checkPdf(): Promise<boolean> {
   const errors: string[] = [], table: string[] = [];
   const draft = fs.existsSync(path.join(CACHE, 'art')) && fs.readdirSync(path.join(CACHE, 'art')).length > 0 && process.argv.includes('--draft');
@@ -189,6 +200,10 @@ export async function checkPdf(): Promise<boolean> {
       if (type === 'image' && enc !== 'jpeg' && bytes > 300 * 1024) errors.push(`${f}: a ${w} × ${h} raster that is not a JPEG, ${sz} (a CSS filter or opacity on a picture?)`);
       if (cardFile && enc === 'jpeg' && w >= 400 && !draft && xppi < 350) errors.push(`${f}: card picture ${w} × ${h} at ${xppi} ppi, need ≥ 350`);
     }
+    // pdf.js (Firefox, phone and messenger viewers) cannot draw a function-based shading (type 1) and paints it hot pink:
+    // Chromium writes one for a CSS gradient with a transparent stop and for conic-gradient — never in the set
+    const sh1 = shadingType1(full);
+    if (sh1) errors.push(`${f}: ${sh1} function-based shading(s) (/ShadingType 1) — pdf.js paints them pink: a CSS gradient with a transparent stop or a conic-gradient`);
     table[table.length - 1] += `  шрифтов ${fonts.length}`;
   }
   // viewer hints written by pdf-lib (main.ts): read them back

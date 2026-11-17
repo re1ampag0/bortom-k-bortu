@@ -758,7 +758,9 @@ export const V2_CSS = `
 .v2-an{display:flex;align-items:baseline;gap:1.4mm;font:800 10pt 'Alegreya SC',serif;letter-spacing:.04em;color:var(--c);position:relative;top:var(--lift-n)}
 .v2-an .v2-nm{flex:0 1 auto;min-width:0}
 .v2-an .v2-nm b{font:800 13pt Alegreya,serif;letter-spacing:0;margin-right:.1mm}
-.v2-an .v2-orn{flex:1;align-self:center;height:1.4mm;margin-top:-.6mm;min-width:0;background:radial-gradient(circle,var(--c) 0 .32mm,transparent .36mm) 0 50%/1.4mm 1.4mm no-repeat,linear-gradient(to right,var(--c),transparent) 1.9mm 50%/100% .28mm no-repeat;opacity:.75}
+.v2-an .v2-orn{flex:1;align-self:center;height:1.4mm;margin-top:-.6mm;min-width:0;position:relative;opacity:.75}
+.v2-an .v2-orn::before{content:'';position:absolute;left:.36mm;top:.36mm;width:.68mm;height:.68mm;border-radius:50%;background:var(--c)}
+.v2-an .v2-orn::after{content:'';position:absolute;left:1.9mm;right:0;top:.56mm;height:.28mm;background:var(--c);clip-path:polygon(0 0,100% 50%,0 100%)}
 /* an ability: the name and its paragraph at one indent (--ind: the icon's column 7.6 mm + 1.6 mm), the icon in that column */
 .v2-ab{position:relative;padding-left:9.2mm;margin:0 0 var(--lh)}
 .v2-ab:last-child{margin-bottom:0}
