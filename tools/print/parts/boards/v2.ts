@@ -744,10 +744,110 @@ function logInner(ship: Ship, L: Look, id: string): string {
   return `<div class="v2-h">${esc(TXT.abilities)}</div>${ab}${extra}`;
 }
 /** the «раз в ход» sign beside an ability: a brass seal with an engraved hourglass — a sign, not a cell to put a marker in
- *  (the user's decision 17.11: no boxes); floated right in the log, the words under it */
-const HOURGLASS = '<path d="M6 3h12M6 21h12"/><path d="M7.5 3v2.5c0 2.6 4.5 4 4.5 6.5s-4.5 3.9-4.5 6.5V21M16.5 3v2.5c0 2.6-4.5 4-4.5 6.5s4.5 3.9 4.5 6.5V21"/><path d="M9.6 19.6c.8-1.6 1.6-2.4 2.4-2.4s1.6.8 2.4 2.4z" fill="currentColor" stroke="none"/>';
-const ONCE = 7.6;
-const onceCell = (L: Look, _id: string) => `<svg viewBox="0 0 ${ONCE} ${ONCE}" style="width:${ONCE}mm;height:${ONCE}mm;display:block;flex:none"><circle cx="${ONCE / 2}" cy="${ONCE / 2}" r="${ONCE / 2 - 0.15}" fill="${L.brass[1]}" stroke="${L.brass[2]}" stroke-width=".25"/><circle cx="${ONCE / 2}" cy="${ONCE / 2}" r="${ONCE / 2 - 0.9}" fill="${L.cell}" stroke="${L.brass[2]}" stroke-width=".2"/><g transform="translate(${ONCE / 2 - 2.4} ${ONCE / 2 - 2.4}) scale(.2)" fill="none" stroke="${L.tone.ink}" color="${L.tone.ink}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${HOURGLASS}</g></svg>`;
+ *  (the user's decision 17.11: no boxes); floated right in the log, the words under it. Turned brass lit from the upper
+ *  left: a convex rim (stacked discs slid towards the light, a polished glint), a ring of beads in a dark groove, a light
+ *  domed field and in it an hourglass — two turned plates, two turned posts, the glass with its glints, the sand running
+ *  down. Flat paint in steps only (no gradients: poppler and pdfium draw it alike), every line ≥ 0.15 mm, the fine work
+ *  filled. */
+const ONCE = 8.8;              // the drawing's box, mm: the seal Ø 8.2 and room for its shadow
+let onceSeq = 0;
+function onceCell(L: Look, id: string): string {
+  const [bl, bm, bd] = L.brass, ink = L.tone.ink, HI = '#fffbe8', c = 4.2, R = 4.1, u = `${id}once${onceSeq++}`;
+  const f = (n: number) => String(Math.round(n * 1000) / 1000);
+  const at = (rr: number, deg: number) => [c + rr * Math.sin(deg * Math.PI / 180), c - rr * Math.cos(deg * Math.PI / 180)];
+  const arc = (rr: number, d0: number, d1: number) => {
+    const [x0, y0] = at(rr, d0), [x1, y1] = at(rr, d1);
+    return `M${f(x0)} ${f(y0)}A${f(rr)} ${f(rr)} 0 ${d1 - d0 > 180 ? 1 : 0} 1 ${f(x1)} ${f(y1)}`;
+  };
+  const ramp = (stops: string[], t: number) => {
+    const x = Math.max(0, Math.min(1, t)) * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(x));
+    return mix(stops[i], stops[i + 1], x - i);
+  };
+  /** a disc of radius rr shaded in n steps: smaller discs slid towards the light (dx, dy), lighter each step */
+  const dome = (rr: number, stops: string[], dx: number, dy: number, end: number, n = 10) => {
+    let s = '';
+    for (let k = 0; k <= n; k++) {
+      const t = k / n;
+      s += `<circle cx="${f(c + dx * t)}" cy="${f(c + dy * t)}" r="${f(rr * (1 - t * (1 - end)))}" fill="${ramp(stops, t)}"/>`;
+    }
+    return s;
+  };
+  const P = (x: number, y: number) => `${f(c + x)} ${f(c + y)}`;
+  const out: string[] = [];
+  // the shadow on the page, the convex rim, its polished crown, a weak reflection opposite, the dark edge
+  out.push(`<circle cx="${f(c + 0.22)}" cy="${f(c + 0.32)}" r="${f(R + 0.08)}" fill="#1a0e04" fill-opacity=".2"/>`);
+  out.push(dome(R, [mix(bd, bm, 0.15), mix(bd, bm, 0.6), bm, mix(bm, bl, 0.55), bl], -0.55, -0.65, 0.55));
+  out.push(`<path d="${arc(R - 0.3, 278, 350)}" fill="none" stroke="${HI}" stroke-opacity=".85" stroke-width=".22" stroke-linecap="round"/>`);
+  out.push(`<path d="${arc(R - 0.32, 118, 150)}" fill="none" stroke="${HI}" stroke-opacity=".4" stroke-width=".16" stroke-linecap="round"/>`);
+  out.push(`<circle cx="${c}" cy="${c}" r="${f(R - 0.1)}" fill="none" stroke="${bd}" stroke-width=".2"/>`);
+  // the groove and a ring of 28 beads in it, each with a glint towards the light
+  const RG = 3.3, RB = 2.94, n = 28;
+  out.push(`<circle cx="${c}" cy="${c}" r="${RG}" fill="${mix(bd, bm, 0.2)}"/>`);
+  let beads = '', glints = '';
+  for (let i = 0; i < n; i++) {
+    const [x, y] = at(RB, i * 360 / n);
+    beads += `<circle cx="${f(x)}" cy="${f(y)}" r=".19"/>`;
+    glints += `<circle cx="${f(x - 0.06)}" cy="${f(y - 0.07)}" r=".085"/>`;
+  }
+  out.push(`<g fill="${mix(bm, bl, 0.25)}">${beads}</g><g fill="${HI}" fill-opacity=".85">${glints}</g>`);
+  // the field: a dark lip, then light brass domed towards the light, engine-turned in 36 fine rays (filled wedges)
+  const RF = 2.62;
+  out.push(`<circle cx="${c}" cy="${c}" r="${RF}" fill="${bd}"/>`);
+  out.push(dome(RF - 0.1, [mix(bm, bl, 0.35), mix(bl, '#ffffff', 0.15), mix(bl, '#ffffff', 0.5)], -0.45, -0.55, 0.3, 14));
+  let rays = '';
+  for (let i = 0; i < 36; i++) {
+    const a = i * 10, [x0, y0] = at(RF - 0.12, a - 2.6), [x1, y1] = at(RF - 0.12, a + 2.6);
+    rays += `M${c} ${c}L${f(x0)} ${f(y0)}L${f(x1)} ${f(y1)}Z`;
+  }
+  out.push(`<path d="${rays}" fill="${bd}" fill-opacity=".13"/>`);
+  // the hourglass, engraved: py, ph, pw — the plates' outer edge, height, half width; th — the turned collar under each
+  // plate; yb — the glass's half height; px — the posts
+  const py = 2.02, ph = 0.36, pw = 1.2, th = 0.15, yb = py - ph - th, px = 1.02;
+  // the posts behind the glass, turned: a shaft, a knob at each end, a bead in the middle — a silhouette in ink, a glint
+  // on each knob and bead
+  let posts = '', pglint = '';
+  for (const sx of [-1, 1]) {
+    const x = sx * px;
+    posts += `<rect x="${f(c + x - 0.08)}" y="${f(c - py + ph)}" width=".16" height="${f(2 * (py - ph))}"/>` +
+      `<ellipse cx="${f(c + x)}" cy="${f(c - yb + 0.2)}" rx=".17" ry=".13"/><ellipse cx="${f(c + x)}" cy="${f(c + yb - 0.2)}" rx=".17" ry=".13"/>` +
+      `<ellipse cx="${f(c + x)}" cy="${f(c - 0.62)}" rx=".12" ry=".07"/><ellipse cx="${f(c + x)}" cy="${f(c + 0.62)}" rx=".12" ry=".07"/>` +
+      `<ellipse cx="${f(c + x)}" cy="${c}" rx=".2" ry=".27"/>`;
+    for (const [y, rr] of [[-yb + 0.17, 0.055], [-0.05, 0.065], [yb - 0.23, 0.055]]) pglint += `<circle cx="${f(c + x - 0.07)}" cy="${f(c + y)}" r="${rr}"/>`;
+  }
+  out.push(`<g fill="${ink}">${posts}</g><g fill="${bl}">${pglint}</g>`);
+  // the glass: two bulbs and a neck (the shape in units of its half height)
+  const Q = (x: number, y: number) => P(x, y * yb);
+  const glass = `M${Q(-0.6, -1)}C${Q(-0.86, -0.8)} ${Q(-0.84, -0.46)} ${Q(-0.42, -0.25)}C${Q(-0.18, -0.13)} ${Q(-0.1, -0.08)} ${Q(-0.1, 0)}` +
+    `C${Q(-0.1, 0.08)} ${Q(-0.18, 0.13)} ${Q(-0.42, 0.25)}C${Q(-0.84, 0.46)} ${Q(-0.86, 0.8)} ${Q(-0.6, 1)}` +
+    `L${Q(0.6, 1)}C${Q(0.86, 0.8)} ${Q(0.84, 0.46)} ${Q(0.42, 0.25)}C${Q(0.18, 0.13)} ${Q(0.1, 0.08)} ${Q(0.1, 0)}` +
+    `C${Q(0.1, -0.08)} ${Q(0.18, -0.13)} ${Q(0.42, -0.25)}C${Q(0.84, -0.46)} ${Q(0.86, -0.8)} ${Q(0.6, -1)}Z`;
+  const sand = mix(bm, bl, 0.3), sandDark = mix(bm, bd, 0.45);
+  out.push(`<defs><clipPath id="${u}"><path d="${glass}"/></clipPath></defs><path d="${glass}" fill="${mix(L.tone.light, '#ffffff', 0.55)}"/>`);
+  out.push(`<g clip-path="url(#${u})">` +
+    // the sand left above: a dished surface, the right side in shade
+    `<path d="M${Q(-1, -0.56)}Q${Q(0, -0.34)} ${Q(1, -0.56)}V${f(c + 0.1)}H${f(c - 1)}Z" fill="${sand}"/>` +
+    `<path d="M${Q(0.14, -0.44)}Q${Q(0.5, -0.5)} ${Q(1, -0.56)}V${f(c + 0.1)}H${f(c + 0.08)}Z" fill="${sandDark}" fill-opacity=".5"/>` +
+    // the stream through the neck and the heap below, the right side in shade
+    `<rect x="${f(c - 0.075)}" y="${f(c - 0.1)}" width=".15" height="${f(yb * 0.7)}" fill="${sand}"/>` +
+    `<path d="M${Q(-1, 1.1)}V${f(c + yb * 0.84)}Q${Q(-0.45, 0.8)} ${Q(-0.14, 0.5)}Q${Q(0, 0.42)} ${Q(0.14, 0.5)}Q${Q(0.45, 0.8)} ${Q(1, 0.84)}V${f(c + yb * 1.1)}Z" fill="${sand}"/>` +
+    `<path d="M${Q(0.04, 0.45)}Q${Q(0.4, 0.74)} ${Q(1, 0.84)}V${f(c + yb * 1.1)}H${f(c + 0.04)}Z" fill="${sandDark}" fill-opacity=".5"/>` +
+    // the glints on the glass: along the left of each bulb, a small one on the right of the upper bulb
+    `<path d="M${Q(-0.54, -0.88)}C${Q(-0.7, -0.72)} ${Q(-0.68, -0.52)} ${Q(-0.46, -0.36)}C${Q(-0.58, -0.54)} ${Q(-0.6, -0.72)} ${Q(-0.54, -0.88)}Z" fill="${HI}"/>` +
+    `<path d="M${Q(-0.4, 0.3)}C${Q(-0.64, 0.42)} ${Q(-0.72, 0.56)} ${Q(-0.68, 0.7)}C${Q(-0.6, 0.56)} ${Q(-0.54, 0.44)} ${Q(-0.4, 0.3)}Z" fill="${HI}"/>` +
+    `<ellipse cx="${f(c + 0.52)}" cy="${f(c - yb * 0.7)}" rx=".06" ry=".15" fill="${HI}"/></g>`);
+  out.push(`<path d="${glass}" fill="none" stroke="${ink}" stroke-width=".15" stroke-linejoin="round"/>`);
+  // the plates: a turned collar in ink against the glass, then the brass plate — lit along its top, in shade below
+  for (const sy of [-1, 1]) {
+    const y0 = sy < 0 ? c - py : c + py - ph, yg = c + sy * yb, yp = c + sy * (py - ph);
+    out.push(`<path d="M${f(c - 0.94)} ${f(yp)}L${f(c - 0.72)} ${f(yg)}H${f(c + 0.72)}L${f(c + 0.94)} ${f(yp)}Z" fill="${ink}" stroke="${ink}" stroke-width=".15" stroke-linejoin="round"/>`);
+    out.push(`<rect x="${f(c - pw)}" y="${f(y0)}" width="${f(2 * pw)}" height="${ph}" rx=".1" fill="${bm}"/>` +
+      `<rect x="${f(c - pw + 0.1)}" y="${f(y0 + ph * 0.58)}" width="${f(2 * pw - 0.2)}" height="${f(ph * 0.34)}" fill="${mix(bm, bd, 0.45)}"/>` +
+      `<rect x="${f(c - pw + 0.22)}" y="${f(y0 + 0.07)}" width="${f(2 * pw - 0.62)}" height=".09" rx=".045" fill="${HI}" fill-opacity=".85"/>` +
+      `<rect x="${f(c - pw)}" y="${f(y0)}" width="${f(2 * pw)}" height="${ph}" rx=".1" fill="none" stroke="${ink}" stroke-width=".15"/>`);
+  }
+  out.push(`<circle cx="${c}" cy="${c}" r="${f(RF - 0.08)}" fill="none" stroke="${ink}" stroke-opacity=".55" stroke-width=".15"/>`);
+  return `<svg viewBox="0 0 ${ONCE} ${ONCE}" style="width:${ONCE}mm;height:${ONCE}mm;display:block;flex:none">${out.join('')}</svg>`;
+}
 
 /** every line of the log has one line height (--lh), so the baselines stay on the ruled lines; a heading's larger size sits
  *  its baseline 0.33·Δem lower in the same line box and is lifted back (--lift-h, --lift-n) */
@@ -761,9 +861,12 @@ export const V2_CSS = `
 .v2-an{display:flex;align-items:baseline;gap:1.4mm;font:800 10pt 'Alegreya SC',serif;letter-spacing:.04em;color:var(--c);position:relative;top:var(--lift-n)}
 .v2-an .v2-nm{flex:0 1 auto;min-width:0}
 .v2-an .v2-nm b{font:800 13pt Alegreya,serif;letter-spacing:0;margin-right:.1mm}
+/* the ornamental rule after a name; when the name leaves it less than 8 mm (beside the «раз в ход» sign, or a name
+   wrapped to two lines) the dot and the line shrink to nothing (width 0, not moved away: nothing may overflow the page,
+   or Chromium shrinks the sheet to fit): no stub, no lone dot */
 .v2-an .v2-orn{flex:1;align-self:center;height:1.4mm;margin-top:-.6mm;min-width:0;position:relative;opacity:.75}
-.v2-an .v2-orn::before{content:'';position:absolute;left:.36mm;top:.36mm;width:.68mm;height:.68mm;border-radius:50%;background:var(--c)}
-.v2-an .v2-orn::after{content:'';position:absolute;left:1.9mm;right:0;top:.56mm;height:.28mm;background:var(--c);clip-path:polygon(0 0,100% 50%,0 100%)}
+.v2-an .v2-orn::before{content:'';position:absolute;left:.36mm;top:.36mm;width:clamp(0mm,(100% - 8mm) * 1000,.68mm);height:.68mm;border-radius:50%;background:var(--c)}
+.v2-an .v2-orn::after{content:'';position:absolute;left:1.9mm;right:clamp(0mm,(8mm - 100%) * 1000,100%);top:.56mm;height:.28mm;background:var(--c);clip-path:polygon(0 0,100% 50%,0 100%)}
 /* an ability: the name and its paragraph at one indent (--ind: the icon's column 7.6 mm + 1.6 mm), the icon in that column */
 .v2-ab{position:relative;padding-left:9.2mm;margin:0 0 var(--lh)}
 .v2-ab:last-child{margin-bottom:0}
@@ -775,8 +878,8 @@ export const V2_CSS = `
 .v2-p{margin:0 0 var(--lh)}
 .v2-p:last-child{margin-bottom:0}
 .v2-p b{font-weight:800}
-.v2-tick{float:right;width:13.4mm;height:calc(7.6mm + var(--lh) + .6mm);margin:0 0 0 2mm;display:flex;flex-direction:column;align-items:center}
-.v2-tick i{display:block;font:italic 500 var(--fs) Alegreya,serif;letter-spacing:0;color:var(--soft);white-space:nowrap;margin-top:.6mm}
+.v2-tick{float:right;width:13.4mm;height:calc(8.8mm + var(--lh) + .2mm);margin:0 0 0 2mm;display:flex;flex-direction:column;align-items:center}
+.v2-tick i{display:block;font:italic 500 var(--fs) Alegreya,serif;letter-spacing:0;color:var(--soft);white-space:nowrap;margin-top:-.2mm}
 `;
 
 /** Sheet 04 with counters 'strip' (portrait like the rest of 04): four strips, one per ship, cut along the dashed lines
