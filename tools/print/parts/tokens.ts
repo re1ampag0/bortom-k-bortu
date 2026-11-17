@@ -33,14 +33,18 @@ const require = createRequire(import.meta.url);
 /** the kit ships (tools/card-art/scenes/kit): the same ships as on the card backs and the boards (--tokens new) */
 const KIT = require(path.join(ROOT, 'tools/card-art/scenes/kit/index.cjs')) as {
   ship(u: string, L: unknown, o: Record<string, unknown>): string; makeLight(l: unknown, cam: { horizon: number }): unknown;
-  shipBox(kind: string, o: { x: number; y: number; scale: number; flip?: boolean }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
+  shipBox(kind: string, o: { x: number; y: number; scale: number; flip?: boolean; wind?: number }): { x0: number; x1: number; top: number; y: number; w: number; h: number }; LIGHTS: Record<string, unknown>;
   shipGeom(kind: string, o: Record<string, unknown>): { hb: number; nearRail(X: number): [number, number] };
   splash(u: string, o: Record<string, unknown>): string; foam(u: string, o: Record<string, unknown>): string; sky(u: string, L: unknown, o: Record<string, unknown>): string; water(u: string, L: unknown, o: Record<string, unknown>): string;
+  sunMoon(u: string, L: unknown, o: Record<string, unknown>): string; cloud(u: string, L: unknown, o: Record<string, unknown>): string; cloudBank(u: string, L: unknown, o: Record<string, unknown>): string;
+  fog(u: string, L: unknown, o: Record<string, unknown>): string; localGlow(u: string, loc: Record<string, unknown>, o?: Record<string, unknown>): string;
+  shipSilhouette(kind: string, o: Record<string, unknown>): string; mix(a: string, b: string, t: number): string; rng(seed: number): () => number;
+  SHIP_SPECS: Record<string, { len: number; bow: number[] }>;
 };
 /** the picture part of a ship token (above its band), mm */
 const PIC = { w: 30, h: 21.4 };
-/** a kit ship on the token's paper, a JPEG of PIC (no CSS filters in the PDF) */
-async function kitTokenPics(ctx: Ctx): Promise<Record<string, string>> {
+/** a kit ship on the token's paper, a JPEG of PIC (no CSS filters in the PDF): the plain picture of the track markers */
+async function kitMarkerPics(ctx: Ctx): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
   for (const s of ships()) {
     const kind = DECK_KEY[s.code], b = KIT.shipBox(kind, { x: 0, y: 0, scale: 1 }), m = 1.2, wl = PIC.h - 1.4, k = Math.min((PIC.w - 2 * m) / b.w, (wl - m) / b.h);
@@ -48,6 +52,160 @@ async function kitTokenPics(ctx: Ctx): Promise<Record<string, string>> {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PIC.w} ${PIC.h}"><rect width="${PIC.w}" height="${PIC.h}" fill="${PAPER}"/>${body}<path d="M1 ${wl + 0.5}q1.2 -.6 2.4 0${'t2.4 0'.repeat(11)}" fill="none" stroke="#6f8a96" stroke-width=".25"/></svg>`;
     out[s.code] = (await rasterJpeg(ctx.browser, 'token-ship-' + kind, svg, PIC.w, PIC.h, ctx.opts.draft ? 300 : 600, 0.92)).url;
   }
+  return out;
+}
+
+// ---- the ship tokens' pictures: the deck's ship at sea in the light of its own card back (tools/card-art/scenes/
+// backs4/*.cjs, backs-pilot.cjs): the Pearl at night against the moon, the Revenge at sunset, the Endeavour by day (lit as
+// on her board — the kit's day light, her ochre kept light), the Dutchman in green fog under a pale moon. The scene is in
+// the kit's units, 200 wide (1 mm = 6.67 units): sky with clouds, the sea with its crests, the ship with her reflection,
+// the foam along her side, her wake and the bow wave; the whole ship (mast tops, flags, bowsprit) TS.m inside the cut.
+const TS = { w: 200, h: Math.round(200 * PIC.h / PIC.w * 1000) / 1000, hz: 98, wl: 107, m: 11.5 };
+/** each deck: its light, the ship's side (flip: bow right), the place of the sun or moon, the sky and the sea */
+interface TokenSea { flip: boolean; wind: number; seed: number; grow?: number; sky(u: string): { L: unknown; Ls: unknown; back: string; kant?: string; over?: string; front?: string } }
+const tsGrad = (id: string, y0: number, y1: number, color: string, a0: number, a1: number) =>
+  `<defs><linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="0" y1="${y0}" x2="0" y2="${y1}"><stop offset="0" stop-color="${color}" stop-opacity="${a0}"/><stop offset="1" stop-color="${color}" stop-opacity="${a1}"/></linearGradient></defs><rect x="-10" y="${y0}" width="${TS.w + 20}" height="${R(y1 - y0)}" fill="url(#${id})"/>`;
+const tsVignette = (id: string, cx: number, cy: number, color: string, a: number) =>
+  `<defs><radialGradient id="${id}" gradientUnits="userSpaceOnUse" cx="${cx}" cy="${cy}" r="150"><stop offset=".55" stop-color="${color}" stop-opacity="0"/><stop offset="1" stop-color="${color}" stop-opacity="${a}"/></radialGradient></defs><rect x="-10" y="-10" width="${TS.w + 20}" height="${R(TS.h + 20)}" fill="url(#${id})"/>`;
+/** a long thin streak of sunset cloud lit from below by the low sun (backs4/revenge.cjs streak) */
+function tsStreak(id: string, sun: { x: number; y: number }, o: { x: number; y: number; w: number; h: number; seed: number; lit: string; dark: string; op: number; blur: number }): string {
+  const x0 = o.x - o.w / 2, rnd = KIT.rng(o.seed), top: number[][] = [], bot: number[][] = [];
+  for (let i = 0; i <= 12; i++) { const t = i / 12, x = x0 + o.w * t, e = Math.sin(Math.PI * t), wob = (rnd() - 0.5) * o.h * 0.5; top.push([x, o.y - o.h * e * (0.7 + rnd() * 0.5) + wob * 0.4]); bot.unshift([x, o.y + o.h * 0.35 * e + wob * 0.2]); }
+  const d = 'M' + top.concat(bot).map(p => `${R(p[0])} ${R(p[1])}`).join('L') + 'Z', lx = Math.sign(sun.x - o.x) || 1;
+  return `<defs><linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="${R(o.x + lx * o.w * 0.1)}" y1="${R(o.y + o.h * 0.4)}" x2="${R(o.x - lx * o.w * 0.05)}" y2="${R(o.y - o.h)}"><stop offset="0" stop-color="${o.lit}" stop-opacity="${o.op}"/><stop offset=".35" stop-color="${KIT.mix(o.lit, o.dark, 0.55)}" stop-opacity="${R(o.op * 0.95)}"/><stop offset="1" stop-color="${o.dark}" stop-opacity="${R(o.op * 0.85)}"/></linearGradient>`
+    + `<filter id="${id}b" filterUnits="userSpaceOnUse" x="${R(x0 - 10)}" y="${R(o.y - o.h * 2 - 10)}" width="${R(o.w + 20)}" height="${R(o.h * 3 + 20)}"><feGaussianBlur stdDeviation="${o.blur}"/></filter></defs><path d="${d}" fill="url(#${id}g)" filter="url(#${id}b)"/>`;
+}
+type SeaLight = { pal: { sea: string[]; sky: string[] }; shadowTint: string; keyColor: string };
+/** one near swell seen from the side (backs.cjs swellCrest): the back lit by the sky, the face in shadow with light
+ *  through its thin top, a lace of foam along the crest and streaks down the back; it dies out at both ends */
+function tsSwell(id: string, Lx: unknown, o: { x: number; y: number; w: number; h: number; seed: number; lean: number; foam: number }): string {
+  const L = Lx as SeaLight, { x, y, w, h } = o, rnd = KIT.rng(o.seed), P = L.pal, x0 = x - w / 2, x1 = x + w / 2, px = x + o.lean * w * 0.18, py = y - h, th = h * 1.3;
+  const top = KIT.mix(P.sea[0], P.sky[3], 0.35), face = KIT.mix(P.sea[1], P.sea[2], 0.35), deep = KIT.mix(P.sea[2], L.shadowTint, 0.25), glow = KIT.mix(P.sea[0], '#bfeee0', 0.45), foam = KIT.mix('#f6fcff', L.keyColor, 0.3);
+  const ridge = `M${R(x0)} ${R(y)}C${R(x0 + w * 0.25)} ${R(y - h * 0.15)} ${R(px - w * 0.2)} ${R(py)} ${R(px)} ${R(py)}C${R(px + w * 0.1)} ${R(py)} ${R(px + w * 0.16)} ${R(y - h * 0.45)} ${R(x1)} ${R(y + h * 0.25)}`;
+  const body = ridge + `L${R(x1)} ${R(y + th)}C${R(x + w * 0.2)} ${R(y + th * 1.15)} ${R(x - w * 0.2)} ${R(y + th * 0.85)} ${R(x0)} ${R(y + th)}Z`;
+  let lace = '';
+  for (let i = 0, n = Math.round(46 * o.foam); i < n; i++) {
+    const xx = x0 + w * (0.25 + rnd() * 0.6), near = 1 - Math.min(1, Math.abs(xx - px) / (w * 0.32)), yy = py + (1 - near) * h * 0.55 + (rnd() - 0.3) * 1.6, rr = (0.35 + rnd() * 0.9) * (0.5 + near) * (0.4 + 0.6 * o.foam);
+    if (near > 0) lace += `<ellipse cx="${R(xx)}" cy="${R(yy)}" rx="${R(rr * (1.3 + rnd()))}" ry="${R(rr * 0.6)}" opacity="${R(0.45 + rnd() * 0.5)}"/>`;
+  }
+  for (let i = 0, n = Math.round(7 * o.foam); i < n; i++) { const sx = px - w * (0.05 + rnd() * 0.3), sy = py + h * (0.25 + rnd() * 0.5), l = w * (0.08 + rnd() * 0.14); lace += `<path d="M${R(sx)} ${R(sy)}q${R(-l / 2)} ${R(h * 0.12)} ${R(-l)} ${R(h * 0.28)}" stroke="${foam}" stroke-width="${R(0.3 + rnd() * 0.35)}" fill="none" opacity="${R(0.35 + rnd() * 0.3)}"/>`; }
+  return `<defs><linearGradient id="${id}g" gradientUnits="userSpaceOnUse" x1="0" y1="${R(py)}" x2="0" y2="${R(y + th)}"><stop offset="0" stop-color="${top}" stop-opacity=".95"/><stop offset=".35" stop-color="${face}" stop-opacity=".9"/><stop offset=".75" stop-color="${deep}" stop-opacity=".55"/><stop offset="1" stop-color="${deep}" stop-opacity="0"/></linearGradient>`
+    + `<radialGradient id="${id}w" gradientUnits="userSpaceOnUse" cx="${R(px + w * 0.05)}" cy="${R(py + h * 0.45)}" r="${R(w * 0.22)}"><stop offset="0" stop-color="${glow}" stop-opacity=".55"/><stop offset="1" stop-color="${glow}" stop-opacity="0"/></radialGradient>`
+    + `<filter id="${id}l" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation=".35"/></filter>`
+    + `<linearGradient id="${id}n" gradientUnits="userSpaceOnUse" x1="${R(x0)}" y1="0" x2="${R(x1)}" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".22" stop-color="#fff"/><stop offset=".72" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>`
+    + `<mask id="${id}m" maskUnits="userSpaceOnUse" x="${R(x0 - 2)}" y="${R(py - 6)}" width="${R(w + 4)}" height="${R(h + th + 12)}"><rect x="${R(x0 - 2)}" y="${R(py - 6)}" width="${R(w + 4)}" height="${R(h + th + 12)}" fill="url(#${id}n)"/></mask></defs>`
+    + `<g mask="url(#${id}m)"><path d="${body}" fill="url(#${id}g)"/><path d="${body}" fill="url(#${id}w)"/><path d="${ridge}" fill="none" stroke="${KIT.mix(top, '#ffffff', 0.4)}" stroke-width=".7" opacity=".7" stroke-linecap="round"/><g fill="${foam}" filter="url(#${id}l)">${lace}</g></g>`;
+}
+/** the ship's reflection torn by the ripples (backs.cjs brokenReflection): her group under a mask of short soft dashes
+ *  in the rows y0..y1, so each band of the reflection breaks into pieces with the water showing in the breaks */
+function tsBroken(id: string, body: string, o: { x0: number; x1: number; y0: number; y1: number; seed: number }): string {
+  const rnd = KIT.rng(o.seed);
+  let cuts = '';
+  for (let y = o.y0 + rnd() * 0.6; y < o.y1; y += 0.9 + rnd() * 0.9) {
+    const t = (y - o.y0) / (o.y1 - o.y0);
+    for (let x = o.x0 - rnd() * 20; x < o.x1;) { const l = 2.5 + rnd() * (6 + 12 * t), gap = 5 + rnd() * (22 - 12 * t); cuts += `<rect x="${R(x)}" y="${R(y)}" width="${R(l)}" height="${R(0.5 + rnd() * (0.7 + t * 0.6))}" rx=".4" opacity="${R(0.55 + rnd() * 0.45)}"/>`; x += l + gap; }
+  }
+  return `<defs><filter id="${id}b" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".35"/></filter><mask id="${id}m" maskUnits="userSpaceOnUse" x="-40" y="-40" width="280" height="240"><rect x="-40" y="-40" width="280" height="240" fill="#fff"/><g fill="#000" filter="url(#${id}b)">${cuts}</g></mask></defs><g mask="url(#${id}m)">${body}</g>`;
+}
+const TOKEN_SEAS: Record<string, TokenSea> = {
+  // night: the moon upper left over the bowsprit, the black ship against a moonlit sky, a silver kant on her edges
+  pearl: { flip: false, wind: -1, seed: 3, sky: u => {
+    const base = KIT.LIGHTS.pearl as { key: Record<string, unknown>; fill: Record<string, number>; rim: Record<string, unknown> }, MOON = { x: 27, y: 25 };
+    const light = { ...base, key: { type: base.key.type, color: base.key.color, power: base.key.power, x: MOON.x, y: MOON.y }, fill: { ...base.fill, power: base.fill.power * 0.5 }, rim: { ...base.rim, power: 0.75 } };
+    const L = KIT.makeLight(light, { horizon: TS.hz });
+    const Ls = KIT.makeLight({ ...light, key: { ...light.key, power: (light.key.power as number) * 0.55 }, fill: { ...light.fill, power: light.fill.power * 0.6 }, rim: { ...light.rim, power: 0.9 } }, { horizon: TS.hz });
+    const back = KIT.sky(u, L, { horizon: TS.hz, stars: 46, seed: 4 }) + KIT.sunMoon(u, L, { r: 7.5 })
+      + KIT.cloud(u, L, { x: 150, y: 62, w: 96, h: 18, seed: 9, far: 0.55 }) + KIT.cloudBank(u, L, { y: TS.hz - 2, h: 8, x0: -30, x1: 230, n: 6, seed: 11, far: 0.8 })
+      + KIT.localGlow(u, { x: 70, y: 52, color: '#cfe0ff', power: 0.42, radius: 92 }, { core: false })
+      + KIT.water(u, L, { horizon: TS.hz, bottom: TS.h + 6, swell: 1, seed: 6, glitter: MOON.x })
+      + tsGrad(u + 'gw', TS.wl + 14, TS.h, '#060a16', 0, 0.4);
+    return { L, Ls, back, kant: '#c4d4f2', over: '#16130f', front: tsVignette(u + 'vg', 100, 60, '#05070e', 0.45) };
+  } },
+  // sunset: the sun low on the left behind her stern, the fiery sky streaked with cloud, a hot kant on her edges
+  revenge: { flip: true, wind: 1, seed: 5, sky: u => {
+    const base = KIT.LIGHTS.revenge as Record<string, unknown>, SUN = { x: 15, y: 79 };
+    const light = { ...base, haze: 0.5, key: { type: 'sun', color: '#ffb468', power: 1, x: SUN.x, y: SUN.y }, fill: { color: '#7a3448', power: 0.4 }, rim: { az: 300, color: '#ffc27a', power: 0.8 } };
+    const pal = { sky: ['#2c0a0e', '#7c1a16', '#d4482a', '#ffb45e'], sea: ['#e0844a', '#6e2420', '#1c0a0e'], cloudLit: '#ffa060', cloudShade: '#4a1420' };
+    const L = KIT.makeLight(light, { horizon: TS.hz }) as { pal: Record<string, unknown> }, Ls = KIT.makeLight({ ...light, key: { ...light.key, power: 0.8 }, rim: { ...light.rim, power: 0.95 } }, { horizon: TS.hz }) as { pal: Record<string, unknown> };
+    L.pal = { ...L.pal, ...pal }; Ls.pal = L.pal;
+    let back = KIT.sky(u, L, { horizon: TS.hz, stars: false, seed: 13 });
+    for (const [x, y, w, h, sd] of [[150, 18, 120, 3.6, 3], [60, 32, 100, 3, 4], [150, 48, 110, 3.2, 5], [80, 62, 100, 2.6, 6], [175, 72, 80, 2.2, 7], [120, 84, 90, 1.8, 9]]) {
+      const near = 1 - Math.min(1, Math.hypot(x - SUN.x, y - SUN.y) / 170), hi = 1 - y / TS.hz;
+      back += tsStreak(`${u}st${sd}`, SUN, { x, y, w, h, seed: sd, lit: KIT.mix('#ff8a48', '#ffe0a0', near * 0.7), dark: KIT.mix('#4a1018', '#8a2a24', 1 - hi), op: R(0.55 + 0.3 * hi), blur: R(0.5 + hi * 0.6) });
+    }
+    back += KIT.sunMoon(u, L, { r: 7 }) + KIT.cloudBank(u, L, { y: TS.hz - 1, h: 7, x0: -30, x1: 230, n: 7, seed: 41, far: 0.55 })
+      + KIT.water(u, L, { horizon: TS.hz, bottom: TS.h + 6, swell: 1, seed: 6, glitter: SUN.x })
+      + tsGrad(u + 'gw', TS.wl + 14, TS.h, '#14060a', 0, 0.4);
+    return { L, Ls, back, kant: '#ffc477', front: KIT.localGlow(u, { x: SUN.x, y: SUN.y, color: '#ffc080', power: 0.3, radius: 40 }, { core: false }) + tsVignette(u + 'vg', 110, 70, '#16050a', 0.45) };
+  } },
+  // a clear day: the sun high behind the viewer on the right (the kit's day light, as on her board), cumulus, the light sea
+  endeavour: { flip: false, wind: -1, seed: 4, grow: 1.05, sky: u => {
+    const L = KIT.makeLight(KIT.LIGHTS.endeavour, { horizon: TS.hz }) as { pal: { sky: string[] } };
+    const back = KIT.sky(u, L, { horizon: TS.hz, stars: false, seed: 5 }) + tsGrad(u + 'zn', -10, 60, '#1f4a7e', 0.5, 0)
+      + KIT.cloud(u, L, { x: 34, y: 40, w: 60, h: 16, seed: 7, far: 0.3 }) + KIT.cloud(u, L, { x: 176, y: 30, w: 50, h: 12, seed: 13, far: 0.45 })
+      + KIT.cloudBank(u, L, { y: TS.hz - 1.5, h: 9, x0: -30, x1: 230, n: 7, seed: 5, far: 0.85 })
+      + KIT.water(u, L, { horizon: TS.hz, bottom: TS.h + 6, swell: 1, seed: 9 })
+      + tsGrad(u + 'gw', TS.wl + 14, TS.h, '#082436', 0, 0.35);
+    return { L, Ls: L, back, front: tsVignette(u + 'vg', 100, 60, '#0a2238', 0.3) };
+  } },
+  // green fog: a pale moon upper left behind her high stern, shafts of moonlight, banks of mist, a pale green kant
+  dutch: { flip: true, wind: 1, seed: 6, sky: u => {
+    const base = KIT.LIGHTS.dutchman as { key: Record<string, unknown>; fill: Record<string, number> }, MOON = { x: 26, y: 24 };
+    const light = { ...base, key: { ...base.key, x: MOON.x, y: MOON.y, power: 0.65 }, fill: { ...base.fill, power: base.fill.power * 0.7 }, rim: { az: 340, color: '#cff6e2', power: 0.8 } };
+    const L = KIT.makeLight(light, { horizon: TS.hz });
+    let shafts = '';
+    for (const [a, b, c, d] of [[8, 16, 14, 34], [18, 26, 46, 62], [30, 38, 84, 96]]) shafts += `<path d="M${MOON.x + a} ${MOON.y + 4}L${MOON.x + b} ${MOON.y + 4}L${MOON.x + d} ${TS.hz + 6}L${MOON.x + c} ${TS.hz + 6}Z" fill="url(#${u}sh)"/>`;
+    const back = KIT.sky(u, L, { horizon: TS.hz, stars: 20, seed: 8 }) + tsGrad(u + 'zn', -10, 50, '#040b09', 0.6, 0) + KIT.sunMoon(u, L, { r: 7.5, seed: 3 })
+      + KIT.cloud(u, L, { x: 150, y: 46, w: 90, h: 14, seed: 12, far: 0.45 }) + KIT.cloudBank(u, L, { y: TS.hz - 2, h: 8, x0: -30, x1: 230, n: 6, seed: 19, far: 0.85 })
+      + `<defs><linearGradient id="${u}sh" gradientUnits="userSpaceOnUse" x1="${MOON.x}" y1="${MOON.y}" x2="${MOON.x + 80}" y2="${TS.hz + 10}"><stop offset="0" stop-color="#cff6e2" stop-opacity=".26"/><stop offset=".6" stop-color="#9fd0bc" stop-opacity=".1"/><stop offset="1" stop-color="#9fd0bc" stop-opacity="0"/></linearGradient><filter id="${u}sb" filterUnits="userSpaceOnUse" x="-40" y="-20" width="300" height="200"><feGaussianBlur stdDeviation="2.6"/></filter></defs>`
+      + `<g filter="url(#${u}sb)" style="mix-blend-mode:screen">${shafts}</g>`
+      + KIT.water(u, L, { horizon: TS.hz, bottom: TS.h + 6, swell: 0.9, seed: 12, glitter: MOON.x }) + KIT.fog(u, L, { y: TS.hz - 14, h: 24, density: 0.5, seed: 4 })
+      + tsGrad(u + 'gw', TS.wl + 14, TS.h, '#030a08', 0, 0.45);
+    return { L, Ls: L, back, kant: '#c8f0dc',
+      front: KIT.fog(u, L, { y: TS.wl + 4, h: 14, density: 0.28, seed: 9 }) + KIT.localGlow(u, { x: 100, y: TS.wl + 4, color: '#7fe3c0', power: 0.18, radius: 70 }, { squash: 0.25, core: false }) + tsVignette(u + 'vg', 100, 60, '#020806', 0.5) };
+  } }
+};
+/** the ship of a token picture: the deck's ship fitted TS.m inside the cut (left, right, top) above the waterline TS.wl;
+ *  grow — the kit's box is roomier round some ships than their drawing (measured: the Endeavour's top is 0.7 mm lower) */
+export function tokenShip(kind: string): Record<string, unknown> & { x: number; scale: number } {
+  const sea = TOKEN_SEAS[kind], b = KIT.shipBox(kind, { x: 0, y: 0, scale: 1, flip: sea.flip, wind: sea.wind }), k = Math.min((TS.w - 2 * TS.m) / b.w, (TS.wl - TS.m) / b.h) * (sea.grow ?? 1);
+  return { kind, x: R(TS.w / 2 - k * (b.x0 + b.x1) / 2), y: TS.wl, scale: R(k), flip: sea.flip, wind: sea.wind, sails: 'full', seed: sea.seed };
+}
+/** the whole picture of a ship token, an SVG of TS.w × TS.h units (PIC mm) */
+export function tokenSceneSvg(kind: string): string {
+  const u = 'ts' + kind.slice(0, 2), sea = TOKEN_SEAS[kind], sc = sea.sky(u), po = { ...tokenShip(kind), wake: true, reflect: true, lights: true };
+  const sp = KIT.SHIP_SPECS[kind], dir = sea.flip ? -1 : 1, k = po.scale, x = po.x, wl = TS.wl;
+  const stem = x + dir * k * (2 - sp.len / 2 - sp.bow[0]), stern = x + dir * k * (sp.len / 2 + 2);
+  const sil = (c: string, s: string) => KIT.shipSilhouette(kind, { ...po, color: c, u: u + s });
+  let s = sc.back;
+  // near swells, bigger towards us, their crests lit, a lace of foam on them; the nearest at the sides, clear of her reflection
+  for (const [sx, sy, sw, sh, sd, fm] of [[150, 117, 30, 1.6, 7, 0.3], [52, 121, 32, 1.9, 8, 0.3], [112, 129, 34, 2.2, 9, 0.25], [24, 131, 46, 3.2, 3, 0.55], [178, 138, 44, 3, 4, 0.5], [92, 142, 40, 2.6, 5, 0.35]])
+    s += tsSwell(`${u}w${sd}`, sc.L, { x: sx, y: sy, w: sw, h: sh, seed: sd, lean: 0.25, foam: fm });
+  // the wake: two arms of foam lace running back from her stern, the far one towards the horizon, the near one to us
+  for (let i = 0; i < 4; i++) {
+    const ax = stern + dir * (5 + i * 12);
+    s += KIT.foam(u, { x: R(ax), y: R(wl - 0.4 - i * 0.9), w: R(15 - i * 2.2), h: R(1.1 - i * 0.15), seed: 11 + i, L: sc.L })
+      + KIT.foam(u, { x: R(ax + dir * 3), y: R(wl + 2 + i * 2.4), w: R(16 - i * 2), h: R(1.3 - i * 0.15), seed: 21 + i, L: sc.L });
+  }
+  // the kant of the moon or the low sun (backs-pilot.cjs): the silhouette in pale light shifted towards the source, a thin ring round her outline
+  if (sc.kant) {
+    const src = (sc.L as { source?: { x: number; y: number } }).source ?? { x: 100, y: 0 }, dx = Math.sign(src.x - x) * 0.9;
+    s += `<defs><filter id="${u}dl" filterUnits="userSpaceOnUse" x="-60" y="-60" width="320" height="300"><feMorphology operator="dilate" radius="1"/></filter>`
+      + `<mask id="${u}mk" maskUnits="userSpaceOnUse" x="-60" y="-60" width="320" height="300"><g filter="url(#${u}dl)">${sil('#ffffff', 'd')}</g>${sil('#000000', 'e')}</mask></defs>`
+      + `<g mask="url(#${u}mk)"><g transform="translate(${R(dx)} -.7)">${sil(sc.kant, 'm')}</g></g>`;
+  }
+  // the ship, her reflection torn by the ripples
+  s += tsBroken(u + 'rk', KIT.ship(u, sc.Ls, po), { x0: 0, x1: 200, y0: wl + 2.4, y1: wl + 30, seed: 21 });
+  if (sc.over) s += `<g style="mix-blend-mode:multiply" opacity=".66">${sil(sc.over, 's')}</g>`;
+  if (kind === 'revenge') s += `<defs><clipPath id="${u}sc"><rect x="-20" y="-20" width="240" height="${wl - 10 + 20}"/></clipPath></defs><g clip-path="url(#${u}sc)" style="mix-blend-mode:multiply" opacity=".5">${sil('#c4544c', 's2')}</g>`;
+  // the bow wave and the foam along her side: she runs before the wind
+  s += KIT.splash(u, { x: R(stem - dir * 1.5), y: wl, w: 15, h: 8.5, seed: 5, L: sc.L, wind: sea.wind }) + KIT.foam(u, { x: R(stem - dir * 15), y: wl + 0.4, w: 30, h: 1.8, seed: 3, L: sc.L });
+  s += sc.front ?? '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${TS.w} ${TS.h}">${s}</svg>`;
+}
+async function kitTokenPics(ctx: Ctx): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  for (const s of ships()) out[s.code] = (await rasterJpeg(ctx.browser, 'token-sea-' + DECK_KEY[s.code], tokenSceneSvg(DECK_KEY[s.code]), PIC.w, PIC.h, ctx.opts.draft ? 300 : 600, 0.92)).url;
   return out;
 }
 
@@ -363,13 +521,21 @@ function shipTokensHtml(id: string, pics: Record<string, string> | null): { svg:
     if (pics) svg.push(`<image href="${pics[s.code]}" x="${x}" y="${y}" width="${PIC.w}" height="${PIC.h}" preserveAspectRatio="none"/>`);
     else svg.push(`<g transform="translate(0 ${y})">${bigShip(DECK_KEY[s.code], x + 16.2, 20.2, 0.172)}</g>`);
     svg.push(`<rect x="${x}" y="${y + band}" width="${t}" height="${r(t - band)}" fill="${deep}"/>`);
-    svg.push(`<rect x="${x}" y="${r(y + band - 0.3)}" width="${t}" height=".7" fill="url(#${id}br)"/>`);
+    if (pics) {
+      // the gold edge: a brass bar between the picture and the band (dark rules on both sides of it) and a fine gold
+      // rule round the band 1.6 mm inside the cut, its left end under the medallion
+      const [bl, bm, bd] = LOOK.brass, gx0 = x + 1.6, gx1 = x + t - 1.6, gy0 = y + band + 1.1, gy1 = y + t - 1.6;
+      svg.push(`<rect x="${x}" y="${r(y + band - 0.5)}" width="${t}" height="1" fill="${bd}"/><rect x="${x}" y="${r(y + band - 0.33)}" width="${t}" height=".66" fill="url(#${id}br)"/>`
+        + `<rect x="${r(gx0)}" y="${r(gy0)}" width="${r(gx1 - gx0)}" height="${r(gy1 - gy0)}" rx=".8" fill="none" stroke="${bd}" stroke-width=".5"/>`
+        + `<rect x="${r(gx0)}" y="${r(gy0)}" width="${r(gx1 - gx0)}" height="${r(gy1 - gy0)}" rx=".8" fill="none" stroke="${bm}" stroke-width=".26"/>`
+        + `<path d="M${r(gx0 + 0.8)} ${r(gy0 - 0.06)}H${r(gx1 - 0.8)}" stroke="${bl}" stroke-width=".15"/>`);
+    } else svg.push(`<rect x="${x}" y="${r(y + band - 0.3)}" width="${t}" height=".7" fill="url(#${id}br)"/>`);
     svg.push(`<rect data-plate="${pid}-band" x="${r(x + 0.5)}" y="${r(y + band + 0.4)}" width="${r(t - 1)}" height="${r(t - band - 0.9)}" fill="none"/>`);
     // new: the letter in the band, left of the name, off the sails; old: the letter over the sky, the name centred in the band
     const m = pics ? { cx: x + 4.4, cy: y + 25.75, R: 3.15 } : { cx: x + 5.6, cy: y + 5.6, R: 3.5 };
     svg.push(brassRing(`${pid}-medal`, m.cx, m.cy, m.R, 0.6, id, deep));
     html.push(capWord(`${pid}-medal`, m.cx, m.cy, s.code, m.R * 0.92, { color: CREAM, maxW: m.R * 1.2, inset: 1.2, name: `${s.code} (жетон)` }));
-    const nx = pics ? x + 18.5 : x + t / 2, room = pics ? 18.6 : 25, nO: TO = { font: 'Alegreya SC', w: 700, ls: '.06em' };
+    const nx = pics ? x + 18.4 : x + t / 2, room = pics ? 17.4 : 25, nO: TO = { font: 'Alegreya SC', w: 700, ls: '.06em' };
     let size = 9.6; while (size > 7 && W(s.nick, size, nO) > room) size = Math.round((size - 0.2) * 10) / 10;
     html.push(wordAt(`${pid}-band`, nx, y + 25.75, s.nick, { font: 'Alegreya SC', w: 700, size, lh: pt(size) * 1.2, ls: '.06em', color: CREAM, anchor: 'middle' }));
   });
@@ -387,7 +553,7 @@ function marksHtml(id: string): { svg: string; cuts: string } {
 const markIcon = (pid: string, d: number, id: string) => `<svg data-plate="${pid}" viewBox="0 0 ${TOKEN.marker} ${TOKEN.marker}" style="width:${d}mm;height:${d}mm;flex:none;display:block">${markArt(TOKEN.marker / 2, TOKEN.marker / 2, id)}</svg>`;
 
 // ---- pages
-function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean, dive: { face: string; back: string } | null): PageSpec[] {
+function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean, dive: { face: string; back: string } | null, markerPics: Record<string, string> | null): PageSpec[] {
   const econ = data.econ as { income: number; first_income: number; cap: number; second_start: number }, rules = data.rules as Record<string, number>;
   const nums = { income: econ.income, first: econ.first_income, cap: econ.cap, start: econ.second_start, firstGame: rules.firstGameSecondStart };
   const pd = TOKEN.powder, fr = TOKEN.fire, of = strips ? 3 : 2, page = (n: number) => fill(TXT.page, { n, of });
@@ -402,7 +568,7 @@ function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean, d
   const cFire = caption('cap-fire', FIRE.x, FIRE.y, fill(TXT.fire, { n: COUNTS.fire }), ico('fire', capSign(FIRE.x, FIRE.y).cx, capSign(FIRE.x, FIRE.y).cy, 4.8, TONE.red));
   s1.push(cFire.svg, tokenGrid(id1, FIRE, fr, COUNTS.fire, (i, x, y) => coinToken(id1, `fr${i}`, x, y, fr, FIRE_FIELD, icon('fire', x + fr / 2, y + fr / 2 + 0.3, 13.2, TONE.red))));
   h1.push(cFire.html);
-  const mk = markersHtml(pics), sg = capSign(MARK.x, MARK.y);
+  const mk = markersHtml(markerPics), sg = capSign(MARK.x, MARK.y);
   const cMark = caption('cap-markers', MARK.x, MARK.y, TXT.markers,
     `<rect x="${r(sg.cx - 2.3)}" y="${r(sg.cy - 2.3)}" width="4.6" height="4.6" rx=".8" fill="url(#${id1}brh)" stroke="${LOOK.brass[2]}" stroke-width=".2"/><rect x="${r(sg.cx - 1.6)}" y="${r(sg.cy - 1.6)}" width="3.2" height="3.2" rx=".4" fill="${deepOf(data.ships.find(s => s.code === 'М')!.color)}"/>`);
   s1.push(cMark.svg, mk.svg); h1.push(cMark.html, mk.html);
@@ -444,11 +610,11 @@ function pages(ctx: Ctx, pics: Record<string, string> | null, strips: boolean, d
   return out;
 }
 /** the sheets of part 04: a dry run collects the words to measure, the browser measures them, then the real run */
-export async function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null, strips = false): Promise<PageSpec[]> {
+export async function tokenPages(ctx: Ctx, pics: Record<string, string> | null = null, strips = false, markerPics = pics): Promise<PageSpec[]> {
   const dive = await diveArt(ctx);
-  pages(ctx, pics, strips, dive);
+  pages(ctx, pics, strips, dive, markerPics);
   await measureMissing(ctx);
-  return pages(ctx, pics, strips, dive);
+  return pages(ctx, pics, strips, dive, markerPics);
 }
 
 export const TOKENS_CSS = `${ART_CSS}
@@ -463,7 +629,7 @@ export const TOKENS_CSS = `${ART_CSS}
 `;
 
 export async function build(ctx: Ctx): Promise<Part[]> {
-  const pics = (ctx.opts.tokens ?? 'new') === 'new' ? await kitTokenPics(ctx) : null;
-  const pages = await tokenPages(ctx, pics, (ctx.opts.board ?? 'b') === 'b' && ctx.opts.counters === 'strip');
+  const fresh = (ctx.opts.tokens ?? 'new') === 'new', pics = fresh ? await kitTokenPics(ctx) : null;
+  const pages = await tokenPages(ctx, pics, (ctx.opts.board ?? 'b') === 'b' && ctx.opts.counters === 'strip', fresh ? await kitMarkerPics(ctx) : null);
   return [{ file: '04-tryumy-zhetony', title: TXT.partTitle, css: TOKENS_CSS, pages }, await schemePart(ctx)];
 }
